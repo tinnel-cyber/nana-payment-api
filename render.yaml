@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: nana-payment-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PAYMENT_WEBHOOK_SECRET
+        value: konkobo_telecom_webhook_secret_key_2026
+      - key: FIREBASE_PROJECT_ID
+        value: pos-app-1759a
+      - key: FIXIE_URL
+        sync: false
