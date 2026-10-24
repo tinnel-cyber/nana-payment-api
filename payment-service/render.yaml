@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: nana-payment-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FIREBASE_PROJECT_ID
+        value: pos-app-1759a
+      - key: FIXIE_URL
+        sync: false
+      - key: PAYMENT_WEBHOOK_SECRET
+        value: konkobo_telecom_webhook_secret_key_2026
+      # YouTube OAuth 2.0 (Google Cloud Console)
+      - key: YOUTUBE_CLIENT_ID
+        sync: false
+      - key: YOUTUBE_CLIENT_SECRET
+        sync: false
+      - key: YOUTUBE_REDIRECT_URI
+        value: https://nana-payment-api.onrender.com/api/youtube/callback
+      # Stream Router (YouTube / Jitsi Failover)
+      - key: MAX_YOUTUBE_DAILY_LIVES
+        value: "30"
+      - key: JITSI_DOMAIN
+        value: meet.jit.si
+      # Sebpay Gateway
+      - key: SEBPAY_PUBLIC_KEY
+        sync: false
+      - key: SEBPAY_SECRET_KEY
+        sync: false
+      - key: SEBPAY_BASE_URL
+        value: https://newapi.sebpay.bj/api/v1/
+      # Split Financier Nanasore (5%)
+      - key: PLATFORM_COMMISSION_PERCENT
+        value: "5"
+      # Twilio SMS
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: COMMUNICATION_SMS_COST_FCFA
+        value: "25"
+      # Brevo Email
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Wameet / Nanasore Live
+      - key: BREVO_SENDER_EMAIL
+        value: notifications@wameet.africa
+      - key: COMMUNICATION_EMAIL_COST_FCFA
+        value: "5"
+      # Master Vault
+      - key: NANASWITCH_MASTER_KEY
+        sync: false
