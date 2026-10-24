@@ -136,23 +136,84 @@ function resolveCountryAndCurrency(countryInput, phoneInput, currencyInput) {
 }
 
 /**
- * Normalisation universelle des codes d'opérateurs pour l'API Sebpay
- * Mappe les noms et formats entrants vers les slugs/codes officiels acceptés par Sebpay :
- * - BF : orange, moov, wligdicash
- * - CI : orange, moov, mtn, wave
- * - BJ : mtn, moov, celtiis, coris
- * - ML : orange, moov, mobicash
- * - TG : togocom, moov
- * - SN : orange, wave, free, emoney
- * - NE : airtel, moov, amanata, nita, wligdicash, zamani
- * - CD : orange, airtel, mpesa, vodacom, afrimoney
- * - CM : orange, mtn
- * - GA : airtel, moov
- * - GN : orange, mtn
+ * Dictionnaire officiel complet des opérateurs supportés par Sebpay par pays
+ */
+const SEBPAY_COUNTRY_OPERATORS = {
+  BF: ['moov', 'orange', 'wligdicash'],
+  CD: ['afrimoney', 'airtel', 'mpesa', 'orange', 'vodacom'],
+  CG: ['airtel', 'mtn'],
+  CI: ['moov', 'mtn', 'orange', 'wave'],
+  CM: ['mtn', 'orange'],
+  GA: ['airtel', 'moov'],
+  GN: ['mtn', 'orange'],
+  GW: ['orange'],
+  ML: ['mobicash', 'moov', 'orange'],
+  NE: ['airtel', 'amanata', 'moov', 'nita', 'wligdicash', 'zamani'],
+  SN: ['emoney', 'free', 'orange', 'wave'],
+  TG: ['moov', 'togocom'],
+  BJ: ['celtiis', 'coris', 'moov', 'mtn'],
+  GM: ['afrimoney'],
+  TD: ['airtel', 'moov'],
+  NG: ['airtel', 'mtn'],
+  GH: ['airtel', 'mtn', 'telecel'],
+  KE: ['airtel', 'mpesa'],
+  UG: ['airtel', 'mtn'],
+  TZ: ['airtel', 'ezypesa', 'halo_pesa', 'mpesa', 'tigopesa']
+};
+
+/**
+ * Opérateur par défaut par pays en cas d'omission ou terme générique (ex: MOMO)
+ */
+const SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY = {
+  BF: 'orange',
+  CD: 'orange',
+  CG: 'airtel',
+  CI: 'orange',
+  CM: 'orange',
+  GA: 'airtel',
+  GN: 'orange',
+  GW: 'orange',
+  ML: 'orange',
+  NE: 'airtel',
+  SN: 'orange',
+  TG: 'togocom',
+  BJ: 'mtn',
+  GM: 'afrimoney',
+  TD: 'moov',
+  NG: 'mtn',
+  GH: 'mtn',
+  KE: 'mpesa',
+  UG: 'mtn',
+  TZ: 'mpesa'
+};
+
+/**
+ * Normalisation universelle enrichie des codes d'opérateurs pour l'API Sebpay
+ * Couvre les 20 pays supportés par Sebpay :
+ * - BF (Burkina Faso) : moov, orange, wligdicash
+ * - CD (R.D. Congo) : afrimoney, airtel, mpesa, orange, vodacom
+ * - CG (Congo) : airtel, mtn
+ * - CI (Côte d'Ivoire) : moov, mtn, orange, wave
+ * - CM (Cameroun) : mtn, orange
+ * - GA (Gabon) : airtel, moov
+ * - GN (Guinée Conakry) : mtn, orange
+ * - GW (Guinée-Bissau) : orange
+ * - ML (Mali) : mobicash, moov, orange
+ * - NE (Niger) : airtel, amanata, moov, nita, wligdicash, zamani
+ * - SN (Sénégal) : emoney, free, orange, wave
+ * - TG (Togo) : moov, togocom
+ * - BJ (Bénin) : celtiis, coris, moov, mtn
+ * - GM (Gambie) : afrimoney
+ * - TD (Tchad) : airtel, moov
+ * - NG (Nigéria) : airtel, mtn
+ * - GH (Ghana) : airtel, mtn, telecel
+ * - KE (Kenya) : airtel, mpesa
+ * - UG (Ouganda) : airtel, mtn
+ * - TZ (Tanzanie) : airtel, ezypesa, halo_pesa, mpesa, tigopesa
  * 
  * @param {string|object} country - Code ISO du pays (ex: 'BF', 'CI') ou objet pays
- * @param {string} rawOperator - Nom brut de l'opérateur (ex: 'ORANGE_MONEY', 'MOOV_MONEY', 'Orange Money')
- * @returns {string} Slug opérateur officiel Sebpay en minuscules (ex: 'orange', 'moov', 'wligdicash')
+ * @param {string} rawOperator - Nom brut de l'opérateur (ex: 'ORANGE_MONEY', 'MOOV_MONEY', 'Halo Pesa')
+ * @returns {string} Slug opérateur officiel Sebpay en minuscules
  */
 function normalizeSebpayOperator(country, rawOperator) {
   const countryCode = (typeof country === 'object'
@@ -160,46 +221,18 @@ function normalizeSebpayOperator(country, rawOperator) {
     : String(country || 'BF')
   ).trim().toUpperCase();
 
-  const DEFAULT_OPERATOR_BY_COUNTRY = {
-    BF: 'orange',
-    CI: 'orange',
-    BJ: 'mtn',
-    ML: 'orange',
-    TG: 'togocom',
-    SN: 'orange',
-    NE: 'airtel',
-    CD: 'orange',
-    CM: 'orange',
-    GA: 'airtel',
-    GN: 'orange'
-  };
-
-  const COUNTRY_OPERATORS = {
-    BF: ['orange', 'moov', 'wligdicash'],
-    CI: ['orange', 'moov', 'mtn', 'wave'],
-    BJ: ['mtn', 'moov', 'celtiis', 'coris'],
-    ML: ['orange', 'moov', 'mobicash'],
-    TG: ['togocom', 'moov'],
-    SN: ['orange', 'wave', 'free', 'emoney'],
-    NE: ['airtel', 'moov', 'amanata', 'nita', 'wligdicash', 'zamani'],
-    CD: ['orange', 'airtel', 'mpesa', 'vodacom', 'afrimoney'],
-    CM: ['orange', 'mtn'],
-    GA: ['airtel', 'moov'],
-    GN: ['orange', 'mtn']
-  };
-
   if (!rawOperator) {
-    return DEFAULT_OPERATOR_BY_COUNTRY[countryCode] || 'orange';
+    return SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryCode] || '';
   }
 
   const op = String(rawOperator).toLowerCase().trim();
 
-  // Si c'est un terme générique de paiement mobile, renvoyer l'opérateur par défaut du pays
+  // Termes génériques de paiement mobile -> fallback vers opérateur par défaut du pays
   if (op === 'momo' || op === 'mobile_money' || op === 'mobile-money' || op === 'mobilemoney' || op === 'money') {
-    return DEFAULT_OPERATOR_BY_COUNTRY[countryCode] || 'orange';
+    return SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryCode] || 'orange';
   }
 
-  // Détections et mappings spécifiques recommandés
+  // Détections et correspondances des opérateurs officiels Sebpay
   if (op.includes('orange')) return 'orange';
   if (op.includes('moov') || op.includes('flooz')) return 'moov';
   if (op.includes('mtn')) return 'mtn';
@@ -215,12 +248,16 @@ function normalizeSebpayOperator(country, rawOperator) {
   if (op.includes('nita')) return 'nita';
   if (op.includes('zamani')) return 'zamani';
   if (op.includes('airtel')) return 'airtel';
-  if (op.includes('mpesa') || op.includes('m-pesa')) return 'mpesa';
   if (op.includes('vodacom')) return 'vodacom';
   if (op.includes('afrimoney') || op.includes('afri')) return 'afrimoney';
+  if (op.includes('mpesa') || op.includes('m-pesa')) return 'mpesa';
+  if (op.includes('telecel')) return 'telecel';
+  if (op.includes('ezypesa') || op.includes('ezy')) return 'ezypesa';
+  if (op.includes('halo')) return 'halo_pesa';
+  if (op.includes('tigo')) return 'tigopesa';
 
   // Si le code correspond déjà directement à un opérateur supporté dans ce pays
-  const supported = COUNTRY_OPERATORS[countryCode];
+  const supported = SEBPAY_COUNTRY_OPERATORS[countryCode];
   if (supported && supported.includes(op)) {
     return op;
   }
@@ -441,7 +478,7 @@ async function createSebpayCollection(params) {
 
   // Normalisation universelle du code opérateur pour l'API Sebpay
   const rawOperator = operator || customPayload.operator || customPayload.provider || '';
-  const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator);
+  const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
 
   const body = {
     amount: Math.round(Number(amount)),
@@ -957,6 +994,8 @@ module.exports = {
   SEBPAY_DEFAULT_BASE_URL,
   SUPPORTED_COUNTRIES,
   SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
+  SEBPAY_COUNTRY_OPERATORS,
+  SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY,
   resolveCountryAndCurrency,
   normalizeSebpayOperator,
   getSebpayBaseUrl,
