@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Zamani Telecom Niger (NE • Zamani) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="zamani-ne">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <polygon points="0,-20 18,-10 18,10 0,20 -18,10 -18,-10" fill="#00843d"/>
+          <path d="M -8 -8 L 8 -8 L -8 8 L 8 8" stroke="#ff7900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+      
+    <text x="60" y="75" font-family="system-ui, sans-serif" font-size="11" font-weight="900" fill="#00843d" text-anchor="middle">zamani</text>
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-ne-zamani-x5nje">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-ne-zamani-x5nje)">
+        <rect x="0" y="0" width="9" height="3" fill="#ea580c"/><rect x="0" y="3" width="9" height="3" fill="#ffffff"/><rect x="0" y="6" width="9" height="3" fill="#16a34a"/><circle cx="4.5" cy="4.5" r="1.2" fill="#ea580c"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#15803d" text-anchor="middle" letter-spacing="0.3">
+        NE • Zamani
+      </text>
+    </g>
+  </g>
+</svg>

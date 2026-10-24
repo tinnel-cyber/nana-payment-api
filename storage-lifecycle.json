@@ -1,0 +1,17 @@
+{
+  "rule": [
+    {
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "age": 7,
+        "matchesPrefix": [
+          "chat_medias/",
+          "wameet_chat/",
+          "wameet_chat_media/"
+        ]
+      }
+    }
+  ]
+}

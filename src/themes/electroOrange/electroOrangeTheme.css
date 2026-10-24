@@ -1,0 +1,732 @@
+/* =========================================================================
+   THÈME 4 : THEME ELECTRO ORANGE & BLANC
+   Inspiré de l'architecture mondiale "Electro", revisité en Orange Vif & Blanc
+   ========================================================================= */
+
+:root {
+  --theme-primary: #FF6A00;          /* Orange vif énergique - remplace le jaune classique */
+  --theme-primary-hover: #E05D00;    /* Orange légèrement plus foncé au survol */
+  --theme-bg: #FFFFFF;               /* Blanc pur */
+  --theme-text-dark: #333E48;        /* Gris très foncé technologique */
+  --theme-link-blue: #0062BD;        /* Bleu électrique pour les titres de produits */
+  --theme-border: #EAEAEA;           /* Gris très clair pour les séparateurs */
+  --theme-bg-light: #F7F7F7;         /* Fond très léger pour mini-bannières et cards */
+  --theme-sidebar-width: 270px;
+}
+
+/* Base Root */
+.electro-root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--theme-text-dark);
+  background-color: var(--theme-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================================
+   1. LE HEADER À 3 NIVEAUX
+   ========================================================================= */
+
+/* Top Bar */
+.electro-top-bar {
+  background-color: #F5F5F5;
+  border-bottom: 1px solid var(--theme-border);
+  font-size: 11.5px;
+  color: #727982;
+}
+
+/* Logo avec point Orange */
+.electro-logo-dot {
+  color: var(--theme-primary);
+  font-weight: 900;
+}
+
+/* Barre de recherche monumentale en pilule */
+.electro-search-pill {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--theme-primary);
+  border-radius: 50px;
+  background-color: #FFFFFF;
+  height: 46px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.08);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.electro-search-pill:focus-within {
+  box-shadow: 0 4px 14px rgba(255, 106, 0, 0.2);
+}
+
+.electro-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 18px;
+  font-size: 13.5px;
+  color: var(--theme-text-dark);
+  background: transparent;
+}
+
+.electro-search-input::placeholder {
+  color: #8C949E;
+  font-size: 13px;
+}
+
+.electro-search-select {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #555E68;
+  border-left: 1px solid var(--theme-border);
+  height: 28px;
+  cursor: pointer;
+}
+
+.electro-search-btn {
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  border: none;
+  outline: none;
+  width: 52px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.electro-search-btn:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+/* Icônes d'Action d'En-tête */
+.electro-icon-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--theme-text-dark);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.electro-icon-action:hover {
+  color: var(--theme-primary);
+}
+
+/* Bouton "Tous les départements" */
+.electro-dept-btn {
+  width: var(--theme-sidebar-width);
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: 44px;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.electro-dept-btn:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+/* =========================================================================
+   2. BLOC HERO + MENU VERTICAL + SLIDER 50/50
+   ========================================================================= */
+
+/* Colonne Catégories Verticales (270px) */
+.electro-categories-sidebar {
+  width: var(--theme-sidebar-width);
+  background-color: #FFFFFF;
+  border: 1px solid var(--theme-border);
+  border-top: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+.electro-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9.5px 16px;
+  font-size: 12.5px;
+  color: #4B5563;
+  border-bottom: 1px solid #F0F0F0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.electro-cat-item:last-child {
+  border-bottom: none;
+}
+
+.electro-cat-item:hover,
+.electro-cat-item.active {
+  background-color: #FFF8F2;
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+
+.electro-cat-item.featured {
+  font-weight: 700;
+  color: var(--theme-text-dark);
+}
+
+.electro-cat-item.featured:hover {
+  color: var(--theme-primary);
+}
+
+/* Mega-Menu Déroulant au survol vers la droite */
+.electro-megamenu-panel {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 780px;
+  min-height: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid var(--theme-border);
+  border-left: 2px solid var(--theme-primary);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 220px;
+  gap: 20px;
+  animation: electroFadeIn 0.2s ease-out;
+}
+
+@keyframes electroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slider Hero */
+.electro-hero-slider {
+  background: linear-gradient(135deg, #FBFBFB 0%, #F5F6F8 100%);
+  border-radius: 4px;
+  border: 1px solid #ECECEC;
+  position: relative;
+  overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+}
+
+.electro-hero-btn {
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  padding: 12px 28px;
+  border-radius: 30px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 106, 0, 0.28);
+}
+
+.electro-hero-btn:hover {
+  background-color: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 106, 0, 0.35);
+}
+
+/* Pagination Dots du Hero */
+.electro-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #D6D9DE;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.electro-dot.active {
+  width: 26px;
+  border-radius: 12px;
+  background-color: var(--theme-primary);
+}
+
+/* =========================================================================
+   3. LES 4 MINI-BANNIÈRES SOUS LE HERO (IMAGE 2)
+   ========================================================================= */
+
+.electro-mini-banners-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .electro-mini-banners-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .electro-mini-banners-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+.electro-mini-card {
+  background-color: var(--theme-bg-light);
+  border: 1px solid #EFEFEF;
+  border-radius: 4px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.electro-mini-card:hover {
+  background-color: #FFFFFF;
+  border-color: var(--theme-primary);
+  box-shadow: 0 6px 20px rgba(255, 106, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.electro-mini-card-img {
+  width: 40%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.electro-mini-card-content {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.electro-round-arrow {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.electro-mini-card:hover .electro-round-arrow {
+  transform: translateX(3px);
+}
+
+/* Titres de produits en bleu contrasté */
+.electro-product-title {
+  color: var(--theme-link-blue);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.electro-product-title:hover {
+  color: var(--theme-primary);
+}
+
+/* =========================================================================
+   4. LA SECTION ASYMÉTRIQUE (GRILLE 320PX 1FR) - OFFRE SPÉCIALE & ONGLETS
+   ========================================================================= */
+
+.electro-asym-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .electro-asym-section {
+    grid-template-columns: 320px 1fr;
+  }
+}
+
+/* Carte Offre Spéciale Gauche (320px) */
+.electro-special-offer-card {
+  border: 2px solid var(--theme-primary);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(255, 106, 0, 0.08);
+}
+
+/* Badge Économisez Circulaire (70px x 70px) */
+.electro-save-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.35);
+  line-height: 1.1;
+  z-index: 5;
+}
+
+.electro-save-badge .save-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.95;
+}
+
+.electro-save-badge .save-amount {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Boîtes du compte à rebours */
+.electro-countdown-box {
+  background-color: #F5F5F5;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  min-width: 52px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.electro-countdown-num {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--theme-text-dark);
+  font-family: monospace;
+  line-height: 1;
+}
+
+.electro-countdown-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  color: #8C949E;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* Onglets avec ligne grise et triangle CSS sous l'actif */
+.electro-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid var(--theme-border);
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+
+.electro-tab-btn {
+  position: relative;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #727982;
+  padding-bottom: 10px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.electro-tab-btn:hover {
+  color: var(--theme-text-dark);
+}
+
+.electro-tab-btn.active {
+  color: var(--theme-text-dark);
+  font-weight: 800;
+  border-bottom: 3px solid var(--theme-primary);
+  margin-bottom: -1px;
+}
+
+/* Pointe Triangle sous l'onglet actif */
+.electro-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--theme-primary);
+  z-index: 2;
+}
+
+/* =========================================================================
+   5. LA CARTE PRODUIT ELECTRO (ELECTRO PRODUCT CARD) & GRILLE 3X2
+   ========================================================================= */
+
+.electro-products-grid-3x2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  border: 1px solid var(--theme-border);
+  background-color: #FFFFFF;
+}
+
+@media (min-width: 640px) {
+  .electro-products-grid-3x2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .electro-products-grid-3x2 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.electro-product-card {
+  position: relative;
+  background-color: #FFFFFF;
+  border-right: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.25s ease, z-index 0.25s ease;
+  min-height: 330px;
+}
+
+.electro-product-card:hover {
+  z-index: 20;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+}
+
+/* Bouton rond d'ajout au panier */
+.electro-card-round-cart {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #F1F5F9;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.electro-card-round-cart:hover,
+.electro-product-card:hover .electro-card-round-cart {
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(255, 106, 0, 0.35);
+  transform: scale(1.06);
+}
+
+/* Petit pied de carte caché apparaissant au survol (:hover) */
+.electro-card-hover-footer {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 0;
+  margin-top: 0;
+  transition: opacity 0.2s ease, max-height 0.25s ease, padding 0.2s ease, margin 0.2s ease;
+}
+
+.electro-product-card:hover .electro-card-hover-footer {
+  opacity: 1;
+  max-height: 40px;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.electro-hover-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8C949E;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.electro-hover-link:hover {
+  color: var(--theme-primary);
+}
+
+/* =========================================================================
+   6. LA SECTION "PRODUIT VEDETTE CENTRAL" (GRILLE 1FR 1.5FR 1FR)
+   ========================================================================= */
+
+.electro-featured-center-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  border: 1px solid var(--theme-border);
+  background-color: #FFFFFF;
+}
+
+@media (min-width: 1024px) {
+  .electro-featured-center-grid {
+    grid-template-columns: 1fr 1.5fr 1fr;
+  }
+}
+
+.electro-center-feature-col {
+  border-right: 1px solid var(--theme-border);
+  border-left: 1px solid var(--theme-border);
+  background-color: #FFFFFF;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  .electro-center-feature-col {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--theme-border);
+    border-bottom: 1px solid var(--theme-border);
+  }
+}
+
+.electro-pill-cart-btn {
+  background-color: var(--theme-primary);
+  color: #FFFFFF;
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 13.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 13px 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 106, 0, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.electro-pill-cart-btn:hover {
+  background-color: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 106, 0, 0.38);
+}
+
+
+/* =========================================================================
+   7. PAGE PRODUIT (PDP) & ONGLETS CONTENU
+   ========================================================================= */
+
+.electro-pdp-thumb-active {
+  border: 2px solid var(--theme-primary) !important;
+  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.2);
+}
+
+.electro-bundle-card {
+  border: 1px solid var(--theme-border);
+  transition: all 0.2s ease;
+}
+
+.electro-bundle-card.checked {
+  border-color: var(--theme-primary);
+  background-color: #FFFDFB;
+}
+
+/* =========================================================================
+   8. PAGE CATALOGUE & SIDEBAR FILTRES
+   ========================================================================= */
+
+/* Range Slider Styling */
+input[type=range].electro-range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+
+input[type=range].electro-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  cursor: pointer;
+  margin-top: -5px;
+  box-shadow: 0 2px 6px rgba(255, 106, 0, 0.4);
+}
+
+input[type=range].electro-range-slider::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(255, 106, 0, 0.4);
+}
+
+input[type=range].electro-range-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: #E2E8F0;
+  border-radius: 4px;
+}
+
+/* Grayscale Brands Transition */
+.electro-brand-logo {
+  filter: grayscale(100%);
+  opacity: 0.6;
+  transition: filter 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+}
+
+.electro-brand-logo:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.05);
+}

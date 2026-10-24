@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Afri Money RDC (CD • Africell) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="afrimoney-cd">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <circle cx="0" cy="0" r="22" fill="#702082"/>
+          <path d="M -12 8 L 0 -14 L 12 8 L 5 8 L 0 -2 L -5 8 Z" fill="#ff6600"/>
+          <circle cx="0" cy="-6" r="3.5" fill="#ffffff"/>
+        </g>
+      
+    <text x="60" y="75" font-family="system-ui, sans-serif" font-size="10.5" font-weight="900" fill="#702082" text-anchor="middle">afri<tspan fill="#ff6600">money</tspan></text>
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-cd-afrimoney-4y0wh">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-cd-afrimoney-4y0wh)">
+        <rect x="0" y="0" width="9" height="9" fill="#0284c7"/><polygon points="0,7 9,2 9,4 0,9" fill="#dc2626"/><polygon points="1,2 2,4 0,3" fill="#eab308"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#7e22ce" text-anchor="middle" letter-spacing="0.3">
+        CD • Africell
+      </text>
+    </g>
+  </g>
+</svg>

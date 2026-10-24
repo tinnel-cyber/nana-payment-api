@@ -1,0 +1,1922 @@
+/* =============================================================================
+   5ÈME THÈME : THEME BEAUTY EMERALD & OR CHAMPAGNE
+   Cosmétiques, Skincare, Parfumerie & Santé / Bien-être
+   Design System Haute Couture "Fool-Proof" (Indestructible)
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+
+:root {
+  /* Palette Chromatique Signature Émeraude & Or */
+  --emerald-primary: #0F4C3A;         /* Vert Émeraude Impérial — boutons, flèches, CTA texte blanc */
+  --emerald-primary-hover: #093326;   /* Émeraude nuit au survol */
+  --emerald-gold: #C59B27;            /* Or Champagne — accroches, étoiles, bordures, badges [SALE] */
+  --emerald-bg-soft: #F4F7F4;         /* Brume végétale ultra-claire pour le Hero */
+  --emerald-card-bg: #EFECE6;         /* Sable chaud très doux pour fonds de conteneurs flacons */
+  --emerald-dark: #111C18;            /* Noir carbone pour grands titres et onglets */
+  --emerald-urgent: #D9381E;          /* Rouge vermillon pour alertes stock bas et [HOT] */
+}
+
+/* Base Wrapper Scoped */
+.beauty-emerald-root {
+  font-family: 'Outfit', sans-serif;
+  color: var(--emerald-dark);
+  background-color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* =============================================================================
+   TYPOGRAPHIE HAUTE COUTURE (Règles Strictes)
+   ============================================================================= */
+
+/* 1. Accroches au-dessus des titres H1/H2 : Bodoni Moda italique 600 Or Champagne */
+.beauty-emerald-root .emerald-eyebrow,
+.beauty-emerald-root h4.emerald-eyebrow,
+.beauty-emerald-root span.emerald-eyebrow {
+  font-family: 'Bodoni Moda', Georgia, serif !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+  color: var(--emerald-gold) !important;
+  font-size: 26px !important;
+  letter-spacing: 1px !important;
+  line-height: 1.25 !important;
+  margin-bottom: 0.35rem;
+  display: inline-block;
+}
+
+@media (max-width: 640px) {
+  .beauty-emerald-root .emerald-eyebrow,
+  .beauty-emerald-root h4.emerald-eyebrow,
+  .beauty-emerald-root span.emerald-eyebrow {
+    font-size: 20px !important;
+  }
+}
+
+/* 2. Grands Titres H1 / H2 : Syne 800 Noir Carbone */
+.beauty-emerald-root .emerald-title-giant,
+.beauty-emerald-root h1.emerald-title-giant {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  color: var(--emerald-dark) !important;
+  font-size: clamp(34px, 5vw, 56px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0;
+}
+
+.beauty-emerald-root .emerald-title-section,
+.beauty-emerald-root h2.emerald-title-section {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  color: var(--emerald-dark) !important;
+  font-size: clamp(26px, 3.5vw, 38px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.015em !important;
+}
+
+/* 3. Corps de texte, Prix FCFA & Boutons : Outfit géométrique */
+.beauty-emerald-root .emerald-font-body,
+.beauty-emerald-root p,
+.beauty-emerald-root input,
+.beauty-emerald-root select,
+.beauty-emerald-root textarea {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.beauty-emerald-root .emerald-price {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Bouton Rectangulaire Strict (Haute Couture) */
+.beauty-emerald-root .emerald-btn-strict {
+  border-radius: 0px !important;
+  background-color: var(--emerald-primary) !important;
+  color: #FFFFFF !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  padding: 16px 36px !important;
+  border: 1px solid var(--emerald-primary) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(15, 76, 58, 0.15);
+  text-decoration: none;
+}
+
+.beauty-emerald-root .emerald-btn-strict:hover {
+  background-color: var(--emerald-primary-hover) !important;
+  border-color: var(--emerald-primary-hover) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(9, 51, 38, 0.25);
+}
+
+.beauty-emerald-root .emerald-btn-strict:active {
+  transform: translateY(0);
+}
+
+/* =============================================================================
+   2. LE HEADER MINIMALISTE À MICRO-BADGES (height: 85px, fond #FFFFFF)
+   ============================================================================= */
+
+.beauty-emerald-header {
+  height: 85px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid rgba(17, 28, 24, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.beauty-emerald-header.scrolled {
+  box-shadow: 0 4px 20px rgba(17, 28, 24, 0.05);
+}
+
+/* Logo : Syne 800, 28px, #111C18 avec point Or Champagne #C59B27 */
+.beauty-emerald-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: var(--emerald-dark);
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: baseline;
+  text-decoration: none;
+  user-select: none;
+}
+
+.beauty-emerald-logo-dot {
+  color: var(--emerald-gold);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  margin-left: 1px;
+}
+
+/* Menu Horizontal Espacé */
+.beauty-emerald-nav-list {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.beauty-emerald-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.beauty-emerald-nav-link {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--emerald-dark);
+  text-decoration: none;
+  padding: 8px 2px;
+  position: relative;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.beauty-emerald-nav-link:hover,
+.beauty-emerald-nav-link.active {
+  color: var(--emerald-primary);
+}
+
+.beauty-emerald-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--emerald-gold);
+  transition: width 0.25s ease;
+}
+
+.beauty-emerald-nav-link:hover::after,
+.beauty-emerald-nav-link.active::after {
+  width: 100%;
+}
+
+/* Micro-Badges Flottants avec Flèche CSS Triangulaire vers le bas */
+.emerald-micro-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #FFFFFF;
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  z-index: 5;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+/* Flèche CSS en triangle */
+.emerald-micro-badge::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 3.5px solid currentColor;
+}
+
+.emerald-micro-badge-new {
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+}
+.emerald-micro-badge-new::after {
+  border-top-color: var(--emerald-primary);
+}
+
+.emerald-micro-badge-sale {
+  background-color: var(--emerald-gold);
+  color: #FFFFFF;
+}
+.emerald-micro-badge-sale::after {
+  border-top-color: var(--emerald-gold);
+}
+
+.emerald-micro-badge-hot {
+  background-color: var(--emerald-urgent);
+  color: #FFFFFF;
+}
+.emerald-micro-badge-hot::after {
+  border-top-color: var(--emerald-urgent);
+}
+
+/* Icônes SVG Droite (stroke-width: 1.5px, couleur #111C18) */
+.beauty-emerald-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.beauty-emerald-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--emerald-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.beauty-emerald-icon-btn svg {
+  stroke-width: 1.5px !important;
+  stroke: var(--emerald-dark) !important;
+  color: var(--emerald-dark) !important;
+  transition: stroke 0.2s ease;
+}
+
+.beauty-emerald-icon-btn:hover {
+  background-color: rgba(15, 76, 58, 0.05);
+  border-color: rgba(15, 76, 58, 0.1);
+}
+
+.beauty-emerald-icon-btn:hover svg {
+  stroke: var(--emerald-primary) !important;
+  color: var(--emerald-primary) !important;
+}
+
+/* Badge rond Émeraude #0F4C3A pour Panier */
+.beauty-emerald-cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(15, 76, 58, 0.3);
+}
+
+/* =============================================================================
+   3. LE HERO SLIDER PLEINE LARGEUR (Style Magazine de Luxe)
+   ============================================================================= */
+
+.beauty-emerald-hero {
+  position: relative;
+  width: 100%;
+  min-height: 580px;
+  background: linear-gradient(135deg, #F4F7F4 0%, #FFFFFF 60%, #EFECE6 100%);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(17, 28, 24, 0.06);
+}
+
+@media (min-width: 1024px) {
+  .beauty-emerald-hero {
+    min-height: 640px;
+  }
+}
+
+/* Motifs botaniques inline dans les coins (opacity: 0.12, couleur #0F4C3A) */
+.beauty-emerald-botanical-corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.12;
+  color: var(--emerald-primary);
+  transition: opacity 0.3s ease;
+}
+
+.beauty-emerald-botanical-tl {
+  top: -20px;
+  left: -20px;
+  width: 260px;
+  height: 260px;
+}
+
+.beauty-emerald-botanical-br {
+  bottom: -30px;
+  right: -30px;
+  width: 320px;
+  height: 320px;
+  transform: rotate(180deg);
+}
+
+.beauty-emerald-botanical-tr {
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  transform: scaleX(-1);
+}
+
+/* Grille 50/50 Desktop, empilé Mobile */
+.beauty-emerald-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 36px;
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+@media (min-width: 1024px) {
+  .beauty-emerald-hero-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    padding: 72px 48px;
+  }
+}
+
+/* Colonne Texte */
+.beauty-emerald-hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 580px;
+}
+
+.beauty-emerald-hero-desc {
+  font-family: 'Outfit', sans-serif;
+  color: #555555;
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 18px 0 28px 0;
+  max-width: 500px;
+}
+
+/* Colonne Image : conteneur aspect-ratio 4/3 ou 1/1, object-fit contain */
+.beauty-emerald-hero-media-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.beauty-emerald-hero-image-card {
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 4 / 3;
+  background-color: var(--emerald-card-bg);
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(17, 28, 24, 0.07);
+  border: 1px solid rgba(197, 155, 39, 0.2);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+@media (min-width: 1280px) {
+  .beauty-emerald-hero-image-card {
+    aspect-ratio: 1 / 1;
+    max-width: 520px;
+  }
+}
+
+.beauty-emerald-hero-image-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 60px rgba(17, 28, 24, 0.12);
+}
+
+.beauty-emerald-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important;
+  padding: 18px;
+  transition: transform 0.5s ease;
+}
+
+.beauty-emerald-hero-image-card:hover .beauty-emerald-hero-img {
+  transform: scale(1.02);
+}
+
+/* Contrôles du Slider : Boutons Carrés 44px x 44px, fond #0F4C3A collés aux extrémités */
+.beauty-emerald-slider-btn {
+  width: 44px;
+  height: 44px;
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+  transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 12px rgba(15, 76, 58, 0.25);
+}
+
+.beauty-emerald-slider-btn:hover {
+  background-color: var(--emerald-primary-hover);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.beauty-emerald-slider-btn:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.beauty-emerald-slider-btn.prev {
+  left: 0;
+}
+
+.beauty-emerald-slider-btn.next {
+  right: 0;
+}
+
+/* Pagination / Indicateurs Luxe */
+.beauty-emerald-slider-dots {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+}
+
+.beauty-emerald-dot {
+  width: 28px;
+  height: 3px;
+  background-color: rgba(15, 76, 58, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.beauty-emerald-dot.active {
+  width: 46px;
+  background-color: var(--emerald-primary);
+}
+
+/* Mini Badge Promesse / Qualité Botanique */
+.beauty-emerald-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(197, 155, 39, 0.12);
+  border: 1px solid rgba(197, 155, 39, 0.3);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--emerald-dark);
+  margin-top: 24px;
+  letter-spacing: 0.5px;
+}
+
+/* =============================================================================
+   ÉTAPE 2 : GRILLE "TRENDING PRODUCTS" & CARTE PRODUIT HAUTE COUTURE
+   ============================================================================= */
+
+/* 1. En-tête de Section & Onglets Minimalistes */
+.beauty-trending-section {
+  padding: 60px 24px 80px 24px;
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.beauty-trending-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.beauty-trending-title {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 36px !important;
+  color: var(--emerald-dark) !important;
+  margin: 4px 0 20px 0 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Barre de 3 onglets centrés en Outfit (16px) */
+.beauty-trending-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.beauty-trending-tab-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666666;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.beauty-trending-tab-btn:hover {
+  color: var(--emerald-primary);
+}
+
+.beauty-trending-tab-btn.active {
+  color: var(--emerald-primary) !important;
+  font-weight: 700 !important;
+}
+
+.beauty-trending-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--emerald-gold);
+}
+
+.beauty-trending-tab-separator {
+  color: #DDDDDD;
+  font-weight: 300;
+  user-select: none;
+}
+
+/* 2. Grille de Produits (4 colonnes Desktop, 2 Mobile) */
+.beauty-products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  row-gap: 28px;
+}
+
+@media (min-width: 768px) {
+  .beauty-products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    row-gap: 36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .beauty-products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+    row-gap: 44px;
+  }
+}
+
+/* =============================================================================
+   CARTE PRODUIT INDESTRUCTIBLE : EmeraldProductCard
+   ============================================================================= */
+
+.emerald-product-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #FFFFFF;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+
+/* Conteneur Image : aspect-ratio: 4 / 5, #EFECE6 (Sable chaud), padding: 24px */
+.emerald-card-media {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-color: var(--emerald-card-bg);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(17, 28, 24, 0.03);
+}
+
+.emerald-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.emerald-product-card:hover .emerald-card-img {
+  transform: scale(1.05);
+}
+
+/* Badge Promo Rond (46px x 46px, Or Champagne #C59B27, Outfit 12px gras) */
+.emerald-round-promo-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background-color: var(--emerald-gold);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(197, 155, 39, 0.35);
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+/* Icônes Flottantes au Survol (Hover) : top: 15px, right: 15px */
+.emerald-card-hover-actions {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.emerald-product-card:hover .emerald-card-hover-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.emerald-card-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  color: var(--emerald-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emerald-card-action-btn:hover {
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+  transform: scale(1.08);
+}
+
+.emerald-card-action-btn.active {
+  color: #D9381E;
+}
+
+/* Corps de la Carte (centré text-align: center, padding-top: 16px) */
+.emerald-card-body {
+  text-align: center;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+/* Étoiles d'avis en Or Champagne #C59B27 (14px) */
+.emerald-card-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.emerald-card-star {
+  width: 14px;
+  height: 14px;
+  fill: var(--emerald-gold);
+  color: var(--emerald-gold);
+}
+
+/* Titre du Produit : Outfit 16px, 600, #111C18, strictement bridé à 1 ligne */
+.emerald-card-title {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--emerald-dark) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+  margin: 2px 0 0 0 !important;
+  padding: 0 4px;
+  transition: color 0.2s ease;
+}
+
+.emerald-product-card:hover .emerald-card-title {
+  color: var(--emerald-primary) !important;
+}
+
+/* Prix : Outfit gras (18px, #0F4C3A), ancien prix barré #888 */
+.emerald-card-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.emerald-card-price {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--emerald-primary);
+  line-height: 1;
+}
+
+.emerald-card-old-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: #888888;
+  text-decoration: line-through;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* Pastilles de Variantes / Teintes (Swatches) */
+.emerald-card-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 6px 0 2px 0;
+  min-height: 22px;
+}
+
+.emerald-swatch-item {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.emerald-swatch-item:hover {
+  transform: scale(1.15);
+  border-color: var(--emerald-dark);
+}
+
+.emerald-swatch-item.active {
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3.5px var(--emerald-primary);
+}
+
+/* Infobulle Noire (Tooltip) au survol */
+.emerald-swatch-tooltip {
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #111C18;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 25;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.emerald-swatch-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 3px;
+  border-style: solid;
+  border-color: #111C18 transparent transparent transparent;
+}
+
+.emerald-swatch-item:hover .emerald-swatch-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.emerald-swatch-more {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #777777;
+  margin-left: 2px;
+  user-select: none;
+}
+
+/* Boutons d'Action Nanasore : Côte à Côte */
+.emerald-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.emerald-card-btn-tunnel {
+  border: 1px solid var(--emerald-primary) !important;
+  color: var(--emerald-primary) !important;
+  background-color: transparent !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  padding: 10px 4px !important;
+  border-radius: 0px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emerald-card-btn-tunnel:hover {
+  background-color: rgba(15, 76, 58, 0.08) !important;
+}
+
+.emerald-card-btn-buy {
+  background-color: var(--emerald-primary) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--emerald-primary) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  padding: 10px 4px !important;
+  border-radius: 0px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(15, 76, 58, 0.2);
+}
+
+.emerald-card-btn-buy:hover {
+  background-color: var(--emerald-primary-hover) !important;
+  border-color: var(--emerald-primary-hover) !important;
+  box-shadow: 0 4px 12px rgba(9, 51, 38, 0.3);
+}
+
+/* =============================================================================
+   ÉTAPE 3 : PAGE PRODUIT (PDP) AVEC SIDEBAR 270PX & LES 3 BOOSTERS DE VENTE
+   ============================================================================= */
+
+.beauty-pdp-wrapper {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 24px 16px 80px 16px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .beauty-pdp-wrapper {
+    padding: 32px 24px 100px 24px;
+  }
+}
+
+/* Fil d'Ariane / Breadcrumb */
+.beauty-pdp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: #777777;
+  margin-bottom: 28px;
+}
+
+.beauty-pdp-breadcrumb a,
+.beauty-pdp-breadcrumb button {
+  color: #777777;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.beauty-pdp-breadcrumb a:hover,
+.beauty-pdp-breadcrumb button:hover {
+  color: var(--emerald-primary);
+}
+
+.beauty-pdp-breadcrumb-active {
+  color: var(--emerald-dark) !important;
+  font-weight: 600;
+}
+
+/* Layout Global (Desktop 270px 1fr avec gap: 40px) */
+.beauty-pdp-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+}
+
+@media (min-width: 1024px) {
+  .beauty-pdp-layout {
+    grid-template-columns: 270px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   A. COLONNE GAUCHE (SIDEBAR 270PX)
+   ----------------------------------------------------------------------------- */
+.beauty-pdp-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .beauty-pdp-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 270px;
+    position: sticky;
+    top: 105px;
+  }
+}
+
+/* 1. Bloc "Parcourir par Catégories" */
+.beauty-sidebar-box {
+  border: 1px solid #E5E5E5;
+  padding: 20px;
+  background-color: #FFFFFF;
+}
+
+.beauty-sidebar-title {
+  font-family: 'Syne', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--emerald-dark) !important;
+  margin: 0 0 16px 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--emerald-primary);
+  padding-bottom: 8px;
+}
+
+.beauty-category-accordion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.beauty-category-accordion-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: #333333;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.beauty-category-accordion-btn:hover {
+  background-color: var(--emerald-bg-soft);
+  color: var(--emerald-primary);
+  padding-left: 10px;
+}
+
+.beauty-category-accordion-btn.active {
+  background-color: var(--emerald-bg-soft);
+  color: var(--emerald-primary);
+  font-weight: 700;
+}
+
+/* 2. Bloc "Collection Vedette" (Featured Collection) */
+.beauty-featured-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.beauty-featured-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F0F0F0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.beauty-featured-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.beauty-featured-item:hover {
+  transform: translateX(3px);
+}
+
+.beauty-featured-thumb {
+  width: 70px;
+  height: 70px;
+  background-color: var(--emerald-card-bg);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.beauty-featured-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.beauty-featured-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.beauty-featured-item-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--emerald-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beauty-featured-item-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--emerald-primary);
+}
+
+.beauty-sidebar-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--emerald-dark);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #EAEAEA;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.beauty-sidebar-view-all:hover {
+  color: var(--emerald-primary);
+}
+
+/* 3. Carte Promo Verticale */
+.beauty-sidebar-promo-card {
+  background-color: var(--emerald-card-bg);
+  padding: 24px 20px;
+  text-align: center;
+  border: 1px solid rgba(197, 155, 39, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(17, 28, 24, 0.04);
+}
+
+/* -----------------------------------------------------------------------------
+   B. COLONNE DROITE : HAUT (FICHE PRODUIT 50/50)
+   ----------------------------------------------------------------------------- */
+.beauty-pdp-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .beauty-pdp-main-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+/* Sous-colonne Galerie (Gauche) */
+.beauty-gallery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.beauty-main-image-container {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-color: var(--emerald-card-bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: crosshair;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.beauty-main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 24px;
+  transition: transform 0.15s ease-out;
+  transform-origin: center center;
+}
+
+.beauty-main-image.zoomed {
+  transform: scale(2);
+}
+
+/* Carrousel de 4 Miniatures Carrées */
+.beauty-thumbnails-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.beauty-thumb-btn {
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  background-color: var(--emerald-card-bg);
+  border: 1.5px solid transparent;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.beauty-thumb-btn.active {
+  border-color: var(--emerald-primary) !important;
+  box-shadow: 0 0 0 1px var(--emerald-primary);
+}
+
+.beauty-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.beauty-thumb-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 0px;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  color: var(--emerald-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.beauty-thumb-nav-btn:hover {
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+  border-color: var(--emerald-primary);
+}
+
+/* Sous-colonne Achat (Droite) */
+.beauty-buy-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.beauty-buy-title {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 28px !important;
+  color: var(--emerald-dark) !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+}
+
+.beauty-buy-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.beauty-buy-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--emerald-primary);
+  line-height: 1;
+}
+
+.beauty-buy-old-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #888888;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.beauty-meta-row {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid #F0F0F0;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.beauty-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #555555;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  transition: color 0.2s ease;
+}
+
+.beauty-quick-link:hover {
+  color: var(--emerald-primary);
+}
+
+/* Jauge d'Urgence Stock */
+.beauty-stock-urgency-box {
+  background-color: #FFFDF8;
+  border: 1px solid #F3E5C8;
+  padding: 12px 14px;
+  border-radius: 2px;
+}
+
+.beauty-stock-gauge-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #EAEAEA;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.beauty-stock-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--emerald-gold) 0%, var(--emerald-primary) 100%);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* Sélecteurs de Variantes (Boutons carrés 42px x 42px) */
+.beauty-variant-grid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.beauty-size-btn {
+  width: 48px;
+  height: 42px;
+  border: 1px solid #D5D5D5;
+  background-color: #FFFFFF;
+  color: var(--emerald-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.beauty-size-btn.active {
+  background-color: var(--emerald-dark) !important;
+  color: #FFFFFF !important;
+  border-color: var(--emerald-dark) !important;
+}
+
+/* Quantité & Bouton Pleine Largeur 52px */
+.beauty-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.beauty-qty-selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid #D5D5D5;
+  height: 52px;
+  background-color: #FFFFFF;
+}
+
+.beauty-qty-btn {
+  width: 40px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--emerald-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.beauty-qty-btn:hover {
+  background-color: #F5F5F5;
+}
+
+.beauty-qty-display {
+  width: 40px;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--emerald-dark);
+}
+
+.beauty-btn-order-full {
+  flex: 1;
+  height: 52px;
+  background-color: var(--emerald-primary);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(15, 76, 58, 0.2);
+}
+
+.beauty-btn-order-full:hover {
+  background-color: var(--emerald-primary-hover);
+  box-shadow: 0 6px 18px rgba(9, 51, 38, 0.3);
+}
+
+/* Message d'expédition dynamique */
+.beauty-dispatch-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  color: #555555;
+  background-color: var(--emerald-bg-soft);
+  padding: 8px 12px;
+  border-left: 3px solid var(--emerald-gold);
+}
+
+/* Grille de Réassurance (2x2) */
+.beauty-reassurance-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #F0F0F0;
+}
+
+.beauty-reassurance-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #FAFAFA;
+  border: 1px solid #F0F0F0;
+}
+
+.beauty-reassurance-item-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  color: var(--emerald-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   C. LES 3 BOOSTERS DE CONVERSION (SOUS LA FICHE PRODUIT)
+   ----------------------------------------------------------------------------- */
+.beauty-boosters-wrapper {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Booster 1 : Mini-Vidéos UGC "Complétez votre routine" */
+.beauty-video-reels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.beauty-reel-card {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #111C18;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.beauty-reel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.beauty-reel-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.88;
+  transition: opacity 0.2s ease, transform 0.4s ease;
+}
+
+.beauty-reel-card:hover .beauty-reel-cover {
+  opacity: 0.95;
+  transform: scale(1.04);
+}
+
+.beauty-reel-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  color: var(--emerald-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.beauty-reel-card:hover .beauty-reel-play-btn {
+  background: var(--emerald-primary);
+  color: #FFFFFF;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.beauty-reel-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 10px;
+  background: linear-gradient(180deg, transparent 0%, rgba(17, 28, 24, 0.9) 100%);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Booster 2 : Acheter avec (Buy It With) */
+.beauty-buy-with-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.beauty-buy-with-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #EAEAEA;
+  transition: border-color 0.2s ease;
+}
+
+.beauty-buy-with-card:hover {
+  border-color: var(--emerald-primary);
+}
+
+.beauty-buy-with-thumb {
+  width: 55px;
+  height: 55px;
+  background-color: var(--emerald-card-bg);
+  flex-shrink: 0;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.beauty-buy-with-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.beauty-btn-add-gold {
+  background-color: var(--emerald-gold);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.beauty-btn-add-gold:hover {
+  background-color: #A37E17;
+  transform: translateY(-1px);
+}
+
+/* Booster 3 : Fréquemment achetés ensemble (Pack Routine Complet) */
+.beauty-frequently-bundle-box {
+  border: 1px solid #EAEAEA;
+  padding: 24px;
+  background-color: #FAFAFA;
+}
+
+.beauty-bundle-visual-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.beauty-bundle-product-thumb {
+  width: 80px;
+  height: 80px;
+  background-color: var(--emerald-card-bg);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E0E0E0;
+}
+
+.beauty-bundle-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.beauty-bundle-plus-sign {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #999999;
+}
+
+.beauty-bundle-total-panel {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
+  min-width: 200px;
+}
+
+.beauty-bundle-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #E5E5E5;
+}
+
+.beauty-bundle-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--emerald-dark);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* =============================================================================
+   ÉTAPE 4 : ONGLETS RECTANGULAIRES, AVIS IMMERSIFS & NOTIFICATION LIVE
+   ============================================================================= */
+
+/* 1. Les 4 Onglets Rectangulaires Centrés */
+.beauty-tab-btn {
+  padding: 12px 28px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border-radius: 0px !important;
+  border: 1px solid transparent !important;
+  background-color: var(--emerald-card-bg) !important; /* Sable chaud #EFECE6 */
+  color: var(--emerald-dark) !important;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.beauty-tab-btn:hover:not(.active) {
+  background-color: #E2DDD5 !important;
+}
+
+.beauty-tab-btn.active {
+  background-color: var(--emerald-dark) !important; /* Noir carbone #111C18 */
+  color: #FFFFFF !important;
+  border-color: var(--emerald-dark) !important;
+  box-shadow: 0 4px 12px rgba(17, 28, 24, 0.2);
+}
+
+/* 2. Carrousel d'Avis Immersifs (50/50 Avant/Après & Lifestyle) */
+.beauty-testimonial-card {
+  border-radius: 16px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 360px;
+  background-color: #FFFFFF;
+  border: 1px solid #EAE6DE;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.beauty-testimonial-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(15, 76, 58, 0.08);
+}
+
+@media (max-width: 640px) {
+  .beauty-testimonial-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .beauty-testimonial-left {
+    min-height: 240px;
+  }
+}
+
+.beauty-testimonial-left {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--emerald-card-bg);
+}
+
+.beauty-testimonial-left img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.beauty-testimonial-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--emerald-bg-soft);
+  padding: 24px;
+}
+
+/* 3. Notification "Preuve Sociale en Direct" (Live Sales Popup) */
+.beauty-live-sales-popup {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 900;
+  background: #FFFFFF;
+  border-left: 4px solid var(--emerald-primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  max-width: 320px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border-top: 1px solid #F0F0F0;
+  border-right: 1px solid #F0F0F0;
+  border-bottom: 1px solid #F0F0F0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.beauty-live-sales-popup:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+}
+
+.beauty-live-sales-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background-color: var(--emerald-card-bg);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #E8E5DD;
+}
+
+.beauty-live-sales-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.beauty-live-sales-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.beauty-live-sales-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+.beauty-live-sales-close:hover {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .beauty-live-sales-popup {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+
+

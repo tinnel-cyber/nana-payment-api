@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="14" fill="url(#vitrine_grad)" />
+  <path d="M12 20L15 13H33L36 20V34H12V20Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M12 20C12 22.2 13.8 24 16 24C18.2 24 20 22.2 20 20C20 22.2 21.8 24 24 24C26.2 24 28 22.2 28 20C28 22.2 29.8 24 32 24C34.2 24 36 22.2 36 20" stroke="white" stroke-width="2"/>
+  <rect x="21" y="27" width="6" height="7" fill="white" fill-opacity="0.9"/>
+  <defs>
+    <linearGradient id="vitrine_grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+</svg>

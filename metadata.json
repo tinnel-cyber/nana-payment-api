@@ -1,0 +1,11 @@
+{
+  "name": "Remix Nana",
+  "description": "Caisse de boutique ultra-rapide optimisée pour mobile avec commande vocale, cahier de dettes, inventaire de stock et agent IA Gemini d\u0027analyse financière.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

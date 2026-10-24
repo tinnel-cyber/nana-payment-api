@@ -1,0 +1,842 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =============================================================================
+   DESIGN TOKENS MULTI-THÈMES ARCHITECTURE NANASORE
+   Classes maîtresses : .theme-dark, .theme-light, .theme-blue
+   ============================================================================= */
+
+/* 1. THÈME DARK (Défaut - Sombre Haute Fidélité Nanasore) */
+:root,
+.theme-dark,
+html.theme-dark,
+body.theme-dark {
+  --bg-primary: #070b14;
+  --bg-secondary: #0d1527;
+  --bg-card: #131f38;
+  --bg-card-hover: #1a2b4c;
+  --bg-input: #0a1122;
+  --text-body: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: rgba(51, 65, 85, 0.65);
+  --border-subtle: rgba(51, 65, 85, 0.3);
+  --brand-primary: #2563eb;
+  --brand-hover: #1d4ed8;
+  --accent-badge: rgba(37, 99, 235, 0.2);
+  color-scheme: dark;
+}
+
+/* 2. THÈME LIGHT (Pur Blanc - Clean SaaS / Accessibilité Visuelle) */
+.theme-light,
+html.theme-light,
+body.theme-light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #f8fafc;
+  --text-body: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --brand-primary: #2563eb;
+  --brand-hover: #1d4ed8;
+  --accent-badge: #eff6ff;
+  color-scheme: light;
+}
+
+/* 3. THÈME BLUE (Brand Pur Bleu - Signature Nanasore Royal Tech) */
+.theme-blue,
+html.theme-blue,
+body.theme-blue {
+  --bg-primary: #0a192f;
+  --bg-secondary: #0f2744;
+  --bg-card: #13365e;
+  --bg-card-hover: #184475;
+  --bg-input: #0a2342;
+  --text-body: #f0f7ff;
+  --text-muted: #93c5fd;
+  --border-color: #1e4976;
+  --border-subtle: rgba(30, 73, 118, 0.45);
+  --brand-primary: #0284c7;
+  --brand-hover: #0369a1;
+  --accent-badge: rgba(14, 165, 233, 0.25);
+  color-scheme: dark;
+}
+
+/* Tokens Sémantiques Tailwind v4 */
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-input: var(--bg-input);
+
+  --color-text-body: var(--text-body);
+  --color-text-muted: var(--text-muted);
+
+  --color-border-theme: var(--border-color);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-brand-primary: var(--brand-primary);
+
+  /* Charte Graphique VIP & Live Shopping : Bleu Royal (#4169E1) et Blanc Pur (#FFFFFF) */
+  --color-royal-blue: #4169E1;
+  --color-royal-blue-hover: #3154b3;
+  --color-pure-white: #ffffff;
+}
+
+/* Classes Utilitaires Sémantiques Universelles */
+@layer utilities {
+  .bg-primary { background-color: var(--bg-primary) !important; }
+  .bg-secondary { background-color: var(--bg-secondary) !important; }
+  .bg-card { background-color: var(--bg-card) !important; }
+  .bg-card-hover:hover { background-color: var(--bg-card-hover) !important; }
+  .bg-input { background-color: var(--bg-input) !important; }
+
+  .text-body { color: var(--text-body) !important; }
+  .text-muted { color: var(--text-muted) !important; }
+
+  .border-theme { border-color: var(--border-color) !important; }
+  .border-subtle { border-color: var(--border-subtle) !important; }
+
+  /* Utilitaires Charte Graphique Bleu Royal & Blanc */
+  .bg-royal-blue { background-color: #4169E1 !important; }
+  .bg-royal-blue-hover:hover { background-color: #3154b3 !important; }
+  .text-royal-blue { color: #4169E1 !important; }
+  .border-royal-blue { border-color: #4169E1 !important; }
+  .ring-royal-blue { --tw-ring-color: #4169E1 !important; }
+  .bg-pure-white { background-color: #ffffff !important; }
+}
+
+@layer base {
+  html, body {
+    min-height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: 100vw;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-body) !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+    max-width: 100vw;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-body) !important;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  /* Anti-freeze & touch momentum for all scrollable containers on mobile */
+  .overflow-y-auto, [data-scroll-container] {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+  }
+  .overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-x pan-y !important;
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  display: flex !important;
+  width: max-content !important;
+  animation: marquee 25s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover,
+.animate-marquee-elite:hover,
+.animate-marquee-features:hover {
+  animation-play-state: paused !important;
+}
+
+@keyframes marqueeElite {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee-elite {
+  display: flex !important;
+  width: max-content !important;
+  animation: marqueeElite 28s linear infinite !important;
+  will-change: transform;
+}
+
+@keyframes marqueeFeatures {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee-features {
+  display: flex !important;
+  width: max-content !important;
+  animation: marqueeFeatures 35s linear infinite !important;
+  will-change: transform;
+}
+
+.scrollbar-hide::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-hide,
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Scrollbars fines, discrètes et élégantes façon macOS (Silicon Valley UX) */
+.custom-scrollbar,
+.scrollbar-thin,
+.mac-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar,
+.mac-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track,
+.mac-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb,
+.mac-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.mac-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.6); /* Lueur ambrée chaleureuse au survol */
+}
+
+/* Élimination du délai de 300ms au toucher sur mobile et écrans tactiles de caisse */
+button, [role="button"], input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Format d'impression thermique pour imprimantes 80mm & 58mm (ESC/POS, Bluetooth, USB) */
+@media print {
+  /* Masquer tous les éléments de l'application */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Rendre uniquement visible la zone de reçu thermique */
+  #thermal-receipt-print-area,
+  #thermal-receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  #thermal-receipt-print-area {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+    padding: 3mm 4mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    display: block !important;
+    z-index: 999999 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    line-height: 1.25 !important;
+  }
+
+  #thermal-receipt-print-area.width-80mm {
+    width: 76mm !important;
+    max-width: 76mm !important;
+    font-size: 11px !important;
+  }
+
+  #thermal-receipt-print-area.width-58mm {
+    width: 54mm !important;
+    max-width: 54mm !important;
+    font-size: 9.5px !important;
+  }
+
+  @page {
+    margin: 0;
+    size: auto;
+  }
+}
+
+/* =============================================================================
+   WIDGET DUO ASSISTANCE & FORMATION NANASORE (SARAH & LE FONDATEUR)
+   ============================================================================= */
+
+.nana-widget-container {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  z-index: 99998;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: auto;
+  user-select: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (min-width: 640px) {
+  .nana-widget-container {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+/* 1. Bulle d'accueil / Tooltip de Sarah */
+.nana-welcome-tooltip {
+  position: relative;
+  margin-bottom: 12px;
+  max-width: 290px;
+  background: rgba(13, 21, 39, 0.96);
+  border: 2px solid #6366f1;
+  color: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  box-shadow: 0 12px 30px rgba(7, 11, 20, 0.85);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  animation: nanaFadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.nana-welcome-tooltip:hover {
+  border-color: #818cf8;
+  transform: translateY(-2px);
+}
+
+.nana-welcome-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  right: 26px;
+  width: 12px;
+  height: 12px;
+  background: #0d1527;
+  border-right: 2px solid #6366f1;
+  border-bottom: 2px solid #6366f1;
+  transform: rotate(45deg);
+}
+
+.nana-tooltip-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.nana-tooltip-close:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 2. Carte Principale Dépliée (Lecteur + Duo) */
+.nana-card {
+  width: calc(100vw - 32px);
+  max-width: 380px;
+  background: rgba(13, 21, 39, 0.96);
+  border: 2px solid rgba(99, 102, 241, 0.7);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(7, 11, 20, 0.95);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  margin-bottom: 12px;
+  animation: nanaScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+}
+
+.nana-header {
+  padding: 12px 14px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 27, 75, 0.95));
+  border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nana-header-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nana-header-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #818cf8;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.nana-header-title {
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.nana-header-sub {
+  font-size: 11px;
+  color: #34d399;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.nana-trainer-banner {
+  background: linear-gradient(90deg, rgba(234, 88, 12, 0.18), rgba(99, 102, 241, 0.22));
+  border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.nana-trainer-banner strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* 3. Lecteur Vidéo & Poster du Fondateur */
+.nana-video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  overflow: hidden;
+}
+
+.nana-video-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 4. Corps & Boutons d'Action */
+.nana-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: #0a0f1d;
+}
+
+.nana-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: #ffffff;
+  border: 1px solid rgba(165, 180, 252, 0.4);
+  padding: 11px 14px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.nana-btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca, #1d4ed8);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+  transform: translateY(-1px);
+}
+
+.nana-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.nana-btn-secondary {
+  background: rgba(30, 41, 59, 0.85);
+  color: #e2e8f0;
+  border: 1px solid rgba(71, 85, 105, 0.7);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.nana-btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: #94a3b8;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.nana-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* 5. Bouton Rond Avatar (Sarah) */
+.nana-avatar-btn {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nana-avatar-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.7);
+}
+
+.nana-avatar-btn:active {
+  transform: scale(0.95);
+}
+
+.nana-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  display: block;
+}
+
+.nana-online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2.5px solid #070b14;
+  box-shadow: 0 0 8px #10b981;
+}
+
+@keyframes nanaScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes nanaFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+   CARTE PRODUIT DIGITALE - FORMAT CARRÉ (FACEBOOK / INSTAGRAM ADS 1080x1080)
+   ============================================================================= */
+/* 1. Le conteneur de l'image force le carré parfait */
+.product-image-container {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Le fameux format carré Facebook Ads */
+  overflow: hidden;
+  border-radius: 12px 12px 0 0; /* Garde l'arrondi premium juste en haut */
+  background-color: #F8F9FA; /* Fond léger au cas où l'image a un fond transparent */
+  position: relative;
+}
+
+/* 2. L'image remplit le conteneur sans se déformer */
+.product-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Essentiel : remplit tout le carré proprement */
+  display: block;
+}
+
+/* =============================================================================
+   ANIMATION DU TIROIR DÉPLIABLE (SLIDE-OUT SUR DESKTOP, BOTTOM-SHEET SUR MOBILE)
+   ============================================================================= */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideInFromRight 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 767px) {
+  .animate-slide-in {
+    animation: slideInFromBottom 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 2.6s ease-in-out infinite;
+}
+
+.animate-bounce-subtle:hover {
+  animation-play-state: paused;
+}
+
+/* =============================================================================
+   3D FLIP CARD & PERSPECTIVE UTILITIES (WAMEET MYSTERY GIFT & FLIP INTERACTIONS)
+   ============================================================================= */
+.perspective-1000 {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+
+.rotate-y-0 {
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+}
+
+/* =============================================================================
+   PROMPT 26: WAMEET VIP DISCOVERY HUB (CARROUSELS INFINIS & EFFET SHIMMER)
+   ============================================================================= */
+
+@keyframes vipShimmerGold {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+@keyframes vipShimmerSilver {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+@keyframes infiniteScrollTrack {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes infiniteScrollTrackReverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Shimmer Doré / Or pour Cartes Salons d'Affaires VIP */
+.vip-shimmer-gold {
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-shimmer-gold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(245, 158, 11, 0.24) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vip-shimmer-gold:hover::after {
+  opacity: 1;
+  animation: vipShimmerGold 1.8s ease-in-out infinite;
+}
+
+/* Shimmer Argent / Bleu Nuit pour Cartes Salles de Cours VIP */
+.vip-shimmer-silver {
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-shimmer-silver::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(56, 189, 248, 0.28) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vip-shimmer-silver:hover::after {
+  opacity: 1;
+  animation: vipShimmerSilver 1.8s ease-in-out infinite;
+}
+
+/* Défilement continu infini */
+.animate-infinite-carousel {
+  display: flex;
+  width: max-content;
+  animation: infiniteScrollTrack 42s linear infinite;
+}
+
+.animate-infinite-carousel:hover {
+  animation-play-state: paused;
+}
+
+.animate-infinite-carousel-fast {
+  display: flex;
+  width: max-content;
+  animation: infiniteScrollTrack 26s linear infinite;
+}
+
+.animate-infinite-carousel-fast:hover {
+  animation-play-state: paused;
+}
+
+.animate-infinite-carousel-slow {
+  display: flex;
+  width: max-content;
+  animation: infiniteScrollTrack 65s linear infinite;
+}
+
+.animate-infinite-carousel-slow:hover {
+  animation-play-state: paused;
+}
+
+.animate-infinite-carousel-reverse {
+  display: flex;
+  width: max-content;
+  animation: infiniteScrollTrackReverse 42s linear infinite;
+}
+
+.animate-infinite-carousel-reverse:hover {
+  animation-play-state: paused;
+}
+
+
+

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- M-Pesa Vodacom Tanzanie (TZ • Vodacom) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="mpesa-tz">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <rect x="-30" y="-18" width="60" height="36" rx="12" fill="#00a859"/>
+          <path d="M -14 0 L -4 10 L 14 -8" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <rect x="8" y="-14" width="14" height="14" rx="4" fill="#e11900"/>
+          <text x="15" y="-4" font-family="system-ui, sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">M</text>
+        </g>
+      
+    <text x="60" y="75" font-family="'Arial Black', sans-serif" font-size="12" font-weight="900" fill="#00a859" text-anchor="middle" letter-spacing="0.5">M-PESA</text>
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-tz-mpesa-uowu8">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-tz-mpesa-uowu8)">
+        <polygon points="0,0 9,0 0,9" fill="#16a34a"/><polygon points="0,9 9,0 9,9" fill="#0284c7"/><polygon points="0,8 8,0 9,1 1,9" fill="#facc15"/><polygon points="0,9 9,0 9,2 2,9" fill="#000000"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#15803d" text-anchor="middle" letter-spacing="0.3">
+        TZ • Vodacom
+      </text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="14" fill="url(#pos_grad)" />
+  <rect x="14" y="14" width="20" height="20" rx="3" stroke="white" stroke-width="2"/>
+  <rect x="18" y="18" width="12" height="4" rx="1" fill="white"/>
+  <circle cx="19" cy="26" r="1.5" fill="white"/>
+  <circle cx="24" cy="26" r="1.5" fill="white"/>
+  <circle cx="29" cy="26" r="1.5" fill="white"/>
+  <circle cx="19" cy="30" r="1.5" fill="white"/>
+  <circle cx="24" cy="30" r="1.5" fill="white"/>
+  <circle cx="29" cy="30" r="1.5" fill="white"/>
+  <defs>
+    <linearGradient id="pos_grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#059669"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+  </defs>
+</svg>

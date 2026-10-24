@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- TogoCom T-Money (TG • T-Money) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="togocom-tg">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <rect x="-30" y="-18" width="60" height="36" rx="12" fill="#009639"/>
+          <path d="M -20 -6 C -10 -14, 10 -14, 20 -6" stroke="#ffcc00" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <text x="0" y="7" font-family="'Arial Black', sans-serif" font-size="13" font-weight="900" fill="#ffffff" text-anchor="middle">TMoney</text>
+        </g>
+      
+    <text x="60" y="75" font-family="system-ui, sans-serif" font-size="11" font-weight="900" fill="#009639" text-anchor="middle">togocom</text>
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-tg-togocom-vkmjc">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-tg-togocom-vkmjc)">
+        <rect x="0" y="0" width="9" height="9" fill="#16a34a"/><rect x="0" y="1.8" width="9" height="1.8" fill="#facc15"/><rect x="0" y="5.4" width="9" height="1.8" fill="#facc15"/><rect x="0" y="0" width="3.6" height="3.6" fill="#dc2626"/><circle cx="1.8" cy="1.8" r="0.8" fill="#ffffff"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#166534" text-anchor="middle" letter-spacing="0.3">
+        TG • T-Money
+      </text>
+    </g>
+  </g>
+</svg>

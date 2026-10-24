@@ -1,0 +1,675 @@
+{
+  "version": "2.0.0",
+  "environment": "production",
+  "defaultGateway": "sebpay",
+  "gatewayBaseUrl": "https://newapi.sebpay.bj/api/v1/",
+  "productionProxy": "https://nana-payment-api.onrender.com",
+  "staticIp": "54.195.3.54",
+  "currencyDefaults": {
+    "UEMOA": "XOF",
+    "CEMAC": "XAF",
+    "INTERNATIONAL": "EUR"
+  },
+  "countries": [
+    {
+      "code": "BF",
+      "name": "Burkina Faso",
+      "flag": "🇧🇫",
+      "dialCode": "+226",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Ouagadougou",
+      "operators": [
+        {
+          "id": "orange",
+          "name": "Orange Money Burkina",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "*144*4*6*{amount}#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Burkina",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9",
+          "ussdTemplate": "*555*2*1*{amount}#"
+        },
+        {
+          "id": "wave",
+          "name": "Wave Burkina Faso",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        },
+        {
+          "id": "wligdicash",
+          "name": "LigdiCash Burkina",
+          "code": "LIGDICASH",
+          "needsOtp": false,
+          "brandColor": "#00875A"
+        }
+      ]
+    },
+    {
+      "code": "CI",
+      "name": "Côte d'Ivoire",
+      "flag": "🇨🇮",
+      "dialCode": "+225",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Abidjan",
+      "operators": [
+        {
+          "id": "wave",
+          "name": "Wave Côte d'Ivoire",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        },
+        {
+          "id": "orange",
+          "name": "Orange Money CI",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "#144*82#"
+        },
+        {
+          "id": "mtn",
+          "name": "MTN MoMo CI",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*133#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money CI",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9",
+          "ussdTemplate": "*155#"
+        }
+      ]
+    },
+    {
+      "code": "ML",
+      "name": "Mali",
+      "flag": "🇲🇱",
+      "dialCode": "+223",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Bamako",
+      "operators": [
+        {
+          "id": "orange",
+          "name": "Orange Money Mali",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "#144#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Mali (Malitel)",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9"
+        },
+        {
+          "id": "wave",
+          "name": "Wave Mali",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        }
+      ]
+    },
+    {
+      "code": "SN",
+      "name": "Sénégal",
+      "flag": "🇸🇳",
+      "dialCode": "+221",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Dakar",
+      "operators": [
+        {
+          "id": "wave",
+          "name": "Wave Sénégal",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        },
+        {
+          "id": "orange",
+          "name": "Orange Money Sénégal",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "#144#"
+        },
+        {
+          "id": "free",
+          "name": "Free Money Sénégal",
+          "code": "FREE_MONEY",
+          "needsOtp": false,
+          "brandColor": "#ED1C24",
+          "ussdTemplate": "#150#"
+        }
+      ]
+    },
+    {
+      "code": "TG",
+      "name": "Togo",
+      "flag": "🇹🇬",
+      "dialCode": "+228",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Lomé",
+      "operators": [
+        {
+          "id": "tmoney",
+          "name": "T-Money (TogoCom)",
+          "code": "TMONEY",
+          "needsOtp": false,
+          "brandColor": "#F7A800",
+          "ussdTemplate": "*145#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Togo",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9",
+          "ussdTemplate": "*155#"
+        },
+        {
+          "id": "wave",
+          "name": "Wave Togo",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        }
+      ]
+    },
+    {
+      "code": "BJ",
+      "name": "Bénin",
+      "flag": "🇧🇯",
+      "dialCode": "+229",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Cotonou",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Bénin",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*880#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Bénin",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9",
+          "ussdTemplate": "*855#"
+        },
+        {
+          "id": "celtiis",
+          "name": "Celtiis Cash Bénin",
+          "code": "CELTIIS",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        }
+      ]
+    },
+    {
+      "code": "NE",
+      "name": "Niger",
+      "flag": "🇳🇪",
+      "dialCode": "+227",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Niamey",
+      "operators": [
+        {
+          "id": "airtel",
+          "name": "Airtel Money Niger",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*444#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Niger (Flooz)",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9"
+        },
+        {
+          "id": "wave",
+          "name": "Wave Niger",
+          "code": "WAVE",
+          "needsOtp": false,
+          "brandColor": "#1DC3F4"
+        },
+        {
+          "id": "zamani",
+          "name": "Zamani Telecom Niger",
+          "code": "ZAMANI",
+          "needsOtp": false,
+          "brandColor": "#8B5CF6"
+        }
+      ]
+    },
+    {
+      "code": "GN",
+      "name": "Guinée",
+      "flag": "🇬🇳",
+      "dialCode": "+224",
+      "currency": "GNF",
+      "currencySymbol": "FG",
+      "zone": "UEMOA",
+      "defaultCity": "Conakry",
+      "operators": [
+        {
+          "id": "orange",
+          "name": "Orange Money Guinée",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "*144#"
+        },
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Guinée (Areeba)",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "code": "CM",
+      "name": "Cameroun",
+      "flag": "🇨🇲",
+      "dialCode": "+237",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "Douala",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Cameroun",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*126#"
+        },
+        {
+          "id": "orange",
+          "name": "Orange Money Cameroun",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "#150#"
+        }
+      ]
+    },
+    {
+      "code": "GA",
+      "name": "Gabon",
+      "flag": "🇬🇦",
+      "dialCode": "+241",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "Libreville",
+      "operators": [
+        {
+          "id": "airtel",
+          "name": "Airtel Money Gabon",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*150#"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Gabon",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9"
+        }
+      ]
+    },
+    {
+      "code": "CG",
+      "name": "Congo-Brazzaville",
+      "flag": "🇨🇬",
+      "dialCode": "+242",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "Brazzaville",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Congo",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*105#"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money Congo",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*128#"
+        }
+      ]
+    },
+    {
+      "code": "TD",
+      "name": "Tchad",
+      "flag": "🇹🇩",
+      "dialCode": "+235",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "N'Djamena",
+      "operators": [
+        {
+          "id": "airtel",
+          "name": "Airtel Money Tchad",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        },
+        {
+          "id": "moov",
+          "name": "Moov Money Tchad",
+          "code": "MOOV_MONEY",
+          "needsOtp": false,
+          "brandColor": "#005CA9"
+        }
+      ]
+    },
+    {
+      "code": "CD",
+      "name": "R.D. Congo",
+      "flag": "🇨🇩",
+      "dialCode": "+243",
+      "currency": "CDF",
+      "currencySymbol": "FC",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Kinshasa",
+      "operators": [
+        {
+          "id": "mpesa",
+          "name": "M-Pesa (Vodacom RDC)",
+          "code": "MPESA",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*1122#"
+        },
+        {
+          "id": "orange",
+          "name": "Orange Money RDC",
+          "code": "ORANGE_MONEY",
+          "needsOtp": true,
+          "brandColor": "#FF7900",
+          "ussdTemplate": "*144#"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money RDC",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        },
+        {
+          "id": "afrimoney",
+          "name": "AfriMoney RDC",
+          "code": "AFRIMONEY",
+          "needsOtp": false,
+          "brandColor": "#10B981"
+        }
+      ]
+    },
+    {
+      "code": "GH",
+      "name": "Ghana",
+      "flag": "🇬🇭",
+      "dialCode": "+233",
+      "currency": "GHS",
+      "currencySymbol": "GH₵",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Accra",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN Mobile Money Ghana",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*170#"
+        },
+        {
+          "id": "telecel",
+          "name": "Telecel Cash (Vodafone)",
+          "code": "TELECEL_CASH",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*110#"
+        },
+        {
+          "id": "airtel",
+          "name": "AT Money (AirtelTigo)",
+          "code": "AIRTELTIGO",
+          "needsOtp": false,
+          "brandColor": "#005CA9"
+        }
+      ]
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "flag": "🇳🇬",
+      "dialCode": "+234",
+      "currency": "NGN",
+      "currencySymbol": "₦",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Lagos",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN MoMo PSB Nigeria",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*671#"
+        },
+        {
+          "id": "airtel",
+          "name": "SmartCash PSB (Airtel)",
+          "code": "SMARTCASH",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        },
+        {
+          "id": "paystack",
+          "name": "Paystack Bank Transfer / Card",
+          "code": "PAYSTACK",
+          "needsOtp": false,
+          "brandColor": "#00C3F7"
+        }
+      ]
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "flag": "🇰🇪",
+      "dialCode": "+254",
+      "currency": "KES",
+      "currencySymbol": "KSh",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Nairobi",
+      "operators": [
+        {
+          "id": "mpesa",
+          "name": "M-Pesa Safaricom Kenya",
+          "code": "MPESA",
+          "needsOtp": false,
+          "brandColor": "#00B04F",
+          "ussdTemplate": "*334#"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money Kenya",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        }
+      ]
+    },
+    {
+      "code": "MR",
+      "name": "Mauritanie",
+      "flag": "🇲🇷",
+      "dialCode": "+222",
+      "currency": "MRU",
+      "currencySymbol": "MRU",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Nouakchott",
+      "operators": [
+        {
+          "id": "bankily",
+          "name": "Bankily (BPM)",
+          "code": "BANKILY",
+          "needsOtp": false,
+          "brandColor": "#1E40AF"
+        },
+        {
+          "id": "masrvi",
+          "name": "Masrvi (Mauritanie)",
+          "code": "MASRVI",
+          "needsOtp": false,
+          "brandColor": "#059669"
+        },
+        {
+          "id": "sedad",
+          "name": "Sedad Mobile Payment",
+          "code": "SEDAD",
+          "needsOtp": false,
+          "brandColor": "#D97706"
+        }
+      ]
+    },
+    {
+      "code": "RW",
+      "name": "Rwanda",
+      "flag": "🇷🇼",
+      "dialCode": "+250",
+      "currency": "RWF",
+      "currencySymbol": "RF",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Kigali",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN Mobile Money Rwanda",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*182#"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money Rwanda",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        }
+      ]
+    },
+    {
+      "code": "UG",
+      "name": "Ouganda",
+      "flag": "🇺🇬",
+      "dialCode": "+256",
+      "currency": "UGX",
+      "currencySymbol": "USh",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Kampala",
+      "operators": [
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Uganda",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00",
+          "ussdTemplate": "*165#"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money Uganda",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#E60000",
+          "ussdTemplate": "*185#"
+        }
+      ]
+    },
+    {
+      "code": "DIASPORA",
+      "name": "Diaspora & International",
+      "flag": "🌍",
+      "dialCode": "+1",
+      "currency": "EUR",
+      "currencySymbol": "€",
+      "zone": "INTERNATIONAL",
+      "defaultCity": "Paris / Monde",
+      "operators": [
+        {
+          "id": "visa_mastercard",
+          "name": "Carte Visa / Mastercard (3D Secure)",
+          "code": "CARD_3DS",
+          "needsOtp": false,
+          "brandColor": "#2563EB"
+        },
+        {
+          "id": "apple_pay",
+          "name": "Apple Pay / Google Pay Direct",
+          "code": "WALLET_PAY",
+          "needsOtp": false,
+          "brandColor": "#0F172A"
+        },
+        {
+          "id": "taptap",
+          "name": "Taptap Send (Europe / USA / Canada)",
+          "code": "TAPTAP_SEND",
+          "needsOtp": false,
+          "brandColor": "#10B981"
+        }
+      ]
+    }
+  ]
+}

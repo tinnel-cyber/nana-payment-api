@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Free Money Sénégal (SN • Free) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="free-sn">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 44)">
+          <rect x="-36" y="-18" width="72" height="34" rx="17" fill="#fef2f2"/>
+          <text x="-4" y="6" font-family="'Brush Script MT', cursive, sans-serif" font-size="28" font-style="italic" font-weight="900" fill="#cd1e25" text-anchor="middle" letter-spacing="-1">free</text>
+        </g>
+      
+    
+        <g transform="translate(60, 72)">
+          <rect x="-24" y="-9" width="48" height="16" rx="8" fill="#cd1e25"/>
+          <text x="0" y="3" font-family="system-ui, sans-serif" font-size="9.5" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">MONEY</text>
+        </g>
+      
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-sn-free-bybuo">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-sn-free-bybuo)">
+        <rect x="0" y="0" width="3" height="9" fill="#16a34a"/><rect x="3" y="0" width="3" height="9" fill="#facc15"/><rect x="6" y="0" width="3" height="9" fill="#dc2626"/><circle cx="4.5" cy="4.5" r="1" fill="#16a34a"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#b91c1c" text-anchor="middle" letter-spacing="0.3">
+        SN • Free
+      </text>
+    </g>
+  </g>
+</svg>

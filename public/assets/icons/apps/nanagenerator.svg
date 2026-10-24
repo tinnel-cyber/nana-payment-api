@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="14" fill="url(#nanagen_grad)" />
+  <path d="M15 24L24 15L33 24L24 33L15 24Z" fill="white" fill-opacity="0.25" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="24" cy="24" r="4.5" fill="#FBBF24" />
+  <path d="M24 12V16M24 32V36M12 24H16M32 24H36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="34" cy="14" r="2" fill="#F59E0B"/>
+  <circle cx="14" cy="34" r="2" fill="#60A5FA"/>
+  <defs>
+    <linearGradient id="nanagen_grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="0.5" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+</svg>

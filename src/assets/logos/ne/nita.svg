@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Nita Transfert (NE • Nita) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="nita-ne">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <rect x="-28" y="-18" width="56" height="36" rx="12" fill="#0284c7"/>
+          <path d="M -12 6 L 0 -10 L 12 6" stroke="#f97316" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <circle cx="0" cy="2" r="3" fill="#ffffff"/>
+        </g>
+      
+    <text x="60" y="75" font-family="system-ui, sans-serif" font-size="11" font-weight="900" fill="#0284c7" text-anchor="middle">nita</text>
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-ne-nita-ifcig">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-ne-nita-ifcig)">
+        <rect x="0" y="0" width="9" height="3" fill="#ea580c"/><rect x="0" y="3" width="9" height="3" fill="#ffffff"/><rect x="0" y="6" width="9" height="3" fill="#16a34a"/><circle cx="4.5" cy="4.5" r="1.2" fill="#ea580c"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#1d4ed8" text-anchor="middle" letter-spacing="0.3">
+        NE • Nita
+      </text>
+    </g>
+  </g>
+</svg>

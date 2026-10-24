@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- MTN Money Guinée (GN • Areeba) - Official Sebpay Vector Emblem (100% Transparent Background) -->
+  <g id="mtn-gn">
+    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+        <g transform="translate(60, 42)">
+          <rect x="-34" y="-18" width="68" height="36" rx="18" fill="#ffcc00"/>
+          <rect x="-30" y="-14" width="60" height="28" rx="14" fill="#000000"/>
+          <text x="0" y="5" font-family="'Arial Black', Impact, sans-serif" font-size="14" font-weight="900" fill="#ffcc00" text-anchor="middle" letter-spacing="1.2">MTN</text>
+        </g>
+      
+    
+        <g transform="translate(60, 72)">
+          <rect x="-24" y="-9" width="48" height="15" rx="7.5" fill="#002b49"/>
+          <text x="0" y="2" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="900" fill="#ffcc00" text-anchor="middle" letter-spacing="0.5">MoMo</text>
+        </g>
+      
+    <g transform="translate(24, 85)">
+      <rect x="0" y="0" width="72" height="18" rx="9" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+      
+    <g transform="translate(4.5, 4.5)">
+      <clipPath id="flag-gn-mtn-z2jly">
+        <circle cx="4.5" cy="4.5" r="4.5"/>
+      </clipPath>
+      <g clip-path="url(#flag-gn-mtn-z2jly)">
+        <rect x="0" y="0" width="3" height="9" fill="#dc2626"/><rect x="3" y="0" width="3" height="9" fill="#facc15"/><rect x="6" y="0" width="3" height="9" fill="#16a34a"/>
+      </g>
+    </g>
+  
+      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#854d0e" text-anchor="middle" letter-spacing="0.3">
+        GN • Areeba
+      </text>
+    </g>
+  </g>
+</svg>

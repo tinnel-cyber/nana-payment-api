@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "central_hub_config": {
+      ".read": true,
+      ".write": true
+    },
+    "central_hub_blocks": {
+      ".read": true,
+      ".write": true
+    },
+    "published_cards": {
+      ".read": true,
+      ".write": true
+    },
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
