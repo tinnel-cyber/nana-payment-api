@@ -43,7 +43,6 @@ const { createChatFinanceRouter } = require('./chat-finance-controller');
 const { LiveCommerceEngine, createLiveCommerceRouter } = require('./live-commerce-controller');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'konkobo_telecom_webhook_secret_key_2026';
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'pos-app-1759a';
 
@@ -2415,22 +2414,13 @@ app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, 
   });
 });
 
-// Création du serveur HTTP hybride Express + WebSocket
-const httpServer = http.createServer(app);
-initWebSocketServer(httpServer);
-
-// Démarrage du serveur si exécuté directement
-if (require.main === module) {
-  httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`=======================================================`);
+// Démarrage du serveur et initialisation WebSocket
+const PORT = process.env.PORT || 10000;
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 NaNa Payment Micro-service actif sur le port ${PORT}`);
-    console.log(`📡 WebSocket Actif sur : ws://localhost:${PORT}/ws/smart-transactions`);
-    console.log(`📡 URL Fixie Proxy : ${FIXIE_URL ? 'ACTIF (Sortie IP Statique)' : 'DÉSACTIVÉ'}`);
-    console.log(`🔗 Endpoint Test IP : http://localhost:${PORT}/api/payment/ip`);
-    console.log(`=======================================================`);
-  });
-}
+});
+initWebSocketServer(server);
 
 module.exports = app;
-module.exports.httpServer = httpServer;
+module.exports.server = server;
 
