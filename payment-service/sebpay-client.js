@@ -98,8 +98,9 @@ async function callSebpayApiViaPermissiveClient(targetUrl, { method, headers, bo
 
       const responseData = axiosRes.data;
       if (axiosRes.status < 200 || axiosRes.status >= 300) {
-        const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error))
-          ? (responseData.message || responseData.error)
+        console.error(`[SEBPAY API ERROR ${axiosRes.status} DETAIL]`, JSON.stringify(responseData));
+        const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error || responseData.msg))
+          ? (responseData.message || responseData.error || responseData.msg)
           : `HTTP ${axiosRes.status} ${axiosRes.statusText || 'Error'}`;
         const error = new Error(`Erreur Sebpay (${axiosRes.status}): ${errorMsg}`);
         error.status = axiosRes.status;
@@ -668,11 +669,26 @@ async function createSebpayCollection(params) {
   const countryIso = countryObject.country_code;
 
   // Normalisation universelle du code opérateur pour l'API Sebpay
-  const rawOperator = operator || customPayload.operator || customPayload.provider || '';
+  const rawOperator = operator || customPayload.operator || customPayload.provider || params.provider || params.operator_code || params.slug || '';
   const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
 
   // Formatage forcé du numéro au format local à 8 chiffres (Burkina Faso) requis par Orange BF et Sebpay
   const localPhoneNumber = formatLocalPhoneNumber(effectivePhone);
+
+  // Extraction polyvalente du code d'autorisation temporaire (OTP) Orange Money
+  const effectiveOtp = String(
+    params.otpCode ||
+    params.otp ||
+    params.otp_code ||
+    params.authorization_code ||
+    customPayload.otpCode ||
+    customPayload.otp ||
+    customPayload.otp_code ||
+    ''
+  ).trim();
+
+  const isOrangeBf = countryIso === 'BF' && (normalizedOperator === 'orange' || normalizedOperator.includes('orange'));
+  const isOtpRequired = isOrangeBf || Boolean(effectiveOtp);
 
   const body = {
     amount: Math.round(Number(amount)),
@@ -691,12 +707,14 @@ async function createSebpayCollection(params) {
     customer_email: customerEmail || 'client@nanasore.com',
     external_reference: externalReference,
     callback_url: effectiveCallback,
+    // Identification de l'opérateur conforme à la documentation Sebpay (slug, code, operator)
     operator: normalizedOperator,
     provider: normalizedOperator,
+    operator_code: normalizedOperator,
+    operator_slug: normalizedOperator,
+    slug: normalizedOperator,
     description: description || `Paiement Commande ${orderId}`,
-    ...customPayload,
-    operator: normalizedOperator,
-    provider: normalizedOperator
+    ...customPayload
   };
 
   // Forcer le formatage sur le champ du téléphone juste avant l'envoi de la requête HTTP vers l'API Sebpay
@@ -705,6 +723,13 @@ async function createSebpayCollection(params) {
   body.customer_phone = finalLocalPhone;
   if (body.msisdn) body.msisdn = finalLocalPhone;
   if (body.client_phone) body.client_phone = finalLocalPhone;
+
+  // Ré-application stricte des identifiants opérateur pour éviter tout écrasement via customPayload
+  body.operator = normalizedOperator;
+  body.provider = normalizedOperator;
+  body.operator_code = normalizedOperator;
+  body.operator_slug = normalizedOperator;
+  body.slug = normalizedOperator;
 
   // Sebpay ne dispose d'aucun environnement Sandbox/Test (flux 100% Production/Live réel)
   // Neutralisation stricte et suppression définitive de tout flag de test
@@ -715,9 +740,15 @@ async function createSebpayCollection(params) {
   delete body.SEBPAY_TEST;
 
   // Gestion du cas Orange Money OTP
-  if (otpCode && String(otpCode).trim()) {
-    body.otp_code = String(otpCode).trim();
-    body.otp = String(otpCode).trim();
+  if (effectiveOtp) {
+    body.otp = effectiveOtp;
+    body.otp_code = effectiveOtp;
+    body.otpCode = effectiveOtp;
+    body.authorization_code = effectiveOtp;
+    body.otp_required = true;
+  } else if (isOtpRequired) {
+    body.otp_required = true;
+    console.warn(`[SEBPAY OTP NOTICE] Orange Burkina Faso (${countryIso}) ciblé sans code OTP. Si Orange exige un OTP (*144*4*6*montant#), la transaction risque d'être rejetée.`);
   }
 
   console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${normalizedOperator}`);
@@ -1169,6 +1200,46 @@ async function getSebpayCountries(forceRefresh = false) {
 }
 
 /**
+ * 4. GET /operators?country={country} - Récupère les opérateurs actifs auprès de Sebpay
+ * 
+ * @param {string} [country='BF'] - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
+ * @returns {Promise<{ success: boolean, country: string, operators: Array }>}
+ */
+async function getSebpayOperators(country = 'BF') {
+  const cleanCountry = String(country || 'BF').trim().toUpperCase();
+  try {
+    const rawResponse = await callSebpayApi(`operators?country=${encodeURIComponent(cleanCountry)}`, {
+      method: 'GET'
+    });
+    let items = rawResponse?.data;
+    if (items && typeof items === 'object' && items.data) {
+      items = items.data;
+    }
+    const operatorsList = Array.isArray(items) ? items : (rawResponse?.operators || []);
+    return {
+      success: true,
+      country: cleanCountry,
+      operators: operatorsList
+    };
+  } catch (err) {
+    console.warn(`[SEBPAY OPERATORS API] Impossible de récupérer les opérateurs pour ${cleanCountry}:`, err.message);
+    const fallbackList = (SEBPAY_COUNTRY_OPERATORS[cleanCountry] || ['orange', 'moov']).map(slug => ({
+      slug,
+      code: slug.toUpperCase(),
+      name: slug === 'orange' ? 'Orange Money' : slug === 'moov' ? 'Moov Money' : slug,
+      otp_required: cleanCountry === 'BF' && slug === 'orange',
+      country_code: cleanCountry
+    }));
+    return {
+      success: false,
+      country: cleanCountry,
+      error: err.message,
+      operators: fallbackList
+    };
+  }
+}
+
+/**
  * Retourne une instance de HttpsProxyAgent configurée dynamiquement avec priorité SEBPAY_FIXIE_URL
  */
 function getFixieHttpsProxyAgent(options = {}) {
@@ -1210,5 +1281,6 @@ module.exports = {
   callSebpayApi,
   createSebpayCollection,
   getSebpayCollection,
-  getSebpayCountries
+  getSebpayCountries,
+  getSebpayOperators
 };

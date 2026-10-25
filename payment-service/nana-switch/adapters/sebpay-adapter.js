@@ -59,6 +59,7 @@ class SebpayAdapter extends PaymentGatewayAdapter {
 
     const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
     const resolvedPhone = customerPhone || phone || '+22670000000';
+    const effectiveOtp = params.otpCode || params.otp || params.otp_code || params.authorization_code || otpCode;
 
     const sebpayPayload = {
       tenantId: `nanasore_${cleanShopName}`,
@@ -74,7 +75,12 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       client_email: customerEmail || 'client@wameet.africa',
       client_phone: resolvedPhone,
       operator,
-      otpCode,
+      provider: operator,
+      operator_code: operator,
+      slug: operator,
+      otpCode: effectiveOtp,
+      otp: effectiveOtp,
+      otp_code: effectiveOtp,
       description: description.substring(0, 120),
       external_reference: externalReference,
       externalReference,

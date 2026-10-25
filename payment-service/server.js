@@ -32,7 +32,8 @@ const {
   callSebpayApi,
   createSebpayCollection,
   getSebpayCollection,
-  getSebpayCountries
+  getSebpayCountries,
+  getSebpayOperators
 } = require('./sebpay-client');
 const {
   createSaspayPayin,
@@ -921,8 +922,8 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
       phone,
       customerName,
       customerEmail,
-      operator = req.body.provider,
-      otpCode = req.body.otp,
+      operator = req.body.provider || req.body.operator_code || req.body.slug,
+      otpCode = req.body.otpCode || req.body.otp || req.body.otp_code || req.body.authorization_code,
       description
     } = req.body;
 
@@ -1111,6 +1112,20 @@ app.get(['/api/payment/countries', '/api/payment/sebpay/countries'], async (req,
       countries: SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
       warning: err.message
     });
+  }
+});
+
+// ============================================================================
+// ROUTE 3f : Catalogue des Opérateurs par Pays (GET /api/payment/sebpay/operators?country=BF)
+// ============================================================================
+app.get(['/api/payment/operators', '/api/payment/sebpay/operators'], async (req, res) => {
+  try {
+    const country = req.query.country || req.query.country_code || req.query.countryCode || 'BF';
+    const result = await getSebpayOperators(country);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[OPERATORS API ERROR]', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -1511,8 +1526,8 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       callbackUrl,
       country,
       countryCode,
-      operator,
-      otpCode,
+      operator = req.body.provider || req.body.operator_code || req.body.slug,
+      otpCode = req.body.otp || req.body.otp_code || req.body.authorization_code,
       metadata = {}
     } = req.body;
 
