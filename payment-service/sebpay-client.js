@@ -49,8 +49,35 @@ try {
 }
 
 /**
+ * Détecte récursivement les erreurs d'authentification proxy ou de tunneling HTTP
+ * (y compris les erreurs imbriquées dans TypeError: fetch failed -> DOMException -> RequestAbortedError)
+ */
+function isProxyTunnelError(err) {
+  if (!err) return false;
+  let cur = err;
+  for (let i = 0; i < 5 && cur; i++) {
+    const msg = String(cur.message || '');
+    const name = String(cur.name || '');
+    const code = String(cur.code || '');
+    if (
+      msg.includes('407') ||
+      msg.includes('HTTP Tunneling') ||
+      msg.includes('Proxy response') ||
+      msg.includes('fetch failed') ||
+      code === 'UND_ERR_ABORTED' ||
+      name === 'RequestAbortedError' ||
+      name === 'AbortError'
+    ) {
+      return true;
+    }
+    cur = cur.cause;
+  }
+  return false;
+}
+
+/**
  * Exécute un appel réseau vers l'API Sebpay via un client permissif (Axios ou node-fetch avec https-proxy-agent)
- * Utilisé en cas d'échec 407 / AbortError d'undici HTTP Tunneling
+ * Utilisé en priorité lorsque FIXIE est actif pour éliminer radicalement l'erreur Undici 407.
  */
 async function callSebpayApiViaPermissiveClient(targetUrl, { method, headers, body, httpsAgent, timeoutMs }) {
   console.log(`[SEBPAY PERMISSIVE CLIENT] Exécution via HttpsProxyAgent (${axiosClient ? 'Axios' : 'node-fetch'})...`);
@@ -81,10 +108,10 @@ async function callSebpayApiViaPermissiveClient(targetUrl, { method, headers, bo
       }
       return responseData;
     } catch (axiosErr) {
-      if (axiosErr.status || (axiosErr.response && axiosErr.response.status)) {
+      if (axiosErr.status || (axiosErr.response && axiosErr.response.status) || axiosErr.data) {
         throw axiosErr;
       }
-      console.warn('[SEBPAY AXIOS NOTICE] Erreur Axios, tentative de secours via node-fetch :', axiosErr.message);
+      console.warn('[SEBPAY AXIOS NOTICE] Erreur réseau Axios, tentative de secours via node-fetch :', axiosErr.message);
     }
   }
 
@@ -122,7 +149,7 @@ async function callSebpayApiViaPermissiveClient(targetUrl, { method, headers, bo
     return responseData;
   }
 
-  throw new Error('Aucun client HTTP permissif (Axios ou node-fetch) disponible pour le contournement 407.');
+  throw new Error('Aucun client HTTP permissif (Axios ou node-fetch) disponible pour le tunneling.');
 }
 
 // URL de base officielle Sebpay
@@ -493,20 +520,25 @@ async function callSebpayApi(endpoint, options = {}) {
 
   console.log(`[SEBPAY REQUEST] ${method} ${targetUrl} (via Fixie IP Statique / HttpsProxyAgent isolé)...`);
 
+  // 1. Si un proxy Fixie est configuré, exécuter directement via le client permissif éprouvé (Axios / node-fetch avec https-proxy-agent)
+  // afin d'éliminer définitivement l'erreur "Proxy response (407) !== 200 when HTTP Tunneling" de l'implémentation Undici interne de Node.js.
+  if (httpsAgent && (axiosClient || nodeFetchClient)) {
+    return await callSebpayApiViaPermissiveClient(targetUrl, {
+      method,
+      headers: reqHeaders,
+      body,
+      httpsAgent,
+      timeoutMs
+    });
+  }
+
+  // 2. Si aucun proxy ou mode direct en clair, exécuter via fetch natif avec filet de sécurité
   let response;
   try {
     response = await fetch(targetUrl, fetchOptions);
   } catch (fetchErr) {
-    const errMsg = String(fetchErr.message || '');
-    const isProxyTunnelError =
-      fetchErr.name === 'RequestAbortedError' ||
-      fetchErr.name === 'AbortError' ||
-      errMsg.includes('407') ||
-      errMsg.includes('HTTP Tunneling') ||
-      errMsg.includes('Proxy response');
-
-    if (isProxyTunnelError && httpsAgent) {
-      console.warn(`[SEBPAY FALLBACK] Échec du tunneling Undici ProxyAgent (407). Basculement automatique vers le client permissif https-proxy-agent / axios... Cause : ${errMsg}`);
+    if (isProxyTunnelError(fetchErr) && httpsAgent) {
+      console.warn(`[SEBPAY FALLBACK] Échec du tunneling Undici ProxyAgent (407). Basculement automatique vers le client permissif https-proxy-agent / axios... Cause : ${fetchErr.message}`);
       return await callSebpayApiViaPermissiveClient(targetUrl, {
         method,
         headers: reqHeaders,

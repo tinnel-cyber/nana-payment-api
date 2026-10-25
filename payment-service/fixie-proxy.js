@@ -26,6 +26,13 @@ delete process.env.all_proxy;
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
 
+let nodeFetchModule = null;
+try {
+  nodeFetchModule = require('node-fetch');
+} catch {
+  nodeFetchModule = null;
+}
+
 // Cache dynamique des agents par URL de proxy pour éviter les fuites de mémoire
 const agentCache = new Map();
 
@@ -402,8 +409,29 @@ async function fetchViaFixie(url, options = {}) {
     delete fetchOpts.dispatcher;
   }
 
-  const response = await fetch(url, fetchOpts);
-  return response;
+  // Si un proxy httpsAgent est actif et node-fetch est disponible, utiliser node-fetch
+  // pour éliminer l'erreur de tunneling 407 d'undici
+  if (targetAgents && targetAgents.httpsAgent && nodeFetchModule) {
+    return await nodeFetchModule(url, {
+      ...fetchOpts,
+      agent: targetAgents.httpsAgent
+    });
+  }
+
+  try {
+    const response = await fetch(url, fetchOpts);
+    return response;
+  } catch (fetchErr) {
+    const errMsg = String(fetchErr.message || '') + ' ' + String(fetchErr.cause?.message || '');
+    if ((errMsg.includes('407') || errMsg.includes('HTTP Tunneling') || errMsg.includes('fetch failed')) && targetAgents?.httpsAgent && nodeFetchModule) {
+      console.warn('[FIXIE PROXY FALLBACK] Erreur tunnel Undici 407 sur fetchViaFixie, basculement vers node-fetch HttpsProxyAgent...');
+      return await nodeFetchModule(url, {
+        ...fetchOpts,
+        agent: targetAgents.httpsAgent
+      });
+    }
+    throw fetchErr;
+  }
 }
 
 let cachedOutboundIp = null;

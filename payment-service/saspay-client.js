@@ -260,17 +260,61 @@ async function callSaspayApi(endpoint, options = {}) {
     fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
+  // Pour les décaissements (Pay-Outs) passant par le proxy Fixie, exécuter via le client permissif éprouvé
+  // (Axios / node-fetch avec https-proxy-agent) pour éliminer l'erreur Undici 407.
+  if (isPayoutCall && fetchOptions.agent && (axiosClient || nodeFetchClient)) {
+    if (axiosClient) {
+      const axiosRes = await axiosClient({
+        url: targetUrl,
+        method,
+        headers: reqHeaders,
+        data: body,
+        httpsAgent: fetchOptions.agent,
+        httpAgent: fetchOptions.agent,
+        proxy: false,
+        timeout: timeoutMs,
+        validateStatus: () => true
+      });
+      if (axiosRes.status < 200 || axiosRes.status >= 300) {
+        const err = new Error(`Erreur Saspay (${axiosRes.status}): ${JSON.stringify(axiosRes.data)}`);
+        err.status = axiosRes.status;
+        err.data = axiosRes.data;
+        throw err;
+      }
+      return axiosRes.data;
+    }
+    if (nodeFetchClient) {
+      const nfRes = await nodeFetchClient(targetUrl, {
+        method,
+        headers: reqHeaders,
+        body: (body && method !== 'GET' && method !== 'HEAD') ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+        agent: fetchOptions.agent,
+        timeout: timeoutMs
+      });
+      const ct = nfRes.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await nfRes.json().catch(() => ({})) : await nfRes.text();
+      if (!nfRes.ok) {
+        const err = new Error(`Erreur Saspay (${nfRes.status}): ${JSON.stringify(data)}`);
+        err.status = nfRes.status;
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+  }
+
   let response;
   try {
     response = await fetch(targetUrl, fetchOptions);
   } catch (fetchErr) {
-    const errMsg = String(fetchErr.message || '');
+    const errMsg = String(fetchErr.message || '') + ' ' + String(fetchErr.cause?.message || '');
     const isProxyTunnelError =
       fetchErr.name === 'RequestAbortedError' ||
       fetchErr.name === 'AbortError' ||
       errMsg.includes('407') ||
       errMsg.includes('HTTP Tunneling') ||
-      errMsg.includes('Proxy response');
+      errMsg.includes('Proxy response') ||
+      errMsg.includes('fetch failed');
 
     if (isProxyTunnelError && isPayoutCall && fetchOptions.agent) {
       console.warn(`[SASPAY FALLBACK] Échec du tunneling Undici ProxyAgent (407). Basculement automatique vers le client permissif https-proxy-agent / axios... Cause : ${errMsg}`);
