@@ -39,6 +39,7 @@ const {
   createSaspayPayout,
   verifySaspayPayment,
   verifySaspayPayout,
+  verifySaspayWebhookSignature,
   getSaspayConfigStatus,
   SASPAY_SUPPORTED_COUNTRIES
 } = require('./saspay-client');
@@ -484,7 +485,12 @@ async function processWebhookTransaction(payload) {
 
   const amount = Number(txData.amount || payload.amount || txData.price || 0);
   const currency = txData.currency || payload.currency || 'XOF';
-  const operator = txData.operator || payload.operator || txData.provider || payload.provider || 'SEBPAY';
+  const operator = txData.operator || payload.operator || txData.network || payload.network || 'MOBILE_MONEY';
+  const resolvedProvider = String(
+    txData.provider ||
+    payload.provider ||
+    (payload.event ? 'SASPAY' : (txData.network ? 'SASPAY' : (String(operator).includes('_') ? 'SASPAY' : 'SEBPAY')))
+  ).toUpperCase();
   const paymentRef = txData.paymentRef || txData.payment_reference || externalRef || transactionId || `ref_${Date.now()}`;
 
   // Résolution multi-tenant "${tenant_id}___${order_id}"
@@ -496,7 +502,7 @@ async function processWebhookTransaction(payload) {
     resolvedOrderId = parts[1] || resolvedOrderId;
   }
 
-  console.log(`[SEBPAY ASYNC PROCESSING] Transaction: ${transactionId} | Order: ${resolvedOrderId} | Tenant: ${resolvedTenantId} | Status: ${status} | Montant: ${amount}`);
+  console.log(`[PAYMENT WEBHOOK PROCESSING] Provider: ${resolvedProvider} | Transaction: ${transactionId} | Order: ${resolvedOrderId} | Tenant: ${resolvedTenantId} | Status: ${status} | Montant: ${amount}`);
 
   if (!db) {
     console.warn('[FIRESTORE NOTICE] Firebase Admin SDK non initialisé, traitement mémoire.');
@@ -570,7 +576,7 @@ async function processWebhookTransaction(payload) {
         tenantId: resolvedTenantId,
         orderId: resolvedOrderId,
         operator,
-        provider: 'SEBPAY',
+        provider: resolvedProvider,
         validatedAt: nowServer,
         updatedAt: nowServer
       };
@@ -598,7 +604,7 @@ async function processWebhookTransaction(payload) {
         userId: resolvedTenantId,
         amount,
         currency,
-        provider: operator || 'SEBPAY',
+        provider: resolvedProvider,
         status: 'completed',
         paymentReference: paymentRef,
         completedAt: nowServer,
@@ -1242,26 +1248,54 @@ app.get('/api/payment/saspay/countries', (req, res) => {
 });
 
 // ============================================================================
-// ROUTE SASPAY 5 : Webhook Dédié Saspay
+// ROUTE SASPAY 5 : Webhook Sécurisé SasPay (Signature HMAC-SHA256 & Timestamp 300s)
 // ============================================================================
-app.post('/api/payment/saspay/webhook', express.json(), async (req, res) => {
-  try {
-    res.status(200).json({ received: true });
+app.post(
+  ['/api/payment/saspay/webhook', '/api/webhooks/saspay'],
+  express.raw({ type: 'application/json', limit: '5mb' }),
+  async (req, res) => {
+    try {
+      const signature = req.headers['x-webhook-signature'] || req.headers['X-Webhook-Signature'];
+      const timestamp = req.headers['x-webhook-timestamp'] || req.headers['X-Webhook-Timestamp'];
+      const eventName = req.headers['x-webhook-event'] || req.headers['X-Webhook-Event'];
 
-    setImmediate(async () => {
-      try {
-        const payload = req.body || {};
-        console.log('[SASPAY WEBHOOK RECEIVED]', JSON.stringify(payload));
-        await processWebhookTransaction(payload);
-      } catch (procErr) {
-        console.error('[SASPAY WEBHOOK PROCESSING ERROR]', procErr.message);
+      const rawBuffer = Buffer.isBuffer(req.body)
+        ? req.body
+        : Buffer.from(req.rawBody || req.body || '', 'utf8');
+
+      // Vérification cryptographique stricte si SASPAY_WEBHOOK_SECRET est configuré
+      if (process.env.SASPAY_WEBHOOK_SECRET) {
+        const sigCheck = verifySaspayWebhookSignature({
+          rawBody: rawBuffer,
+          signature,
+          timestamp
+        });
+
+        if (!sigCheck.valid) {
+          console.error(`[SASPAY WEBHOOK REJECT] Échec vérification cryptographique : ${sigCheck.reason}`);
+          return res.status(401).json({ error: `Signature webhook SasPay invalide (${sigCheck.reason})` });
+        }
       }
-    });
-  } catch (err) {
-    console.error('[SASPAY WEBHOOK ERROR]', err);
-    return res.status(500).json({ error: err.message });
+
+      // Règle SasPay : Réponse HTTP 2xx rapide immédiate pour accuser réception
+      res.status(200).json({ received: true });
+
+      // Traitement asynchrone et idempotent en arrière-plan
+      setImmediate(async () => {
+        try {
+          const payload = JSON.parse(rawBuffer.toString('utf8'));
+          console.log(`[SASPAY WEBHOOK VALIDATED] Événement: ${eventName || payload.event}`);
+          await processWebhookTransaction(payload);
+        } catch (procErr) {
+          console.error('[SASPAY WEBHOOK PROCESSING ERROR]', procErr.message);
+        }
+      });
+    } catch (err) {
+      console.error('[SASPAY WEBHOOK ERROR]', err);
+      return res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 // ============================================================================
 // ROUTE 4 : Initiation d'une Transaction vers la Banque / Agrégateur via IP Statique

@@ -1,18 +1,40 @@
 /**
- * Module Client Réseau Officiel Saspay pour l'API Pont Render
+ * Module Client Réseau Officiel SasPay pour l'API Pont Render
+ * Référence officielle : https://api.saspay.me/api/v1 (OpenAPI 3.1 & /llms.txt)
  * Couverture : 24 pays d'Afrique (UEMOA, CEMAC, EAC, CEDEAO)
  * 
- * RÈGLES STRICTES DU PROXY FIXIE POUR SASPAY :
- * 1. ENCAISSEMENT (Pay-In / Collections / Mobile Money & Cartes) :
- *    -> Effectue les appels HTTP/Axios en DIRECT, SANS utiliser le proxy Fixie.
- * 2. DÉCAISSEMENT (Pay-Out / Transfers / Disbursements) :
- *    -> Injecte l'agent Fixie (process.env.FIXIE_URL_SASPAY via HttpsProxyAgent)
- *       UNIQUEMENT sur ces endpoints spécifiques pour respecter la restriction d'IP fixe.
- * 3. Zéro proxy global :
- *    -> Aucun proxy global sur Express ni Node, isolation stricte par requête.
+ * RÈGLES STRICTES D'ARCHITECTURE & SÉCURITÉ SASPAY :
+ * 1. Gestion des clés :
+ *    - SASPAY_API_KEY lue exclusivement depuis l'environnement (sk_test_... ou sk_live_...).
+ *    - Jamais de clé en dur, jamais exposée au frontend ou dans les logs.
+ *    - En-tête : Authorization: Bearer <SASPAY_API_KEY>
+ * 
+ * 2. Stratégie Réseau & Proxy Fixie :
+ *    - ENCAISSEMENT (Pay-In / Softpay / Checkout-Sessions) :
+ *      -> Exécuté en DIRECT en clair, SANS proxy Fixie (SasPay n'exige pas d'IP fixe pour l'encaissement).
+ *    - DÉCAISSEMENT (Pay-Out / Retraits / Transferts) :
+ *      -> Exécuté obligatoirement via le proxy Fixie (process.env.FIXIE_URL_SASPAY via HttpsProxyAgent)
+ *         pour satisfaire l'IP Whitelisting et éviter l'erreur 403 ip_not_whitelisted.
+ *    - Health Check (/health) :
+ *      -> Réponse 100% locale en HTTP 200 sans aucun appel externe ni proxy.
+ * 
+ * 3. Données financières :
+ *    - Montants : TOUJOURS en chaînes décimales ("2500.00"), jamais de flottants.
+ *    - Idempotence : En-tête Idempotency-Key obligatoire sur toutes les routes de mouvement de fonds.
+ *    - Frais : Comptabilisation via charged et net_amount.
+ * 
+ * 4. Règle absolue de livraison :
+ *    - Ne JAMAIS livrer sur une simple redirection ou un statut PENDING.
+ *    - Livraison conditionnée exclusivement au statut SUCCESS validé par GET /payments/{id}/verify/
+ *      ou par un webhook signé avec contrôle d'unicité en base de données.
+ * 
+ * 5. Sécurisation Webhook :
+ *    - Timestamp max 300s.
+ *    - HMAC-SHA256 sur corps brut : f"{timestamp}.{raw_body}".
+ *    - Comparaison à temps constant via crypto.timingSafeEqual.
  */
 
-// Neutralisation stricte de tout proxy global pour isoler le reste du serveur
+// Suppression stricte de toute variable de proxy global pour isoler le reste du serveur
 delete process.env.HTTP_PROXY;
 delete process.env.HTTPS_PROXY;
 delete process.env.http_proxy;
@@ -25,18 +47,18 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
 const { getFixieUrlSaspay, getFixieAgentsSaspay } = require('./fixie-proxy');
 
-// URL de base officielle Saspay (configurable via variable d'environnement)
+// URL de base officielle SasPay
 const SASPAY_DEFAULT_BASE_URL = 'https://api.saspay.me/api/v1/';
 
-// Dictionnaire des 24 pays supportés par Saspay avec devise et opérateurs officiels
+// Catalogue des 24 pays supportés par SasPay
 const SASPAY_SUPPORTED_COUNTRIES = {
   BJ: { name: 'Bénin', currency: 'XOF', prefix: '+229', networks: ['mtn_bj', 'moov_bj', 'celtiis_bj'] },
   BF: { name: 'Burkina Faso', currency: 'XOF', prefix: '+226', networks: ['orange_bf', 'moov_bf', 'wligdicash_bf'] },
-  CI: { name: "Côte d'Ivoire", currency: 'XOF', prefix: '+225', networks: ['orange_ci', 'mtn_ci', 'moov_ci', 'wave_ci'] },
+  CI: { name: "Côte d'Ivoire", currency: 'XOF', prefix: '+225', networks: ['orange_ci', 'mtn_ci', 'moov_ci', 'wave_ci', 'djamo_ci'] },
   SN: { name: 'Sénégal', currency: 'XOF', prefix: '+221', networks: ['orange_sn', 'wave_sn', 'free_sn', 'emoney_sn'] },
   ML: { name: 'Mali', currency: 'XOF', prefix: '+223', networks: ['orange_ml', 'moov_ml', 'mobicash_ml'] },
   TG: { name: 'Togo', currency: 'XOF', prefix: '+228', networks: ['togocom_tg', 'moov_tg'] },
-  NE: { name: 'Niger', currency: 'XOF', prefix: '+227', networks: ['airtel_ne', 'moov_ne', 'zamani_ne', 'nita_ne'] },
+  NE: { name: 'Niger', currency: 'XOF', prefix: '+227', networks: ['airtel_ne', 'moov_ne', 'zamani_ne', 'nita_ne', 'wligdicash_ne'] },
   GW: { name: 'Guinée-Bissau', currency: 'XOF', prefix: '+245', networks: ['orange_gw'] },
   CM: { name: 'Cameroun', currency: 'XAF', prefix: '+237', networks: ['orange_cm', 'mtn_cm'] },
   CG: { name: 'Congo', currency: 'XAF', prefix: '+242', networks: ['airtel_cg', 'mtn_cg'] },
@@ -62,19 +84,42 @@ function getSaspayBaseUrl() {
 }
 
 /**
- * Retourne le Secret Key Saspay
+ * Récupération sécurisée de la clé API SasPay
+ * Supporte SASPAY_API_KEY et SASPAY_SECRET_KEY
  */
-function getSaspaySecretKey() {
-  return process.env.SASPAY_SECRET_KEY || process.env.SASPAY_API_KEY || '';
+function getSaspayApiKey() {
+  return process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '';
 }
 
 /**
- * Construit les en-têtes officiels Saspay avec Bearer Token et Idempotency-Key
+ * Formatage strict du montant en chaîne décimale à 2 chiffres ("2500.00")
+ * Interdiction formelle des flottants ou entiers bruts non décimaux
+ */
+function formatSaspayAmount(amount) {
+  const num = Number(amount);
+  if (isNaN(num) || num <= 0) {
+    throw new Error(`Montant invalide pour SasPay : "${amount}". Un nombre positif est requis.`);
+  }
+  return num.toFixed(2);
+}
+
+/**
+ * Génère ou valide une clé d'idempotence UUID v4
+ */
+function getOrGenerateIdempotencyKey(key) {
+  if (key && typeof key === 'string' && key.trim().length > 0) {
+    return key.trim();
+  }
+  return crypto.randomUUID ? crypto.randomUUID() : `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+}
+
+/**
+ * Construit les en-têtes HTTP officiels SasPay
  */
 function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
-  const secretKey = getSaspaySecretKey();
+  const apiKey = getSaspayApiKey();
   const headers = {
-    'Authorization': `Bearer ${secretKey}`,
+    'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     ...customHeaders
@@ -88,7 +133,7 @@ function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
 }
 
 /**
- * Résout le code réseau officiel Saspay (ex: "orange_ci", "mtn_bj", "wave_ci")
+ * Résout le code réseau officiel SasPay (ex: "orange_ci", "mtn_bj", "wave_ci")
  */
 function resolveSaspayNetwork(countryInput, rawOperator) {
   const countryCode = (typeof countryInput === 'object'
@@ -99,7 +144,7 @@ function resolveSaspayNetwork(countryInput, rawOperator) {
   const cInfo = SASPAY_SUPPORTED_COUNTRIES[countryCode] || SASPAY_SUPPORTED_COUNTRIES.BF;
   const op = String(rawOperator || '').toLowerCase().trim();
 
-  // Si le code contient déjà le pays sous format "operator_country" (ex: "orange_ci")
+  // Si le code contient déjà le format exact "operator_country"
   if (cInfo.networks.includes(op)) {
     return op;
   }
@@ -118,17 +163,27 @@ function resolveSaspayNetwork(countryInput, rawOperator) {
   if (op.includes('telecel')) return `telecel_${cleanCountry}`;
   if (op.includes('free')) return `free_${cleanCountry}`;
   if (op.includes('afrimoney')) return `afrimoney_${cleanCountry}`;
+  if (op.includes('djamo')) return `djamo_${cleanCountry}`;
+  if (op.includes('ligdicash')) return `wligdicash_${cleanCountry}`;
 
   return cInfo.networks[0] || `${op}_${cleanCountry}`;
 }
 
 /**
- * Exécute une requête réseau vers l'API Saspay avec respect strict de la stratégie de proxy :
- * - Pay-In (Encaissement) : DIRECT en clair, SANS proxy Fixie
- * - Pay-Out (Décaissement) : VIA le proxy FIXIE_URL_SASPAY pour respecter l'IP Whitelisting
+ * Exécute une requête réseau vers l'API SasPay
  * 
- * @param {string} endpoint - Endpoint relatif (ex: 'payments/softpay/', 'payouts/initialize/')
- * @param {object} options - Options { method, body, headers, isPayout, idempotencyKey, timeoutMs }
+ * STRATÉGIE RÉSEAU STRICTE :
+ * - Pay-In (Encaissement) -> 100% DIRECT EN CLAIR (SANS PROXY FIXIE)
+ * - Pay-Out (Décaissement / Retraits) -> PROXY FIXIE (FIXIE_URL_SASPAY) pour satisfaire l'IP Whitelisting
+ * 
+ * GESTION DES CODES D'ERREUR OFFICIELS SASPAY :
+ * - 400 : Requête mal formée
+ * - 401 : Clé API absente ou invalide (ne pas retenter)
+ * - 403 : Compte suspendu ou IP non whitelistée (ip_not_whitelisted)
+ * - 404 : Ressource introuvable
+ * - 409 : Conflit d'idempotence ou état
+ * - 422 : Erreur métier (insufficient_balance, currency_country_mismatch)
+ * - 429 : Rate limit atteint (300 req/min), espacer les appels
  */
 async function callSaspayApi(endpoint, options = {}) {
   const {
@@ -144,9 +199,9 @@ async function callSaspayApi(endpoint, options = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const targetUrl = `${baseUrl}${cleanEndpoint}`;
 
-  const secretKey = getSaspaySecretKey();
-  if (!secretKey) {
-    throw new Error('[SASPAY AUTH ERROR] Clé secrète manquante. Définissez SASPAY_SECRET_KEY sur Render.');
+  const apiKey = getSaspayApiKey();
+  if (!apiKey) {
+    throw new Error('[SASPAY CONFIG ERROR] Clé API SasPay manquante. Définissez SASPAY_API_KEY ou SASPAY_SECRET_KEY.');
   }
 
   const reqHeaders = getSaspayHeaders(headers, idempotencyKey);
@@ -157,10 +212,9 @@ async function callSaspayApi(endpoint, options = {}) {
     signal: AbortSignal.timeout(timeoutMs)
   };
 
-  // STRATÉGIE RÉSEAU STRICTE :
-  // Décaissement (Pay-Out) -> PROXY FIXIE (FIXIE_URL_SASPAY)
-  // Encaissement (Pay-In) -> DIRECT (aucun proxy)
-  const isPayoutCall = Boolean(isPayout || cleanEndpoint.startsWith('payouts'));
+  // Décaissement (Pay-Out) -> Injecte Fixie (FIXIE_URL_SASPAY)
+  // Encaissement (Pay-In) -> Direct en clair
+  const isPayoutCall = Boolean(isPayout || cleanEndpoint.startsWith('payouts') || cleanEndpoint.startsWith('wallet-transfers'));
 
   if (isPayoutCall) {
     const { httpsAgent, undiciAgent } = getFixieAgentsSaspay();
@@ -175,7 +229,7 @@ async function callSaspayApi(endpoint, options = {}) {
     }
     console.log(`[SASPAY PAYOUT OUTBOUND] ${method} ${targetUrl} (via Proxy Fixie FIXIE_URL_SASPAY pour IP Whitelisting)...`);
   } else {
-    // ENCAISSEMENT (Pay-In) : 100% DIRECT EN CLAIR
+    // ENCAISSEMENT : 100% DIRECT EN CLAIR
     delete fetchOptions.agent;
     delete fetchOptions.httpsAgent;
     delete fetchOptions.httpAgent;
@@ -199,15 +253,35 @@ async function callSaspayApi(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error || responseData.detail))
-      ? (responseData.message || responseData.error || responseData.detail)
-      : `HTTP ${response.status} ${response.statusText}`;
+    let errorData = null;
+    try {
+      errorData = typeof responseData === 'object' ? responseData : JSON.parse(responseData);
+    } catch {
+      errorData = { raw: responseData };
+    }
 
-    console.error(`[SASPAY ERROR] ${method} ${cleanEndpoint} -> HTTP ${response.status}:`, errorMsg);
+    const errorMsg = errorData?.error?.message || errorData?.message || errorData?.detail || `HTTP ${response.status} ${response.statusText}`;
 
-    const error = new Error(`Erreur Saspay (${response.status}): ${JSON.stringify(errorMsg)}`);
+    if (response.status === 401) {
+      console.error('[SASPAY 401 UNAUTHORIZED] Clé API invalide, expirée ou absente. Ne pas retenter.');
+    } else if (response.status === 403) {
+      if (JSON.stringify(errorData).includes('ip_not_whitelisted')) {
+        console.error('[SASPAY 403 IP NOT WHITELISTED] L\'IP de sortie du serveur n\'est pas whitelistée dans le dashboard SasPay. Vérifiez FIXIE_URL_SASPAY.');
+      } else {
+        console.error('[SASPAY 403 FORBIDDEN] Accès refusé ou scope insuffisant pour cette clé API.');
+      }
+    } else if (response.status === 409) {
+      console.error('[SASPAY 409 CONFLICT] Conflit d\'idempotence (requête encore en cours ou même clé avec corps différent).');
+    } else if (response.status === 422) {
+      console.error(`[SASPAY 422 UNPROCESSABLE ENTITY] Erreur métier (ex: solde insuffisant, incohérence devise/pays) : ${errorMsg}`);
+    } else if (response.status === 429) {
+      console.warn('[SASPAY 429 RATE LIMIT] Limite de débit atteinte (300 req/min). Espacer les appels.');
+    }
+
+    const error = new Error(`Erreur Saspay (${response.status}): ${typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg)}`);
     error.status = response.status;
-    error.data = responseData;
+    error.code = errorData?.error?.code || response.status;
+    error.data = errorData;
     throw error;
   }
 
@@ -215,10 +289,15 @@ async function callSaspayApi(endpoint, options = {}) {
 }
 
 /**
- * 1. ENCAISSEMENT (Pay-In / Collections) - EXÉCUTÉ EN DIRECT SANS PROXY FIXIE
+ * 1. ENCAISSEMENT (Pay-In) — EXÉCUTÉ EN DIRECT SANS PROXY FIXIE
  * 
- * Accepte les paiements Mobile Money (Softpay direct push) ou sessions Checkout hébergées.
- * Montant obligatoire sous forme de chaîne décimale ("5000.00").
+ * Deux flux selon la spécification OpenAPI :
+ * - Softpay : POST /payments/softpay/ (Push direct USSD/STK)
+ * - Hosted Checkout : POST /checkout-sessions/ (Page hébergée)
+ * 
+ * Règle checkout_url :
+ * Si checkout_url est non vide (Wave, Orange Money, Cartes, Djamo), l'application
+ * doit rediriger le client vers cette URL pour finaliser l'opération.
  */
 async function createSaspayPayin(params) {
   const {
@@ -229,30 +308,31 @@ async function createSaspayPayin(params) {
     country = 'BF',
     phone,
     customerPhone,
-    customerName,
+    customerEmail = 'client@nanasore.com',
+    customerName = 'Client Nanasore',
     operator,
     network,
     description,
-    callbackUrl,
     returnUrl,
+    feeChargeMode = 'ADD_ON', // 'ADD_ON' (le payeur paie les frais) ou 'DEDUCTED'
     customPayload = {},
     type = 'auto' // 'softpay', 'checkout' ou 'auto'
   } = params;
 
-  if (!amount || Number(amount) <= 0) {
-    throw new Error('Le montant du paiement est requis et doit être supérieur à 0.');
-  }
-
-  // Formatage obligatoire du montant en chaîne décimale (ex: "2500.00")
-  const formattedAmount = Number(amount).toFixed(2);
+  // Formatage obligatoire du montant en chaîne décimale ("2500.00")
+  const formattedAmount = formatSaspayAmount(amount);
   const effectivePhone = (phone || customerPhone || '').replace(/[^0-9+]/g, '');
   const externalReference = params.externalReference || `${tenantId}___${orderId}`;
-  const effectiveCallback = callbackUrl || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/api/payment/saspay/webhook';
+  const countryIso = String(country || 'BF').trim().toUpperCase();
 
-  const resolvedNetwork = network || resolveSaspayNetwork(country, operator);
-  const idempotencyKey = params.idempotencyKey || `payin_${orderId}_${Date.now()}`;
+  const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
+  const idempotencyKey = getOrGenerateIdempotencyKey(params.idempotencyKey);
 
-  // Détermination du mode : Softpay (Push STK/USSD direct) ou Hosted Checkout Session
+  // Découpage nom client pour l'objet customer requis
+  const nameParts = customerName.trim().split(/\s+/);
+  const firstName = nameParts[0] || 'Client';
+  const lastName = nameParts.slice(1).join(' ') || 'Nanasore';
+
   const useSoftpay = type === 'softpay' || (type === 'auto' && Boolean(effectivePhone && resolvedNetwork));
 
   let endpoint = 'payments/softpay/';
@@ -262,29 +342,48 @@ async function createSaspayPayin(params) {
     payload = {
       amount: formattedAmount,
       currency: currency.toUpperCase(),
+      country: countryIso,
       network: resolvedNetwork,
-      phone: effectivePhone,
       description: description || `Paiement ${orderId}`,
-      external_reference: externalReference,
-      callback_url: effectiveCallback,
+      customer: {
+        email: customerEmail,
+        first_name: firstName,
+        last_name: lastName,
+        phone: effectivePhone
+      },
+      fee_charge_mode: feeChargeMode,
+      metadata: {
+        order_id: orderId,
+        tenant_id: tenantId,
+        external_reference: externalReference,
+        ...(customPayload.metadata || {})
+      },
       ...customPayload
     };
   } else {
-    endpoint = 'checkout/sessions/';
+    // Route officielle spécification OpenAPI : POST /checkout-sessions/
+    endpoint = 'checkout-sessions/';
     payload = {
       amount: formattedAmount,
       currency: currency.toUpperCase(),
+      country: countryIso,
+      customer_email: customerEmail,
+      customer_name: customerName,
+      customer_phone: effectivePhone || undefined,
       description: description || `Commande ${orderId}`,
-      external_reference: externalReference,
-      customer_name: customerName || 'Client Nanasore',
-      customer_phone: effectivePhone,
-      callback_url: effectiveCallback,
-      return_url: returnUrl || effectiveCallback,
+      return_url: returnUrl,
+      fee_charge_mode: feeChargeMode,
+      metadata: {
+        order_id: orderId,
+        tenant_id: tenantId,
+        external_reference: externalReference,
+        ...(customPayload.metadata || {})
+      },
       ...customPayload
     };
   }
 
-  // APPEL EN DIRECT SANS PROXY FIXIE
+  // APPEL DIRECT EN CLAIR SANS PROXY FIXIE
   const rawResponse = await callSaspayApi(endpoint, {
     method: 'POST',
     body: payload,
@@ -292,8 +391,13 @@ async function createSaspayPayin(params) {
     idempotencyKey
   });
 
-  const checkoutUrl = rawResponse?.checkout_url || rawResponse?.payment_url || rawResponse?.data?.checkout_url || null;
-  const transactionId = rawResponse?.transaction_id || rawResponse?.id || rawResponse?.data?.id || externalReference;
+  const responseData = rawResponse?.data || rawResponse;
+  const checkoutUrl = responseData?.checkout_url || rawResponse?.checkout_url || null;
+  const transactionId = responseData?.id || rawResponse?.id || rawResponse?.transaction_id || externalReference;
+
+  // Calcul comptable : charged (déboursé payeur) vs net_amount (revenu net marchand)
+  const chargedAmount = Number(responseData?.charged || responseData?.amount || amount);
+  const netAmount = Number(responseData?.net_amount || responseData?.amount || amount);
 
   return {
     success: true,
@@ -301,20 +405,26 @@ async function createSaspayPayin(params) {
     checkout_url: checkoutUrl,
     redirectUrl: checkoutUrl,
     transaction_id: transactionId,
+    id: transactionId,
     external_reference: externalReference,
     amount: Number(amount),
-    currency,
-    country,
+    charged: chargedAmount,
+    net_amount: netAmount,
+    currency: currency.toUpperCase(),
+    country: countryIso,
     network: resolvedNetwork,
-    data: rawResponse,
-    message: rawResponse?.message || (checkoutUrl ? 'Redirection vers la caisse Saspay' : 'Demande de paiement transmise à l\'opérateur')
+    status: responseData?.status || 'PENDING',
+    data: responseData,
+    message: rawResponse?.message || (checkoutUrl ? 'Redirection vers la passerelle opérateur' : 'Demande de paiement transmise à l\'opérateur')
   };
 }
 
 /**
- * 2. DÉCAISSEMENT (Pay-Out / Transfers / Disbursements) - EXÉCUTÉ VIA PROXY FIXIE (FIXIE_URL_SASPAY)
+ * 2. DÉCAISSEMENT (Pay-Out / Retraits) — EXÉCUTÉ OBLIGATOIREMENT VIA PROXY FIXIE (FIXIE_URL_SASPAY)
  * 
- * Initialise un transfert de fonds vers un compte Mobile Money avec IP Whitelisting bancaire strict.
+ * Spécification OpenAPI : POST /payouts/initialize/
+ * Requiert une IP whitelistée (fournie par le proxy Fixie).
+ * Devise et pays doivent strictement concorder (ex: XOF + BJ).
  */
 async function createSaspayPayout(params) {
   const {
@@ -325,35 +435,50 @@ async function createSaspayPayout(params) {
     country = 'BF',
     phone,
     beneficiaryPhone,
-    beneficiaryName,
+    beneficiaryName = 'Bénéficiaire Nanasore',
+    customerEmail = 'finance@nanasore.com',
     operator,
     network,
     description,
-    callbackUrl,
+    feeChargeMode = 'DEDUCTED',
     customPayload = {}
   } = params;
 
-  if (!amount || Number(amount) <= 0) {
-    throw new Error('Le montant du transfert est requis et doit être supérieur à 0.');
-  }
-
-  const formattedAmount = Number(amount).toFixed(2);
+  const formattedAmount = formatSaspayAmount(amount);
   const effectivePhone = (phone || beneficiaryPhone || '').replace(/[^0-9+]/g, '');
   const externalReference = params.externalReference || `${tenantId}___${payoutId}`;
-  const effectiveCallback = callbackUrl || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/api/payment/saspay/webhook';
+  const countryIso = String(country || 'BF').trim().toUpperCase();
 
-  const resolvedNetwork = network || resolveSaspayNetwork(country, operator);
-  const idempotencyKey = params.idempotencyKey || `payout_${payoutId}_${Date.now()}`;
+  const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
+  const idempotencyKey = getOrGenerateIdempotencyKey(params.idempotencyKey);
+
+  const nameParts = beneficiaryName.trim().split(/\s+/);
+  const firstName = nameParts[0] || 'Bénéficiaire';
+  const lastName = nameParts.slice(1).join(' ') || 'Nanasore';
 
   const payload = {
     amount: formattedAmount,
     currency: currency.toUpperCase(),
-    network: resolvedNetwork,
-    phone: effectivePhone,
-    beneficiary_name: beneficiaryName || 'Bénéficiaire Nanasore',
+    country: countryIso,
+    method: resolvedNetwork,
+    customer: {
+      email: customerEmail,
+      first_name: firstName,
+      last_name: lastName,
+      phone: effectivePhone
+    },
+    recipient: {
+      msisdn: effectivePhone,
+      name: beneficiaryName
+    },
+    fee_charge_mode: feeChargeMode,
     description: description || `Transfert ${payoutId}`,
-    external_reference: externalReference,
-    callback_url: effectiveCallback,
+    metadata: {
+      payout_id: payoutId,
+      tenant_id: tenantId,
+      external_reference: externalReference,
+      ...(customPayload.metadata || {})
+    },
     ...customPayload
   };
 
@@ -361,71 +486,168 @@ async function createSaspayPayout(params) {
   const rawResponse = await callSaspayApi('payouts/initialize/', {
     method: 'POST',
     body: payload,
-    isPayout: true, // Force l'injection de FIXIE_URL_SASPAY
+    isPayout: true, // Force l'injection du proxy FIXIE_URL_SASPAY
     idempotencyKey
   });
 
-  const pId = rawResponse?.payout_id || rawResponse?.id || rawResponse?.data?.id || payoutId;
+  const responseData = rawResponse?.data || rawResponse;
+  const pId = responseData?.id || rawResponse?.payout_id || payoutId;
 
   return {
     success: true,
     payout_id: pId,
+    id: pId,
     external_reference: externalReference,
     amount: Number(amount),
-    currency,
-    country,
+    charged: Number(responseData?.charged || responseData?.amount || amount),
+    net_amount: Number(responseData?.net_amount || responseData?.amount || amount),
+    currency: currency.toUpperCase(),
+    country: countryIso,
     network: resolvedNetwork,
-    status: rawResponse?.status || 'PENDING',
-    data: rawResponse,
+    status: responseData?.status || 'PENDING',
+    data: responseData,
     message: rawResponse?.message || 'Transfert initié avec succès via IP Statique Fixie'
   };
 }
 
 /**
- * 3. Vérification d'un encaissement (Pay-In) - DIRECT EN CLAIR
+ * 3. Vérification de paiement (Pay-In) — GET /payments/{payment_id}/verify/
+ * Exécuté en DIRECT SANS PROXY FIXIE
+ * Règle : Seul le statut SUCCESS autorise la livraison du produit/service.
  */
 async function verifySaspayPayment(paymentId) {
   if (!paymentId) throw new Error('paymentId requis pour la vérification');
-  return await callSaspayApi(`payments/${paymentId}/verify/`, {
+  const rawResponse = await callSaspayApi(`payments/${paymentId}/verify/`, {
     method: 'GET',
     isPayout: false
   });
+
+  const data = rawResponse?.data || rawResponse;
+  const status = String(data?.status || 'PENDING').toUpperCase();
+  const isSuccess = status === 'SUCCESS';
+
+  return {
+    success: isSuccess,
+    status,
+    isPaid: isSuccess,
+    payment_id: paymentId,
+    id: paymentId,
+    amount: Number(data?.amount || 0),
+    charged: Number(data?.charged || data?.amount || 0),
+    net_amount: Number(data?.net_amount || data?.amount || 0),
+    currency: data?.currency || 'XOF',
+    data,
+    canDeliver: isSuccess // Seul SUCCESS autorise la livraison
+  };
 }
 
 /**
- * 4. Vérification d'un décaissement (Pay-Out) - VIA PROXY FIXIE
+ * 4. Vérification de décaissement (Pay-Out) — GET /payouts/{payout_id}/verify/
+ * Exécuté VIA PROXY FIXIE (FIXIE_URL_SASPAY)
  */
 async function verifySaspayPayout(payoutId) {
   if (!payoutId) throw new Error('payoutId requis pour la vérification');
-  return await callSaspayApi(`payouts/${payoutId}/verify/`, {
+  const rawResponse = await callSaspayApi(`payouts/${payoutId}/verify/`, {
     method: 'GET',
     isPayout: true
   });
+
+  const data = rawResponse?.data || rawResponse;
+  const status = String(data?.status || 'PENDING').toUpperCase();
+
+  return {
+    success: status === 'SUCCESS',
+    status,
+    payout_id: payoutId,
+    id: payoutId,
+    amount: Number(data?.amount || 0),
+    net_amount: Number(data?.net_amount || data?.amount || 0),
+    currency: data?.currency || 'XOF',
+    data
+  };
 }
 
 /**
- * 5. Diagnostic de configuration de Saspay
+ * 5. Vérification cryptographique de la signature Webhook SasPay
+ * Spécification :
+ * - Horodatage X-Webhook-Timestamp dans une fenêtre de 300 secondes
+ * - Signature HMAC SHA-256 en hexadécimal sur le message f"{timestamp}.{raw_body}"
+ * - Comparaison sécurisée en temps constant via crypto.timingSafeEqual
+ * 
+ * @param {object} params { rawBody, signature, timestamp, secret }
+ * @returns {object} { valid: boolean, reason: string|null }
+ */
+function verifySaspayWebhookSignature({ rawBody, signature, timestamp, secret }) {
+  if (!signature) {
+    return { valid: false, reason: 'missing_signature' };
+  }
+  if (!timestamp) {
+    return { valid: false, reason: 'missing_timestamp' };
+  }
+
+  // 1. Contrôle anti-rejeu : fenêtre stricte de 300 secondes
+  const nowSec = Math.floor(Date.now() / 1000);
+  const ts = parseInt(timestamp, 10);
+  if (isNaN(ts) || Math.abs(nowSec - ts) > 300) {
+    return { valid: false, reason: 'timestamp_drift_exceeded_300s' };
+  }
+
+  const signingSecret = secret || process.env.SASPAY_WEBHOOK_SECRET;
+  if (!signingSecret) {
+    console.warn('[SASPAY WEBHOOK WARNING] Variable SASPAY_WEBHOOK_SECRET non définie.');
+    return { valid: false, reason: 'server_secret_not_configured' };
+  }
+
+  // 2. Signature calculée sur Buffer : f"{timestamp}." + rawBody
+  const rawBuffer = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody || '', 'utf8');
+  const signedBuffer = Buffer.concat([Buffer.from(`${timestamp}.`, 'utf8'), rawBuffer]);
+  const expectedHash = crypto.createHmac('sha256', signingSecret).update(signedBuffer).digest('hex').toLowerCase();
+
+  const cleanSignature = String(signature).trim().toLowerCase();
+
+  // 3. Comparaison à temps constant
+  let isValid = false;
+  try {
+    const provBuf = Buffer.from(cleanSignature, 'hex');
+    const expBuf = Buffer.from(expectedHash, 'hex');
+    if (provBuf.length === expBuf.length && provBuf.length > 0) {
+      isValid = crypto.timingSafeEqual(provBuf, expBuf);
+    }
+  } catch {
+    isValid = false;
+  }
+
+  return {
+    valid: isValid,
+    reason: isValid ? null : 'signature_mismatch'
+  };
+}
+
+/**
+ * 6. Diagnostic de configuration de SasPay
  */
 function getSaspayConfigStatus() {
-  const secretKey = getSaspaySecretKey();
+  const apiKey = getSaspayApiKey();
   const fixieSaspayUrl = getFixieUrlSaspay();
 
   let maskedKey = null;
-  if (secretKey) {
-    maskedKey = secretKey.length > 10
-      ? `${secretKey.substring(0, 7)}...${secretKey.substring(secretKey.length - 4)}`
+  if (apiKey) {
+    maskedKey = apiKey.length > 10
+      ? `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`
       : '***';
   }
 
   return {
-    configured: Boolean(secretKey),
+    configured: Boolean(apiKey),
+    environment: apiKey.startsWith('sk_live_') ? 'production' : (apiKey.startsWith('sk_test_') ? 'sandbox' : 'unknown'),
     baseUrl: getSaspayBaseUrl(),
-    hasSecretKey: Boolean(secretKey),
-    maskedKey,
+    hasApiKey: Boolean(apiKey),
+    maskedApiKey: maskedKey,
+    hasWebhookSecret: Boolean(process.env.SASPAY_WEBHOOK_SECRET),
     supportedCountriesCount: Object.keys(SASPAY_SUPPORTED_COUNTRIES).length,
     networkStrategy: {
       payinMode: 'DIRECT (En clair, sans proxy Fixie)',
-      payoutMode: fixieSaspayUrl ? 'PROXY FIXIE_URL_SASPAY (Sortie IP Statique)' : 'DIRECT (FIXIE_URL_SASPAY non défini)'
+      payoutMode: fixieSaspayUrl ? 'PROXY FIXIE_URL_SASPAY (IP Whitelistée)' : 'DIRECT (FIXIE_URL_SASPAY non défini)'
     },
     fixieSaspayConfigured: Boolean(fixieSaspayUrl),
     timestamp: new Date().toISOString()
@@ -433,7 +655,7 @@ function getSaspayConfigStatus() {
 }
 
 /**
- * 6. Configuration Axios pour Saspay (avec isolation stricte)
+ * 7. Configuration Axios pour SasPay (avec isolation stricte)
  */
 function getSaspayAxiosConfig(options = {}) {
   const isPayout = Boolean(options.isPayout);
@@ -459,7 +681,9 @@ module.exports = {
   SASPAY_DEFAULT_BASE_URL,
   SASPAY_SUPPORTED_COUNTRIES,
   getSaspayBaseUrl,
-  getSaspaySecretKey,
+  getSaspayApiKey,
+  formatSaspayAmount,
+  getOrGenerateIdempotencyKey,
   getSaspayHeaders,
   resolveSaspayNetwork,
   callSaspayApi,
@@ -467,6 +691,7 @@ module.exports = {
   createSaspayPayout,
   verifySaspayPayment,
   verifySaspayPayout,
+  verifySaspayWebhookSignature,
   getSaspayConfigStatus,
   getSaspayAxiosConfig
 };
