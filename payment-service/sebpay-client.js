@@ -359,8 +359,8 @@ async function callSebpayApi(endpoint, options = {}) {
 
   const reqHeaders = getSebpayHeaders(headers);
 
-  // Lecture dynamique systématique de process.env.FIXIE_URL
-  const fixieUrl = process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || FIXIE_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
+  // Lecture dynamique systématique de process.env.FIXIE_URL_SEBPAY (avec fallback FIXIE_URL)
+  const fixieUrl = process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || FIXIE_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
   let httpsAgent = null;
   let undiciAgent = null;
 
@@ -974,10 +974,10 @@ async function getSebpayCountries(forceRefresh = false) {
 }
 
 /**
- * Retourne une instance de HttpsProxyAgent configurée avec process.env.FIXIE_URL
+ * Retourne une instance de HttpsProxyAgent configurée avec process.env.FIXIE_URL_SEBPAY
  */
 function getFixieHttpsProxyAgent() {
-  const fixieUrl = process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
+  const fixieUrl = process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
   return fixieUrl ? new HttpsProxyAgent(fixieUrl) : null;
 }
 

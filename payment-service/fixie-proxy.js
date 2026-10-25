@@ -1,14 +1,13 @@
 /**
- * Module Fixie Proxy ISOLÉ pour requêtes sortantes vers l'API Sebpay
+ * Module Fixie Proxy ISOLÉ Multi-Agrégateurs (Sebpay & Saspay)
  * 
  * RÈGLES STRICTES D'ISOLATION FIXIE :
- * 1. Isolation stricte : L'agent Fixie (HttpsProxyAgent / undici ProxyAgent) n'est injecté QUE
- *    dans les requêtes HTTP/HTTPS à destination de l'API Sebpay (https://newapi.sebpay.bj).
- * 2. Zéro proxy global : Suppression active des variables HTTP_PROXY / HTTPS_PROXY pour garantir
- *    qu'aucun sous-système (Firebase Admin, Google APIs, logs, pings) ne transite par Fixie.
- * 3. Health Checks protégés : Les pings de monitoring (ex: /health, /) répondent localement
- *    sans jamais déclencher d'appel réseau ni consommer le quota Fixie.
- * 4. Les requêtes hors-Sebpay communiquent directement en clair.
+ * 1. Configuration des proxies distincts :
+ *    - Sebpay : utilise systématiquement process.env.FIXIE_URL_SEBPAY (fallback FIXIE_URL / QUOTAGUARDSTATIC_URL).
+ *    - Saspay Pay-Out : utilise process.env.FIXIE_URL_SASPAY uniquement sur les endpoints de décaissement (Payouts).
+ *    - Saspay Pay-In : direct en clair SANS aucun proxy.
+ * 2. Zéro proxy global : suppression active de HTTP_PROXY, HTTPS_PROXY, etc.
+ * 3. Health Checks isolés : /health et / répondent localement 200 sans toucher à Fixie.
  */
 
 // Suppression stricte de toute variable de proxy global pour isoler le reste du serveur
@@ -22,44 +21,93 @@ delete process.env.all_proxy;
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
 
-// Lecture dynamique de l'URL Fixie depuis les variables d'environnement Render
-function getFixieUrl() {
-  return process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
+// Lecture dynamique de l'URL Fixie dédiée à Sebpay
+function getFixieUrlSebpay() {
+  return (
+    process.env.FIXIE_URL_SEBPAY ||
+    process.env.FIXIE_URL ||
+    process.env.QUOTAGUARDSTATIC_URL ||
+    'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80'
+  );
 }
 
-let cachedFixieUrl = null;
-let cachedHttpsAgent = null;
-let cachedUndiciAgent = null;
+// Lecture dynamique de l'URL Fixie dédiée à Saspay (décaissements / payouts uniquement)
+function getFixieUrlSaspay() {
+  return process.env.FIXIE_URL_SASPAY || null;
+}
+
+// Caches des agents par agrégateur
+let cachedSebpayFixieUrl = null;
+let cachedSebpayHttpsAgent = null;
+let cachedSebpayUndiciAgent = null;
+
+let cachedSaspayFixieUrl = null;
+let cachedSaspayHttpsAgent = null;
+let cachedSaspayUndiciAgent = null;
 
 /**
- * Retourne ou instancie les agents Proxy HttpsProxyAgent et undici ProxyAgent
+ * Retourne ou instancie les agents Proxy pour Sebpay (FIXIE_URL_SEBPAY)
  */
-function getFixieAgents() {
-  const currentUrl = getFixieUrl();
+function getFixieAgentsSebpay() {
+  const currentUrl = getFixieUrlSebpay();
   if (!currentUrl) {
     return { fixieUrl: null, httpsAgent: null, undiciAgent: null };
   }
 
-  if (currentUrl !== cachedFixieUrl || !cachedHttpsAgent || !cachedUndiciAgent) {
+  if (currentUrl !== cachedSebpayFixieUrl || !cachedSebpayHttpsAgent || !cachedSebpayUndiciAgent) {
     try {
-      cachedHttpsAgent = new HttpsProxyAgent(currentUrl);
-      cachedUndiciAgent = new ProxyAgent(currentUrl);
-      cachedFixieUrl = currentUrl;
-      console.log('[FIXIE PROXY ISOLÉ] Agents HttpsProxyAgent & ProxyAgent initialisés exclusivement pour Sebpay via :', currentUrl.replace(/:[^:@]+@/, ':****@'));
+      cachedSebpayHttpsAgent = new HttpsProxyAgent(currentUrl);
+      cachedSebpayUndiciAgent = new ProxyAgent(currentUrl);
+      cachedSebpayFixieUrl = currentUrl;
+      console.log('[FIXIE PROXY SEBPAY] Agents initialisés avec succès via :', currentUrl.replace(/:[^:@]+@/, ':****@'));
     } catch (err) {
-      console.error('[FIXIE PROXY ERROR] Erreur initialisation HttpsProxyAgent :', err.message);
+      console.error('[FIXIE PROXY ERROR] Erreur initialisation HttpsProxyAgent Sebpay :', err.message);
     }
   }
 
   return {
     fixieUrl: currentUrl,
-    httpsAgent: cachedHttpsAgent,
-    undiciAgent: cachedUndiciAgent
+    httpsAgent: cachedSebpayHttpsAgent,
+    undiciAgent: cachedSebpayUndiciAgent
   };
 }
 
 /**
- * Vérifie si une URL cible correspond au domaine de l'API Sebpay
+ * Retourne ou instancie les agents Proxy pour Saspay Pay-Out (FIXIE_URL_SASPAY)
+ */
+function getFixieAgentsSaspay() {
+  const currentUrl = getFixieUrlSaspay();
+  if (!currentUrl) {
+    return { fixieUrl: null, httpsAgent: null, undiciAgent: null };
+  }
+
+  if (currentUrl !== cachedSaspayFixieUrl || !cachedSaspayHttpsAgent || !cachedSaspayUndiciAgent) {
+    try {
+      cachedSaspayHttpsAgent = new HttpsProxyAgent(currentUrl);
+      cachedSaspayUndiciAgent = new ProxyAgent(currentUrl);
+      cachedSaspayFixieUrl = currentUrl;
+      console.log('[FIXIE PROXY SASPAY PAYOUT] Agents initialisés avec succès via :', currentUrl.replace(/:[^:@]+@/, ':****@'));
+    } catch (err) {
+      console.error('[FIXIE PROXY ERROR] Erreur initialisation HttpsProxyAgent Saspay :', err.message);
+    }
+  }
+
+  return {
+    fixieUrl: currentUrl,
+    httpsAgent: cachedSaspayHttpsAgent,
+    undiciAgent: cachedSaspayUndiciAgent
+  };
+}
+
+/**
+ * Rétro-compatibilité : retourne les agents Sebpay par défaut
+ */
+function getFixieAgents() {
+  return getFixieAgentsSebpay();
+}
+
+/**
+ * Vérifie si une URL cible correspond au domaine Sebpay
  */
 function isSebpayUrl(url) {
   if (!url) return false;
@@ -68,29 +116,43 @@ function isSebpayUrl(url) {
 }
 
 /**
- * Exécute une requête HTTP sortante
- * RÈGLE STRICTE : Le proxy Fixie n'est injecté QUE pour les URLs Sebpay (newapi.sebpay.bj).
- * Toutes les autres requêtes (Firebase, tests, pings) sortent directement en clair.
+ * Vérifie si une URL cible correspond à un endpoint Saspay Pay-Out
+ */
+function isSaspayPayoutUrl(url) {
+  if (!url) return false;
+  const str = String(url).toLowerCase();
+  return (str.includes('saspay.me') || str.includes('saspay.net')) && str.includes('/payouts');
+}
+
+/**
+ * Exécute une requête HTTP sortante avec routage réseau intelligent :
+ * - Sebpay : passe par FIXIE_URL_SEBPAY
+ * - Saspay Payout : passe par FIXIE_URL_SASPAY
+ * - Saspay Payin et tout le reste : passe DIRECTEMENT en clair (aucun proxy)
  * 
  * @param {string} url - URL cible
- * @param {object} options - Options standard fetch (method, headers, body, timeout, forceFixie)
+ * @param {object} options - Options standard fetch
  */
 async function fetchViaFixie(url, options = {}) {
   const fetchOpts = { ...options };
 
-  // Injection du proxy Fixie UNIQUEMENT si l'URL est Sebpay ou si explicitement forcé pour diagnostic IP
-  const shouldRouteViaFixie = isSebpayUrl(url) || Boolean(options.forceFixie);
+  let targetAgents = null;
 
-  if (shouldRouteViaFixie) {
-    const { httpsAgent, undiciAgent } = getFixieAgents();
-    if (httpsAgent) {
-      fetchOpts.agent = httpsAgent;
-      fetchOpts.httpsAgent = httpsAgent; // Axios compatibility
-      fetchOpts.httpAgent = httpsAgent;
-      fetchOpts.proxy = false; // Empêche Axios de chercher un proxy système
-    }
-    if (undiciAgent) {
-      fetchOpts.dispatcher = undiciAgent; // Node 18+ undici / global fetch
+  if (isSebpayUrl(url) || options.aggregator === 'sebpay') {
+    targetAgents = getFixieAgentsSebpay();
+  } else if ((isSaspayPayoutUrl(url) || options.isPayout) && options.aggregator === 'saspay') {
+    targetAgents = getFixieAgentsSaspay();
+  } else if (options.forceFixie) {
+    targetAgents = getFixieAgentsSebpay();
+  }
+
+  if (targetAgents && targetAgents.httpsAgent) {
+    fetchOpts.agent = targetAgents.httpsAgent;
+    fetchOpts.httpsAgent = targetAgents.httpsAgent;
+    fetchOpts.httpAgent = targetAgents.httpsAgent;
+    fetchOpts.proxy = false;
+    if (targetAgents.undiciAgent) {
+      fetchOpts.dispatcher = targetAgents.undiciAgent;
     }
   } else {
     // Communication directe en clair garantie : aucun proxy
@@ -106,11 +168,10 @@ async function fetchViaFixie(url, options = {}) {
 
 let cachedOutboundIp = null;
 let cachedIpTimestamp = 0;
-const IP_CACHE_TTL_MS = 60 * 60 * 1000; // Cache 1 heure pour éviter toute consommation inutile par monitoring
+const IP_CACHE_TTL_MS = 60 * 60 * 1000; // Cache 1 heure
 
 /**
  * Teste et extrait l'adresse IP publique sortante via Fixie (avec cache de 1 heure)
- * Protégé contre les appels répétitifs de robots ou de health checks
  */
 async function getOutboundIp(forceRefresh = false) {
   const now = Date.now();
@@ -127,7 +188,7 @@ async function getOutboundIp(forceRefresh = false) {
     const response = await fetchViaFixie('https://api.ipify.org?format=json', {
       headers: { 'User-Agent': 'NanaPaymentProxy/1.0' },
       signal: AbortSignal.timeout(10000),
-      forceFixie: true // Autorisé explicitement pour le diagnostic d'IP bancaire
+      forceFixie: true
     });
 
     if (!response.ok) {
@@ -140,8 +201,8 @@ async function getOutboundIp(forceRefresh = false) {
     cachedOutboundIp = {
       success: true,
       ip: data.ip,
-      isProxyActive: Boolean(getFixieUrl()),
-      proxyConfigured: Boolean(getFixieUrl()),
+      isProxyActive: Boolean(getFixieUrlSebpay()),
+      proxyConfigured: Boolean(getFixieUrlSebpay()),
       latencyMs,
       timestamp: new Date().toISOString()
     };
@@ -159,8 +220,8 @@ async function getOutboundIp(forceRefresh = false) {
       cachedOutboundIp = {
         success: true,
         ip: textIp,
-        isProxyActive: Boolean(getFixieUrl()),
-        proxyConfigured: Boolean(getFixieUrl()),
+        isProxyActive: Boolean(getFixieUrlSebpay()),
+        proxyConfigured: Boolean(getFixieUrlSebpay()),
         fallback: true,
         timestamp: new Date().toISOString()
       };
@@ -172,20 +233,24 @@ async function getOutboundIp(forceRefresh = false) {
         success: false,
         error: err.message,
         fallbackError: fallbackErr.message,
-        isProxyActive: Boolean(getFixieUrl()),
-        proxyConfigured: Boolean(getFixieUrl())
+        isProxyActive: Boolean(getFixieUrlSebpay()),
+        proxyConfigured: Boolean(getFixieUrlSebpay())
       };
     }
   }
 }
 
 module.exports = {
-  getFixieUrl,
+  getFixieUrl: getFixieUrlSebpay,
+  getFixieUrlSebpay,
+  getFixieUrlSaspay,
   getFixieAgents,
+  getFixieAgentsSebpay,
+  getFixieAgentsSaspay,
   isSebpayUrl,
-  FIXIE_URL: getFixieUrl(),
-  httpsAgent: cachedHttpsAgent,
-  undiciAgent: cachedUndiciAgent,
+  isSaspayPayoutUrl,
+  FIXIE_URL: getFixieUrlSebpay(),
+  FIXIE_URL_SEBPAY: getFixieUrlSebpay(),
   fetchViaFixie,
   getOutboundIp
 };

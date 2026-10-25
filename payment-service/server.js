@@ -35,6 +35,14 @@ const {
   getSebpayCountries
 } = require('./sebpay-client');
 const {
+  createSaspayPayin,
+  createSaspayPayout,
+  verifySaspayPayment,
+  verifySaspayPayout,
+  getSaspayConfigStatus,
+  SASPAY_SUPPORTED_COUNTRIES
+} = require('./saspay-client');
+const {
   generateYouTubeAuthUrl,
   exchangeCodeForTokens,
   saveYouTubeTokensToFirestore,
@@ -274,9 +282,16 @@ app.get(['/', '/health', '/api/health', '/healthz', '/ping', '/api/ping'], (req,
     service: 'nana-payment-gateway-api',
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'production',
-    proxyIsolatedToSebpay: true,
-    fixieConfigured: Boolean(process.env.FIXIE_URL),
-    sebpayConfigured: Boolean(process.env.SEBPAY_PUBLIC_KEY && process.env.SEBPAY_SECRET_KEY),
+    proxyStrategy: {
+      globalProxy: false,
+      sebpayProxy: Boolean(process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL),
+      saspayPayoutProxy: Boolean(process.env.FIXIE_URL_SASPAY),
+      saspayPayinProxy: false // Pay-In est direct sans proxy Fixie
+    },
+    aggregators: {
+      sebpay: Boolean(process.env.SEBPAY_PUBLIC_KEY && process.env.SEBPAY_SECRET_KEY),
+      saspay: Boolean(process.env.SASPAY_SECRET_KEY || process.env.SASPAY_API_KEY)
+    },
     firebaseConnected: isFirebaseInitialized,
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
@@ -292,6 +307,18 @@ app.get('/api/payment/sebpay/status', (req, res) => {
     success: true,
     service: 'sebpay-bridge',
     ...sebpayConfig
+  });
+});
+
+// ============================================================================
+// ROUTE 2c : Statut & Diagnostic Saspay (Sécurité stricte : Secret Key masquée)
+// ============================================================================
+app.get('/api/payment/saspay/status', (req, res) => {
+  const saspayConfig = getSaspayConfigStatus();
+  return res.json({
+    success: true,
+    service: 'saspay-bridge',
+    ...saspayConfig
   });
 });
 
@@ -1024,6 +1051,215 @@ app.get(['/api/payment/countries', '/api/payment/sebpay/countries'], async (req,
       countries: SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
       warning: err.message
     });
+  }
+});
+
+// ============================================================================
+// ROUTE SASPAY 1 : Encaissement (Pay-In / Collections) - DIRECT SANS FIXIE
+// ============================================================================
+app.post(['/api/payment/saspay/payin', '/api/payment/saspay/initiate'], async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = 'XOF',
+      country = 'BF',
+      phone,
+      customerPhone,
+      customerName,
+      operator,
+      network,
+      description,
+      tenantId = 'nanasore_central_hub',
+      orderId = `ORD_${Date.now()}`,
+      returnUrl,
+      type = 'auto'
+    } = req.body;
+
+    if (!amount || Number(amount) <= 0) {
+      return res.status(400).json({ success: false, error: 'Montant de paiement invalide.' });
+    }
+
+    const externalReference = req.body.externalReference || `${tenantId}___${orderId}`;
+    const callbackUrl =
+      req.body.callback_url ||
+      req.body.callbackUrl ||
+      process.env.PAYMENT_CALLBACK_URL ||
+      'https://nana-payment-api.onrender.com/api/payment/saspay/webhook';
+
+    const saspayResult = await createSaspayPayin({
+      tenantId,
+      orderId,
+      externalReference,
+      amount,
+      currency,
+      country,
+      phone: phone || customerPhone,
+      customerName,
+      operator,
+      network,
+      description,
+      callbackUrl,
+      returnUrl,
+      type
+    });
+
+    if (db) {
+      try {
+        const nowServer = admin.firestore.FieldValue.serverTimestamp();
+        const intentData = {
+          id: orderId,
+          orderId,
+          tenantId,
+          externalReference,
+          amount: Number(amount),
+          currency,
+          customerPhone: phone || customerPhone,
+          operator: operator || network || 'SASPAY',
+          provider: 'SASPAY',
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
+          environment: 'production',
+          redirectUrl: saspayResult.checkout_url || null,
+          action: saspayResult.action,
+          createdAt: nowServer,
+          updatedAt: nowServer
+        };
+        await db.collection('payment_intents').doc(orderId).set(intentData, { merge: true });
+        await db.collection('payment_intents').doc(externalReference).set(intentData, { merge: true });
+      } catch (fbErr) {
+        console.warn('[FIRESTORE SASPAY INTENT]', fbErr.message);
+      }
+    }
+
+    return res.status(200).json(saspayResult);
+  } catch (err) {
+    console.error('[SASPAY PAYIN ERROR]', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      details: err.data || null
+    });
+  }
+});
+
+// ============================================================================
+// ROUTE SASPAY 2 : Décaissement (Pay-Out / Transfers) - VIA PROXY FIXIE (FIXIE_URL_SASPAY)
+// ============================================================================
+app.post('/api/payment/saspay/payout', async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = 'XOF',
+      country = 'BF',
+      phone,
+      beneficiaryPhone,
+      beneficiaryName,
+      operator,
+      network,
+      description,
+      tenantId = 'nanasore_central_hub',
+      payoutId = `POUT_${Date.now()}`
+    } = req.body;
+
+    if (!amount || Number(amount) <= 0) {
+      return res.status(400).json({ success: false, error: 'Montant de transfert invalide.' });
+    }
+
+    const callbackUrl =
+      req.body.callback_url ||
+      req.body.callbackUrl ||
+      process.env.PAYMENT_CALLBACK_URL ||
+      'https://nana-payment-api.onrender.com/api/payment/saspay/webhook';
+
+    const payoutResult = await createSaspayPayout({
+      tenantId,
+      payoutId,
+      amount,
+      currency,
+      country,
+      phone: phone || beneficiaryPhone,
+      beneficiaryName,
+      operator,
+      network,
+      description,
+      callbackUrl
+    });
+
+    if (db) {
+      try {
+        const nowServer = admin.firestore.FieldValue.serverTimestamp();
+        await db.collection('payouts').doc(payoutId).set({
+          id: payoutId,
+          tenantId,
+          amount: Number(amount),
+          currency,
+          phone: phone || beneficiaryPhone,
+          provider: 'SASPAY',
+          status: payoutResult.status || 'PENDING',
+          createdAt: nowServer,
+          updatedAt: nowServer
+        }, { merge: true });
+      } catch (fbErr) {
+        console.warn('[FIRESTORE SASPAY PAYOUT]', fbErr.message);
+      }
+    }
+
+    return res.status(200).json(payoutResult);
+  } catch (err) {
+    console.error('[SASPAY PAYOUT ERROR]', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      details: err.data || null
+    });
+  }
+});
+
+// ============================================================================
+// ROUTE SASPAY 3 : Vérification Encaissement / Décaissement
+// ============================================================================
+app.get('/api/payment/saspay/verify/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const isPayout = req.query.type === 'payout' || id.startsWith('POUT_');
+    const result = isPayout ? await verifySaspayPayout(id) : await verifySaspayPayment(id);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[SASPAY VERIFY ERROR]', err);
+    return res.status(500).json({ success: false, error: err.message, details: err.data || null });
+  }
+});
+
+// ============================================================================
+// ROUTE SASPAY 4 : Catalogue des 24 pays Saspay
+// ============================================================================
+app.get('/api/payment/saspay/countries', (req, res) => {
+  return res.json({
+    success: true,
+    count: Object.keys(SASPAY_SUPPORTED_COUNTRIES).length,
+    countries: SASPAY_SUPPORTED_COUNTRIES
+  });
+});
+
+// ============================================================================
+// ROUTE SASPAY 5 : Webhook Dédié Saspay
+// ============================================================================
+app.post('/api/payment/saspay/webhook', express.json(), async (req, res) => {
+  try {
+    res.status(200).json({ received: true });
+
+    setImmediate(async () => {
+      try {
+        const payload = req.body || {};
+        console.log('[SASPAY WEBHOOK RECEIVED]', JSON.stringify(payload));
+        await processWebhookTransaction(payload);
+      } catch (procErr) {
+        console.error('[SASPAY WEBHOOK PROCESSING ERROR]', procErr.message);
+      }
+    });
+  } catch (err) {
+    console.error('[SASPAY WEBHOOK ERROR]', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
