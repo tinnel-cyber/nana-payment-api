@@ -291,7 +291,6 @@ app.get(['/', '/health', '/api/health', '/healthz', '/ping', '/api/ping'], (req,
       globalFallbackConfigured: Boolean(process.env.FIXIE_URL),
       failoverReady: true
     },
-    },
     aggregators: {
       sebpay: Boolean(process.env.SEBPAY_PUBLIC_KEY && process.env.SEBPAY_SECRET_KEY),
       saspay: Boolean(process.env.SASPAY_SECRET_KEY || process.env.SASPAY_API_KEY)
@@ -1011,18 +1010,15 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
           updatedAt: nowServer
         };
 
-        await db.collection('payment_intents').doc(orderId).set(intentData, { merge: true });
+        await db.collection('payment_intents').doc(orderId).set(intentData);
         await db.collection('payment_intents').doc(externalReference).set(intentData, { merge: true });
-      } catch (fbErr) {
-        console.warn('[FIRESTORE INTENT] Enregistrement intention :', fbErr.message);
-      }
-    }
       } catch (fbErr) {
         console.warn('[FIRESTORE INTENT] Enregistrement intention :', fbErr.message);
       }
     }
 
     return res.status(200).json(sebpayResult);
+
   } catch (err) {
     console.error('[SEBPAY INITIATE ERROR]', err);
     return res.status(500).json({
