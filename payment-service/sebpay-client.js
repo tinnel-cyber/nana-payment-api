@@ -180,6 +180,32 @@ const SUPPORTED_COUNTRIES = {
 };
 
 /**
+ * Fonction de nettoyage pour forcer le format local à 8 chiffres (Burkina Faso)
+ * Requis par les opérateurs (notamment Orange Burkina Faso) pour éviter le rejet HTTP 400 Bad Request
+ * 
+ * @param {string|number} phone - Numéro de téléphone brut (ex: '+22670123456', '00226 70 12 34 56', '22670123456')
+ * @returns {string} Numéro nettoyé au format local à 8 chiffres (ex: '70123456')
+ */
+function formatLocalPhoneNumber(phone) {
+  if (!phone) return '';
+  
+  // 1. Supprime tous les caractères non numériques (+, espaces, tirets)
+  let cleaned = String(phone).replace(/\D/g, '');
+  
+  // 2. Si le numéro commence par l'indicatif 226, on retire l'indicatif
+  if (cleaned.startsWith('226') && cleaned.length === 11) {
+    cleaned = cleaned.substring(3);
+  }
+  
+  // 3. On extrait les 8 derniers chiffres au cas où il y a d'autres préfixes (ex: 00226)
+  if (cleaned.length > 8) {
+    cleaned = cleaned.slice(-8);
+  }
+  
+  return cleaned;
+}
+
+/**
  * Résout dynamiquement le code ISO pays (ex: "BF"), son ID officiel Sebpay et la devise nationale (ex: "XOF")
  * Résolution par ordre de priorité :
  * 1. Code pays explicite à 2 lettres (ex: "BF", "BJ", "CI")
@@ -645,6 +671,9 @@ async function createSebpayCollection(params) {
   const rawOperator = operator || customPayload.operator || customPayload.provider || '';
   const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
 
+  // Formatage forcé du numéro au format local à 8 chiffres (Burkina Faso) requis par Orange BF et Sebpay
+  const localPhoneNumber = formatLocalPhoneNumber(effectivePhone);
+
   const body = {
     amount: Math.round(Number(amount)),
     currency: resolved.currency,
@@ -654,8 +683,10 @@ async function createSebpayCollection(params) {
     country_name: countryObject.country_name,
     country_id: countryObject.id,
     prefix: countryObject.prefix,
-    customer_phone: effectivePhone,
-    phone: effectivePhone,
+    customer_phone: localPhoneNumber,
+    phone: localPhoneNumber,
+    msisdn: localPhoneNumber,
+    client_phone: localPhoneNumber,
     customer_name: customerName || 'Client Nanasore',
     customer_email: customerEmail || 'client@nanasore.com',
     external_reference: externalReference,
@@ -667,6 +698,13 @@ async function createSebpayCollection(params) {
     operator: normalizedOperator,
     provider: normalizedOperator
   };
+
+  // Forcer le formatage sur le champ du téléphone juste avant l'envoi de la requête HTTP vers l'API Sebpay
+  const finalLocalPhone = formatLocalPhoneNumber(body.phone || body.customer_phone || effectivePhone);
+  body.phone = finalLocalPhone;
+  body.customer_phone = finalLocalPhone;
+  if (body.msisdn) body.msisdn = finalLocalPhone;
+  if (body.client_phone) body.client_phone = finalLocalPhone;
 
   // Sebpay ne dispose d'aucun environnement Sandbox/Test (flux 100% Production/Live réel)
   // Neutralisation stricte et suppression définitive de tout flag de test
@@ -1161,6 +1199,7 @@ module.exports = {
   SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
   SEBPAY_COUNTRY_OPERATORS,
   SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY,
+  formatLocalPhoneNumber,
   resolveCountryAndCurrency,
   normalizeSebpayOperator,
   getSebpayBaseUrl,

@@ -12,6 +12,7 @@ const {
   getSebpayConfigStatus,
   getFixieHttpsProxyAgent,
   getSebpayAxiosConfig,
+  formatLocalPhoneNumber,
   SUPPORTED_COUNTRIES,
   resolveCountryAndCurrency
 } = require('./sebpay-client');
@@ -53,6 +54,26 @@ console.log('HttpsProxyAgent présent :', Boolean(proxyAgent));
 console.log('Axios config httpsAgent présent :', Boolean(axiosConfig.httpsAgent));
 console.log('Axios config proxy disabled (false) :', axiosConfig.proxy === false);
 
+console.log('\n=== TEST FORMATAGE NUMÉRO LOCAL 8 CHIFFRES (BURKINA FASO) ===');
+const testPhone1 = formatLocalPhoneNumber('+22670123456');
+const testPhone2 = formatLocalPhoneNumber('22670123456');
+const testPhone3 = formatLocalPhoneNumber('00226 70 12 34 56');
+const testPhone4 = formatLocalPhoneNumber('70123456');
+const testPhone5 = formatLocalPhoneNumber('+226 76-54-32-10');
+
+console.log('  +22670123456      ->', testPhone1);
+console.log('  22670123456       ->', testPhone2);
+console.log('  00226 70 12 34 56 ->', testPhone3);
+console.log('  70123456          ->', testPhone4);
+console.log('  +226 76-54-32-10  ->', testPhone5);
+
+const isPhoneFormatOk =
+  testPhone1 === '70123456' &&
+  testPhone2 === '70123456' &&
+  testPhone3 === '70123456' &&
+  testPhone4 === '70123456' &&
+  testPhone5 === '76543210';
+
 if (
   headers['X-Public-Key'] === 'pk_live_sample_key_12345' &&
   headers['X-Secret-Key'] === 'sk_live_sample_secret_67890' &&
@@ -63,9 +84,10 @@ if (
   isCountryValidationOk &&
   Boolean(proxyAgent) &&
   Boolean(axiosConfig.httpsAgent) &&
-  axiosConfig.proxy === false
+  axiosConfig.proxy === false &&
+  isPhoneFormatOk
 ) {
-  console.log('\n>>> VALIDATION REUSSIE : L\'instance réseau Sebpay et la validation country/currency sont 100% conformes !');
+  console.log('\n>>> VALIDATION REUSSIE : L\'instance réseau Sebpay, formatage local 8 chiffres et validation country/currency sont 100% conformes !');
   process.exit(0);
 } else {
   console.error('\n>>> ECHEC VALIDATION');
