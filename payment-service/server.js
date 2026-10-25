@@ -1031,10 +1031,15 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
     return res.status(200).json(sebpayResult);
 
   } catch (err) {
-    console.error('[SEBPAY INITIATE ERROR]', err);
-    return res.status(500).json({
+    console.error('[SEBPAY INITIATE ERROR]', err.message);
+    const statusCode = err.status || (err.code === 'OTP_REQUIRED' || err.code === 'INVALID_PHONE_NUMBER' ? 400 : 500);
+    return res.status(statusCode).json({
       success: false,
+      code: err.code || (statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR'),
       error: err.message,
+      message: err.message,
+      operator: err.operator || null,
+      ussd_code: err.ussd_code || null,
       details: err.data || null
     });
   }
@@ -1622,10 +1627,15 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       rawResponse: initResult.rawResponse
     });
   } catch (err) {
-    console.error('[NANASWITCH INITIATE ERROR]', err);
-    return res.status(500).json({
+    console.error('[NANASWITCH INITIATE ERROR]', err.message);
+    const statusCode = err.status || (err.code === 'OTP_REQUIRED' || err.code === 'INVALID_PHONE_NUMBER' ? 400 : 500);
+    return res.status(statusCode).json({
       success: false,
+      code: err.code || (statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR'),
       error: err.message,
+      message: err.message,
+      operator: err.operator || null,
+      ussd_code: err.ussd_code || null,
       primaryError: err.primaryError?.message || null,
       fallbackError: err.fallbackError?.message || null
     });

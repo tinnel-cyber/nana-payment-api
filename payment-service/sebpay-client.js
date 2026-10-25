@@ -298,6 +298,55 @@ function resolveCountryAndCurrency(countryInput, phoneInput, currencyInput) {
 }
 
 /**
+ * Table de correspondance officielle certifiée des opérateurs Sebpay pour le Burkina Faso
+ * Récupérée en direct via GET /api/v1/operators?country=BF
+ */
+const BF_OPERATORS_MAP = {
+  'orange': {
+    slug: 'orange-bf',
+    code: 'orange',
+    id: '20260506192835289381',
+    name: 'Orange Money',
+    otp_required: true,
+    ussd_code: '*144*4*6*montant#',
+    country_id: '20260506192835258815',
+    country: {
+      id: '20260506192835258815',
+      country_name: 'Burkina Faso',
+      country_code: 'BF'
+    }
+  },
+  'moov': {
+    slug: 'moov-bf',
+    code: 'moov',
+    id: '20260506192835278434',
+    name: 'Moov Money',
+    otp_required: false,
+    ussd_code: null,
+    country_id: '20260506192835258815',
+    country: {
+      id: '20260506192835258815',
+      country_name: 'Burkina Faso',
+      country_code: 'BF'
+    }
+  },
+  'wligdicash': {
+    slug: 'wligdicash-bf',
+    code: 'wligdicash',
+    id: '20260506192835300791',
+    name: 'Wallet LigdiCash',
+    otp_required: false,
+    ussd_code: null,
+    country_id: '20260506192835258815',
+    country: {
+      id: '20260506192835258815',
+      country_name: 'Burkina Faso',
+      country_code: 'BF'
+    }
+  }
+};
+
+/**
  * Dictionnaire officiel complet des opérateurs supportés par Sebpay par pays
  */
 const SEBPAY_COUNTRY_OPERATORS = {
@@ -672,8 +721,19 @@ async function createSebpayCollection(params) {
   const rawOperator = operator || customPayload.operator || customPayload.provider || params.provider || params.operator_code || params.slug || '';
   const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
 
-  // Formatage forcé du numéro au format local à 8 chiffres (Burkina Faso) requis par Orange BF et Sebpay
+  // 1. Validation préalable du format téléphonique local (Burkina Faso = 8 chiffres obligatoires)
   const localPhoneNumber = formatLocalPhoneNumber(effectivePhone);
+  if (countryIso === 'BF' && localPhoneNumber.length !== 8) {
+    console.error(`[SEBPAY GUARD] Opérateur ou numéro invalide : Numéro local pour le Burkina Faso "${effectivePhone}" (nettoyé: "${localPhoneNumber}") non conforme (8 chiffres requis).`);
+    const phoneErr = new Error(`Le numéro de téléphone "${effectivePhone}" est invalide pour le Burkina Faso. 8 chiffres locaux sont requis (ex: 70123456).`);
+    phoneErr.code = 'INVALID_PHONE_NUMBER';
+    phoneErr.status = 400;
+    throw phoneErr;
+  }
+
+  // 2. Vérification préalable dynamique des opérateurs (GET /operators?country=...)
+  const operatorDetails = await resolveSebpayOperatorDetails(countryIso, rawOperator);
+  console.log(`[SEBPAY GUARD] Opérateur vérifié pour ${countryIso} : ${operatorDetails.name} [slug: "${operatorDetails.slug}", code: "${operatorDetails.code}", id: "${operatorDetails.id}", otp_required: ${operatorDetails.otp_required}]`);
 
   // Extraction polyvalente du code d'autorisation temporaire (OTP) Orange Money
   const effectiveOtp = String(
@@ -687,52 +747,46 @@ async function createSebpayCollection(params) {
     ''
   ).trim();
 
-  // Table de correspondance officielle certifiée des opérateurs Sebpay pour le Burkina Faso (/api/v1/operators?country=BF)
-  const BF_OPERATORS_MAP = {
-    'orange': {
-      slug: 'orange-bf',
-      code: 'orange',
-      id: '20260506192835289381',
-      name: 'Orange Money',
-      otp_required: true,
-      ussd_code: '*144*4*6*montant#'
-    },
-    'moov': {
-      slug: 'moov-bf',
-      code: 'moov',
-      id: '20260506192835278434',
-      name: 'Moov Money',
-      otp_required: false,
-      ussd_code: null
-    },
-    'wligdicash': {
-      slug: 'wligdicash-bf',
-      code: 'wligdicash',
-      id: '20260506192835300791',
-      name: 'Wallet LigdiCash',
-      otp_required: false,
-      ussd_code: null
+  // 3. Contrôle strict de l'OTP : Si l'opérateur exige un OTP (Orange BF), refuser catégoriquement si absent
+  if (operatorDetails.otp_required) {
+    if (!effectiveOtp || effectiveOtp.length < 4) {
+      console.error(`[SEBPAY GUARD] Opérateur introuvable ou OTP manquant : L'opérateur ${operatorDetails.name} (${operatorDetails.slug}) au ${countryIso} exige obligatoirement un code OTP. Requête bloquée avant POST /collections.`);
+      const otpErr = new Error(`Le code d'autorisation temporaire (OTP) est obligatoire pour valider le paiement via ${operatorDetails.name}. Veuillez composer le code USSD ${operatorDetails.ussd_code || '*144*4*6*montant#'} sur votre mobile Orange pour générer votre code OTP.`);
+      otpErr.code = 'OTP_REQUIRED';
+      otpErr.status = 400;
+      otpErr.operator = operatorDetails.slug;
+      otpErr.operator_id = operatorDetails.id;
+      otpErr.ussd_code = operatorDetails.ussd_code || '*144*4*6*montant#';
+      otpErr.data = {
+        success: false,
+        code: 'OTP_REQUIRED',
+        operator: operatorDetails.slug,
+        operator_id: operatorDetails.id,
+        ussd_code: operatorDetails.ussd_code || '*144*4*6*montant#',
+        message: otpErr.message
+      };
+      throw otpErr;
     }
-  };
+    console.log(`[SEBPAY GUARD] Contrôle strict OTP validé pour ${operatorDetails.name} (Code OTP présent: ${effectiveOtp.length} caractères)`);
+  }
 
-  const bfOpInfo = countryIso === 'BF' ? (BF_OPERATORS_MAP[normalizedOperator] || null) : null;
-  const operatorSlug = bfOpInfo?.slug || normalizedOperator;
-  const operatorCode = bfOpInfo?.code || normalizedOperator;
-  const operatorId = bfOpInfo?.id;
-  const isOtpRequired = Boolean(bfOpInfo?.otp_required) || Boolean(effectiveOtp);
+  const operatorSlug = operatorDetails.slug;
+  const operatorCode = operatorDetails.code;
+  const operatorId = operatorDetails.id;
+  const isOtpRequired = operatorDetails.otp_required;
 
   // Objet opérateur complet strictement conforme à la documentation officielle Sebpay (/api/v1/operators)
   const operatorObject = {
-    id: operatorId || "20260506192835289381",
-    name: bfOpInfo?.name || "Orange Money",
-    slug: operatorSlug, // "orange-bf"
-    code: operatorCode, // "orange"
-    country: {
+    id: operatorDetails.id,
+    name: operatorDetails.name,
+    slug: operatorDetails.slug,
+    code: operatorDetails.code,
+    country: operatorDetails.country || {
       id: countryObject.id,
       country_name: countryObject.country_name,
       country_code: countryIso
     },
-    otp_required: isOtpRequired
+    otp_required: operatorDetails.otp_required
   };
 
   const body = {
@@ -802,7 +856,6 @@ async function createSebpayCollection(params) {
     body.otp_required = true;
   } else if (isOtpRequired) {
     body.otp_required = true;
-    console.warn(`[SEBPAY OTP NOTICE] Orange Burkina Faso (${countryIso}) ciblé sans code OTP. Si Orange exige un OTP (*144*4*6*montant#), la transaction risque d'être rejetée.`);
   }
 
   console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${operatorSlug} (ID: ${operatorObject.id}) | OTP Présent: ${Boolean(effectiveOtp)}`);
@@ -1291,14 +1344,30 @@ async function getSebpayCountries(forceRefresh = false) {
   };
 }
 
+const cachedOperatorsByCountry = new Map();
+const OPERATORS_CACHE_TTL_MS = 60 * 60 * 1000; // Cache 1 heure
+
 /**
- * 4. GET /operators?country={country} - Récupère les opérateurs actifs auprès de Sebpay
+ * 4. GET /operators?country={country} - Récupère les opérateurs actifs auprès de Sebpay (avec cache dynamique 1h)
  * 
  * @param {string} [country='BF'] - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
- * @returns {Promise<{ success: boolean, country: string, operators: Array }>}
+ * @param {boolean} [forceRefresh=false]
+ * @returns {Promise<{ success: boolean, country: string, cached?: boolean, operators: Array }>}
  */
-async function getSebpayOperators(country = 'BF') {
+async function getSebpayOperators(country = 'BF', forceRefresh = false) {
   const cleanCountry = String(country || 'BF').trim().toUpperCase();
+  const now = Date.now();
+  const cached = cachedOperatorsByCountry.get(cleanCountry);
+
+  if (!forceRefresh && cached && (now - cached.timestamp < OPERATORS_CACHE_TTL_MS)) {
+    return {
+      success: true,
+      country: cleanCountry,
+      cached: true,
+      operators: cached.operators
+    };
+  }
+
   try {
     const rawResponse = await callSebpayApi(`operators?country=${encodeURIComponent(cleanCountry)}`, {
       method: 'GET'
@@ -1308,20 +1377,31 @@ async function getSebpayOperators(country = 'BF') {
       items = items.data;
     }
     const operatorsList = Array.isArray(items) ? items : (rawResponse?.operators || []);
+
+    if (operatorsList.length > 0) {
+      cachedOperatorsByCountry.set(cleanCountry, {
+        timestamp: now,
+        operators: operatorsList
+      });
+    }
+
     return {
       success: true,
       country: cleanCountry,
+      cached: false,
       operators: operatorsList
     };
   } catch (err) {
     console.warn(`[SEBPAY OPERATORS API] Impossible de récupérer les opérateurs pour ${cleanCountry}:`, err.message);
-    const fallbackList = (SEBPAY_COUNTRY_OPERATORS[cleanCountry] || ['orange', 'moov']).map(slug => ({
-      slug,
-      code: slug.toUpperCase(),
-      name: slug === 'orange' ? 'Orange Money' : slug === 'moov' ? 'Moov Money' : slug,
-      otp_required: cleanCountry === 'BF' && slug === 'orange',
-      country_code: cleanCountry
-    }));
+    const fallbackList = cleanCountry === 'BF'
+      ? Object.values(BF_OPERATORS_MAP)
+      : (SEBPAY_COUNTRY_OPERATORS[cleanCountry] || ['orange', 'moov']).map(slug => ({
+          slug,
+          code: slug.toUpperCase(),
+          name: slug === 'orange' ? 'Orange Money' : slug === 'moov' ? 'Moov Money' : slug,
+          otp_required: cleanCountry === 'BF' && slug === 'orange',
+          country_code: cleanCountry
+        }));
     return {
       success: false,
       country: cleanCountry,
@@ -1329,6 +1409,82 @@ async function getSebpayOperators(country = 'BF') {
       operators: fallbackList
     };
   }
+}
+
+/**
+ * Résout de manière dynamique et certifiée les détails d'un opérateur auprès de Sebpay.
+ * Interroge GET /operators?country={country} pour récupérer dynamiquement :
+ * - id : l'identifiant unique officiel
+ * - slug : le slug officiel (ex: 'orange-bf')
+ * - code : le code opérateur (ex: 'orange')
+ * - otp_required : indicateur d'exigence d'un code OTP
+ * - ussd_code : syntaxe de génération OTP si applicable (*144*4*6*montant#)
+ * 
+ * @param {string} countryCode - Code ISO (ex: 'BF')
+ * @param {string} rawOperator - Nom, code ou slug demandé (ex: 'orange', 'orange-bf', 'ORANGE_MONEY')
+ * @returns {Promise<{ found: boolean, id: string, name: string, slug: string, code: string, otp_required: boolean, ussd_code: string|null, country: object }>}
+ */
+async function resolveSebpayOperatorDetails(countryCode = 'BF', rawOperator = '') {
+  const cleanCountry = String(countryCode || 'BF').trim().toUpperCase();
+  const input = String(rawOperator || '').trim().toLowerCase();
+  const normalizedSlug = normalizeSebpayOperator(cleanCountry, input) || 'orange';
+
+  let foundOp = null;
+
+  try {
+    const opsRes = await getSebpayOperators(cleanCountry);
+    const opsList = opsRes.operators || [];
+
+    // Recherche multi-critères dans la liste dynamique retournée par Sebpay
+    foundOp = opsList.find(op => {
+      const opId = String(op.id || '').trim();
+      const opSlug = String(op.slug || '').trim().toLowerCase();
+      const opCode = String(op.code || '').trim().toLowerCase();
+      const opName = String(op.name || '').trim().toLowerCase();
+
+      return (
+        opId === rawOperator ||
+        opSlug === input ||
+        opCode === input ||
+        opSlug === normalizedSlug ||
+        opCode === normalizedSlug ||
+        (cleanCountry === 'BF' && (normalizedSlug === 'orange' && (opSlug === 'orange-bf' || opCode === 'orange' || opName.includes('orange')))) ||
+        (cleanCountry === 'BF' && (normalizedSlug === 'moov' && (opSlug === 'moov-bf' || opCode === 'moov' || opName.includes('moov')))) ||
+        (cleanCountry === 'BF' && (normalizedSlug === 'wligdicash' && (opSlug.includes('ligdicash') || opCode.includes('ligdicash'))))
+      );
+    });
+  } catch (err) {
+    console.warn(`[SEBPAY GUARD] Erreur lors de la résolution dynamique des opérateurs pour ${cleanCountry} :`, err.message);
+  }
+
+  // Fallback certifié pour le Burkina Faso
+  if (!foundOp && cleanCountry === 'BF') {
+    foundOp = BF_OPERATORS_MAP[normalizedSlug] || BF_OPERATORS_MAP['orange'];
+  }
+
+  if (!foundOp) {
+    return {
+      found: false,
+      id: `${normalizedSlug}_${cleanCountry.toLowerCase()}`,
+      name: `${normalizedSlug.toUpperCase()} Money`,
+      slug: normalizedSlug,
+      code: normalizedSlug,
+      otp_required: cleanCountry === 'BF' && normalizedSlug === 'orange',
+      ussd_code: (cleanCountry === 'BF' && normalizedSlug === 'orange') ? '*144*4*6*montant#' : null,
+      country: { country_code: cleanCountry }
+    };
+  }
+
+  return {
+    found: true,
+    id: String(foundOp.id || `${normalizedSlug}_${cleanCountry.toLowerCase()}`),
+    name: foundOp.name || 'Opérateur Mobile',
+    slug: foundOp.slug || normalizedSlug,
+    code: foundOp.code || normalizedSlug,
+    otp_required: Boolean(foundOp.otp_required),
+    ussd_code: foundOp.ussd_code || (foundOp.slug === 'orange-bf' ? '*144*4*6*montant#' : null),
+    country: foundOp.country || { country_code: cleanCountry }
+  };
 }
 
 /**
@@ -1362,9 +1518,11 @@ module.exports = {
   SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
   SEBPAY_COUNTRY_OPERATORS,
   SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY,
+  BF_OPERATORS_MAP,
   formatLocalPhoneNumber,
   resolveCountryAndCurrency,
   normalizeSebpayOperator,
+  resolveSebpayOperatorDetails,
   getSebpayBaseUrl,
   getSebpayHeaders,
   getSebpayConfigStatus,

@@ -77,7 +77,13 @@ class NaNaSwitchManager {
   isEligibleForFailover(err) {
     if (!err) return false;
 
-    const status = Number(err.status || err.statusCode || err.code || 0);
+    // Barrière de sécurité : Les erreurs de validation utilisateur (OTP requis, numéro invalide)
+    // ne doivent JAMAIS déclencher de failover vers une autre passerelle
+    if (err.code === 'OTP_REQUIRED' || err.code === 'INVALID_PHONE_NUMBER' || err.code === 'INVALID_OPERATOR') {
+      return false;
+    }
+
+    const status = Number(err.status || err.statusCode || 0);
     if (status === 403 || status === 429 || status === 502 || status === 503 || status === 504) {
       return true;
     }
