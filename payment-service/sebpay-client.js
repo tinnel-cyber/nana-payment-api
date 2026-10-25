@@ -833,7 +833,8 @@ async function createSebpayCollection(params) {
   };
 
   // Préparation du numéro de téléphone au format Sebpay (avec indicatif 226 pour le BF, ex: 22670123456)
-  const sebpayPhone = formatSebpayPhoneNumber(effectivePhone, countryIso);
+  const finalSebpayPhone = formatSebpayPhoneNumber(effectivePhone, countryIso);
+  const sebpayPhone = finalSebpayPhone;
 
   // Troncature sécurisée selon la spécification Sebpay (Max 255 caractères)
   const safeExternalReference = String(externalReference).trim().slice(0, 255);

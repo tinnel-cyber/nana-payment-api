@@ -109,6 +109,26 @@ async function runGuardTests() {
     process.exit(1);
   }
 
+  // 6. Test Exécution sans ReferenceError dans createSebpayCollection
+  console.log('\n--- 6. Test Exécution createSebpayCollection (Validation des variables) ---');
+  try {
+    await createSebpayCollection({
+      orderId: 'ORD_TEST_EXEC',
+      amount: 200,
+      currency: 'XOF',
+      country: 'BF',
+      phone: '70123456',
+      operator: 'orange',
+      otpCode: '123456'
+    });
+  } catch (err) {
+    if (err instanceof ReferenceError) {
+      console.error('❌ Échec Test 6 : ReferenceError détecté :', err);
+      process.exit(1);
+    }
+    console.log('✅ Test 6 : Aucune ReferenceError dans createSebpayCollection (Erreur réseau normale sans clés: ' + err.message + ')');
+  }
+
   console.log('====================================================');
   console.log('🎉 TOUS LES CONTRÔLES SEBPAY GUARD SONT 100% VALIDÉS !');
   console.log('====================================================');
