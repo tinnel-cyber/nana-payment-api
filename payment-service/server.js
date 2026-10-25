@@ -349,6 +349,7 @@ app.post(
     try {
       // 1. Récupération stricte de la signature X-SebPay-Signature
       const sebpaySignature =
+        req.get('X-SebPay-Signature') ||
         req.headers['x-sebpay-signature'] ||
         req.headers['X-SebPay-Signature'] ||
         req.headers['x-webhook-signature'] ||
@@ -362,14 +363,14 @@ app.post(
         return res.status(401).json({ error: 'Signature cryptographique X-SebPay-Signature absente.' });
       }
 
-      // Clé secrète Sebpay pour la vérification HMAC (priorité à SEBPAY_WEBHOOK_SECRET)
+      // Clé secrète Sebpay pour la vérification HMAC (priorité absolue à SEBPAY_SECRET_KEY comme documenté)
       const secretKey =
-        process.env.SEBPAY_WEBHOOK_SECRET ||
         process.env.SEBPAY_SECRET_KEY ||
+        process.env.SEBPAY_WEBHOOK_SECRET ||
         process.env.PAYMENT_WEBHOOK_SECRET;
 
       if (!secretKey) {
-        console.error('[SECURITY CONFIG ERROR] process.env.SEBPAY_WEBHOOK_SECRET (ou SEBPAY_SECRET_KEY) non configuré.');
+        console.error('[SECURITY CONFIG ERROR] process.env.SEBPAY_SECRET_KEY (ou SEBPAY_WEBHOOK_SECRET) non configuré.');
         return res.status(500).json({ error: 'Configuration serveur incomplète (Clé secrète Sebpay manquante).' });
       }
 
@@ -378,34 +379,22 @@ app.post(
         ? req.body
         : Buffer.from(req.rawBody || req.body || '', 'utf8');
 
-      // 3. Algorithme de vérification (Crypto natif Node.js)
-      // const hash = crypto.createHmac('sha256', process.env.SEBPAY_SECRET_KEY).update(req.body).digest('hex');
-      const calculatedHash = crypto.createHmac('sha256', secretKey).update(rawBuffer).digest('hex');
+      // 3. Algorithme officiel Sebpay : HMAC-SHA256 hexadécimal à temps constant
+      const cleanSignature = String(sebpaySignature).trim().toLowerCase();
+      const calculatedHash = crypto.createHmac('sha256', secretKey).update(rawBuffer).digest('hex').toLowerCase();
 
-      // 4. Comparaison sécurisée à temps constant
-      let isSignatureValid = false;
-      try {
-        const provBuf = Buffer.from(String(sebpaySignature).trim().toLowerCase(), 'hex');
-        const calcBuf = Buffer.from(calculatedHash.toLowerCase(), 'hex');
-        if (provBuf.length === calcBuf.length && provBuf.length > 0) {
-          isSignatureValid = crypto.timingSafeEqual(provBuf, calcBuf);
-        } else {
-          isSignatureValid = String(sebpaySignature).trim().toLowerCase() === calculatedHash.toLowerCase();
-        }
-      } catch {
-        isSignatureValid = String(sebpaySignature).trim().toLowerCase() === calculatedHash.toLowerCase();
-      }
+      const isSignatureValid = cleanSignature.length === calculatedHash.length
+        && crypto.timingSafeEqual(Buffer.from(cleanSignature, 'utf8'), Buffer.from(calculatedHash, 'utf8'));
 
       if (!isSignatureValid) {
         console.error(`[SECURITY REJECT] Signature HMAC invalide.`);
-        console.error(`[SECURITY AUDIT] Reçue: ${sebpaySignature} | Calculée: ${calculatedHash}`);
-        return res.status(401).json({ error: 'Signature X-SebPay-Signature invalide.' });
+        console.error(`[SECURITY AUDIT] Reçue: ${cleanSignature} | Calculée: ${calculatedHash}`);
+        return res.status(401).json({ error: 'Invalid signature' });
       }
 
-      // 5. RÈGLE DES 5 SECONDES : Réponse HTTP 200 'OK' IMMÉDIATE
-      // Sebpay exige une réponse en moins de 5 secondes, sinon retry automatique.
-      res.status(200).send('OK');
-      console.log('[SEBPAY WEBHOOK] Signature validée avec succès. Réponse 200 OK envoyée immédiatement à Sebpay.');
+      // 4. Réponse HTTP 200 immédiate (< 10 secondes) selon la documentation officielle Sebpay
+      res.status(200).json({ received: true });
+      console.log('[SEBPAY WEBHOOK] Signature validée avec succès. Réponse 200 { received: true } envoyée immédiatement à Sebpay.');
 
       // 6. TRAITEMENT ASYNCHRONE & IDEMPOTENCE (En arrière-plan sans bloquer Sebpay)
       setImmediate(async () => {
@@ -499,6 +488,7 @@ async function processWebhookTransaction(payload) {
 
   const amount = Number(txData.amount || payload.amount || txData.price || 0);
   const currency = txData.currency || payload.currency || 'XOF';
+  const customerPhone = String(txData.customer_phone || txData.client_phone || txData.phone || payload.customer_phone || '').trim();
   const operator = txData.operator || payload.operator || txData.network || payload.network || 'MOBILE_MONEY';
   const resolvedProvider = String(
     txData.provider ||
@@ -553,7 +543,8 @@ async function processWebhookTransaction(payload) {
     console.warn('[INTENT CHECK NOTICE]', intentCheckErr.message);
   }
 
-  const isSuccess = ['SUCCESS', 'COMPLETED', 'PAID', 'VALIDATED', 'CONFIRMED', 'VALIDE', 'PAYÉ'].includes(status);
+  // Statuts Sebpay officiels : 'approved' (succès), 'rejected' (échec/expiration)
+  const isSuccess = ['APPROVED', 'SUCCESS', 'COMPLETED', 'PAID', 'VALIDATED', 'CONFIRMED', 'VALIDE', 'PAYÉ'].includes(status);
 
   if (isSuccess) {
     try {
@@ -793,16 +784,18 @@ async function processWebhookTransaction(payload) {
       console.error('[FIRESTORE UPDATE ERROR]', dbErr.message);
     }
   } else {
-    console.warn(`[SEBPAY STATUS NOTICE] Transaction ${transactionId} statut échec ou annulé : ${status}`);
+    console.warn(`[SEBPAY STATUS NOTICE] Transaction ${transactionId} statut échec ou rejeté : ${status}`);
     try {
       const isCancelled = ['CANCELLED', 'CANCELED', 'ANNULE', 'ANNULÉ'].includes(status);
-      const normalizedStatus = isCancelled ? 'CANCELLED' : 'FAILED';
+      const isRejected = ['REJECTED', 'FAILED', 'DECLINED', 'EXPIRED'].includes(status);
+      const normalizedStatus = isCancelled ? 'CANCELLED' : (isRejected ? 'REJECTED' : 'FAILED');
 
       const intentRef = db.collection('payment_intents').doc(resolvedOrderId);
       await intentRef.set({
         status: normalizedStatus,
-        paymentStatus: normalizedStatus,
+        paymentStatus: 'FAILED',
         isPaid: false,
+        customerPhone,
         error: `Paiement ${normalizedStatus.toLowerCase()} via ${operator}`,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -810,7 +803,7 @@ async function processWebhookTransaction(payload) {
       const orderRef = db.collection('orders').doc(resolvedOrderId);
       await orderRef.set({
         status: normalizedStatus,
-        paymentStatus: normalizedStatus,
+        paymentStatus: 'FAILED',
         isPaid: false,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });

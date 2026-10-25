@@ -145,11 +145,11 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       };
     }
 
-    const secretKey = process.env.SEBPAY_WEBHOOK_SECRET || process.env.SEBPAY_SECRET_KEY || process.env.PAYMENT_WEBHOOK_SECRET;
+    const secretKey = process.env.SEBPAY_SECRET_KEY || process.env.SEBPAY_WEBHOOK_SECRET || process.env.PAYMENT_WEBHOOK_SECRET;
     if (!secretKey) {
       return {
         isValid: false,
-        errorMessage: 'Clé secrète SEBPAY_WEBHOOK_SECRET (ou SEBPAY_SECRET_KEY) non configurée sur le serveur.'
+        errorMessage: 'Clé secrète SEBPAY_SECRET_KEY (ou SEBPAY_WEBHOOK_SECRET) non configurée sur le serveur.'
       };
     }
 
@@ -158,20 +158,11 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       ? req.body
       : Buffer.from(req.rawBody || (typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {})), 'utf8');
 
-    const calculatedHash = crypto.createHmac('sha256', secretKey).update(rawBuffer).digest('hex');
+    const cleanSignature = String(signature).trim().toLowerCase();
+    const calculatedHash = crypto.createHmac('sha256', secretKey).update(rawBuffer).digest('hex').toLowerCase();
 
-    let isValid = false;
-    try {
-      const provBuf = Buffer.from(String(signature).trim().toLowerCase(), 'hex');
-      const calcBuf = Buffer.from(calculatedHash.toLowerCase(), 'hex');
-      if (provBuf.length === calcBuf.length && provBuf.length > 0) {
-        isValid = crypto.timingSafeEqual(provBuf, calcBuf);
-      } else {
-        isValid = String(signature).trim().toLowerCase() === calculatedHash.toLowerCase();
-      }
-    } catch {
-      isValid = String(signature).trim().toLowerCase() === calculatedHash.toLowerCase();
-    }
+    const isValid = cleanSignature.length === calculatedHash.length
+      && crypto.timingSafeEqual(Buffer.from(cleanSignature, 'utf8'), Buffer.from(calculatedHash, 'utf8'));
 
     if (!isValid) {
       return {
@@ -217,12 +208,12 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       orderId = parts[1] || orderId;
     }
 
-    const rawStatus = String(txData.status || payload.status || 'SUCCESS').toUpperCase();
-    const isPaid = ['SUCCESS', 'COMPLETED', 'PAID', 'VALIDATED', 'CONFIRMED', 'VALIDE', 'PAYÉ'].includes(rawStatus);
+    const rawStatus = String(txData.status || payload.status || 'APPROVED').toUpperCase();
+    const isPaid = ['APPROVED', 'SUCCESS', 'COMPLETED', 'PAID', 'VALIDATED', 'CONFIRMED', 'VALIDE', 'PAYÉ'].includes(rawStatus);
 
     const amount = Number(txData.amount || payload.amount || txData.price || 0);
     const currency = txData.currency || payload.currency || 'XOF';
-    const customerPhone = txData.client_phone || txData.phone || payload.client_phone || '';
+    const customerPhone = txData.customer_phone || txData.client_phone || txData.phone || payload.customer_phone || '';
     const customerEmail = txData.client_email || txData.email || payload.client_email || '';
 
     return {
