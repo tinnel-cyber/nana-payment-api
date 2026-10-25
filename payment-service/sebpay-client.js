@@ -835,71 +835,35 @@ async function createSebpayCollection(params) {
   // Préparation du numéro de téléphone au format Sebpay (avec indicatif 226 pour le BF, ex: 22670123456)
   const sebpayPhone = formatSebpayPhoneNumber(effectivePhone, countryIso);
 
+  // Troncature sécurisée selon la spécification Sebpay (Max 255 caractères)
+  const safeExternalReference = String(externalReference).trim().slice(0, 255);
+
+  // Construction STRICTEMENT CONFORME à la documentation officielle Sebpay POST /collections
+  // Seuls les champs explicitement autorisés par l'API sont inclus pour éviter les rejets 400/422
   const body = {
     amount: Math.round(Number(amount)),
     currency: resolved.currency || 'XOF',
-    phone: sebpayPhone,
-    operator: operatorCode || 'orange', // 'orange' selon la documentation officielle Sebpay
-    country: countryIso, // 'BF' (code ISO string requis par l'API)
-    external_reference: externalReference,
-    callback_url: effectiveCallback,
-    description: description || `Paiement Commande ${orderId}`,
-
-    // Alias et champs de compatibilité certifiés
-    customer_phone: sebpayPhone,
-    msisdn: sebpayPhone,
-    client_phone: sebpayPhone,
-    customer_name: customerName || 'Client Nanasore',
-    customer_email: customerEmail || 'client@nanasore.com',
-    country_code: countryIso,
-    operator_id: operatorObject.id,
-    operator_code: operatorCode,
-    operator_slug: operatorSlug,
-    operator_name: operatorObject.name,
-    slug: operatorSlug,
-    code: operatorCode,
-    ...customPayload
+    phone: finalSebpayPhone,
+    operator: operatorCode || 'orange', // Code ('orange', 'mtn') ou slug ('orange-bf', 'mtn-bj')
+    country: countryIso,                // Code ISO du pays (ex: 'BF', 'CI', 'BJ')
+    external_reference: safeExternalReference
   };
 
-  if (operatorId) {
-    body.operator_id = operatorId;
+  // Champs optionnels officiellement documentés
+  if (effectiveCallback) {
+    body.callback_url = effectiveCallback;
   }
-
-  // Forcer le formatage sur le champ du téléphone avec indicatif 226 juste avant l'envoi vers l'API Sebpay
-  const finalSebpayPhone = formatSebpayPhoneNumber(body.phone || body.customer_phone || effectivePhone, countryIso);
-  body.phone = finalSebpayPhone;
-  body.customer_phone = finalSebpayPhone;
-  if (body.msisdn) body.msisdn = finalSebpayPhone;
-  if (body.client_phone) body.client_phone = finalSebpayPhone;
-
-  // Ré-application stricte des identifiants opérateur pour éviter tout écrasement via customPayload
-  body.operator = operatorCode || 'orange';
-  body.operator_id = operatorObject.id;
-  body.operator_code = operatorCode;
-  body.operator_slug = operatorSlug;
-  body.slug = operatorSlug;
-  body.code = operatorCode;
-
-  // Sebpay ne dispose d'aucun environnement Sandbox/Test (flux 100% Production/Live réel)
-  // Neutralisation stricte et suppression définitive de tout flag de test
-  delete body.isTest;
-  delete body.is_test;
-  delete body.sandbox;
-  delete body.test_mode;
-  delete body.SEBPAY_TEST;
-
-  // Gestion du cas Orange Money OTP conforme à la documentation officielle
+  if (customerName) {
+    body.customer_name = String(customerName).trim();
+  }
+  if (customerEmail) {
+    body.customer_email = String(customerEmail).trim();
+  }
   if (effectiveOtp) {
     body.otp_code = effectiveOtp;
-    body.otp = effectiveOtp;
-    body.otpCode = effectiveOtp;
-    body.authorization_code = effectiveOtp;
-    body.otp_required = true;
-  } else if (isOtpRequired) {
-    body.otp_required = true;
   }
 
-  console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryIso} | Opérateur: ${body.operator} (Slug: ${operatorSlug}, ID: ${operatorObject.id}) | OTP Présent: ${Boolean(effectiveOtp)}`);
+  console.log(`[SEBPAY INITIATE] Collection pour ${safeExternalReference} | ${amount} ${resolved.currency} | Pays: ${countryIso} | Opérateur: ${body.operator} (Slug: ${operatorSlug}) | OTP Présent: ${Boolean(effectiveOtp)}`);
   console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
 
   let rawResponse;
@@ -909,49 +873,51 @@ async function createSebpayCollection(params) {
       body
     });
   } catch (apiErr) {
-    // Mécanisme d'auto-adaptation polymorphe anti-422 / anti-400 :
+    // Analyse et adaptation conforme aux codes d'erreur officiels de la documentation Sebpay :
     const errorData = apiErr.data || {};
     const errorStr = JSON.stringify(errorData).toLowerCase();
     console.error('[SEBPAY API ERROR DETAIL]', JSON.stringify(errorData));
 
-    // 1. Si Sebpay exige l'objet pays complet plutôt que le code ISO string à 2 lettres :
-    const isCountryObjectRequired =
-      apiErr.status === 422 &&
-      (errorStr.includes('country must be an object') || (errorData.errors && errorData.errors.country));
+    // 400 PAYMENT_DECLINED : L'opérateur a refusé la demande avant qu'elle n'atteigne le client
+    if (apiErr.status === 400 && (errorStr.includes('payment_declined') || errorStr.includes('declined'))) {
+      const declinedErr = new Error(`Paiement refusé par l'opérateur (PAYMENT_DECLINED). Veuillez vérifier le solde du compte et le numéro de téléphone, puis réessayez.`);
+      declinedErr.status = 400;
+      declinedErr.code = 'PAYMENT_DECLINED';
+      declinedErr.data = errorData;
+      throw declinedErr;
+    }
 
-    if (isCountryObjectRequired && typeof body.country !== 'object') {
-      console.warn(`[SEBPAY AUTO-ADAPT 422] Le validateur Sebpay attend l'objet pays structuré. Adaptation automatique : countryObject`);
-      body.country = countryObject;
-      body.country_details = countryObject;
-      console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
-      rawResponse = await callSebpayApi('collections', {
-        method: 'POST',
-        body
-      });
-    } else if ((apiErr.status === 400 || apiErr.status === 422) && (body.operator === operatorCode || body.operator === operatorSlug)) {
-      // 2. Si Sebpay a rejeté le code court ('orange'), tentative avec le slug composé ('orange-bf') :
-      if (body.operator !== operatorSlug) {
-        console.warn(`[SEBPAY AUTO-ADAPT OPERATOR SLUG] Sebpay a rejeté "${body.operator}". Nouvelle tentative avec le slug officiel : "${operatorSlug}"`);
-        body.operator = operatorSlug;
-        body.provider = operatorSlug;
-        body.operator_slug = operatorSlug;
-        body.slug = operatorSlug;
-        console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
-        try {
-          rawResponse = await callSebpayApi('collections', {
-            method: 'POST',
-            body
-          });
-          return rawResponse;
-        } catch (errSlug) {
-          console.warn(`[SEBPAY AUTO-ADAPT NOTICE] Échec avec slug "${operatorSlug}" :`, errSlug.message);
-        }
-      }
+    // 409 EXTERNAL_REFERENCE_CONFLICT : Conflit d'identifiant envoyé avec d'autres paramètres
+    if (apiErr.status === 409 || errorStr.includes('external_reference_conflict')) {
+      const conflictErr = new Error(`Conflit de référence externe (EXTERNAL_REFERENCE_CONFLICT). Cet identifiant a déjà été utilisé avec des paramètres différents.`);
+      conflictErr.status = 409;
+      conflictErr.code = 'EXTERNAL_REFERENCE_CONFLICT';
+      conflictErr.data = errorData;
+      throw conflictErr;
+    }
 
-      // 3. Tentative avec l'ID unique de l'opérateur (ex: "20260506192835289381")
-      console.warn(`[SEBPAY AUTO-ADAPT OPERATOR ID] Nouvelle tentative avec l'id unique de l'opérateur : "${operatorObject.id}"`);
-      body.operator = operatorObject.id;
-      body.operator_id = operatorObject.id;
+    // 422 OTP_REQUIRED : L'opérateur exige un OTP
+    if (apiErr.status === 422 && (errorStr.includes('otp_required') || errorStr.includes('otp'))) {
+      const otpErr = new Error(`L'opérateur exige un code OTP (OTP_REQUIRED). Veuillez demander le code OTP au client.`);
+      otpErr.status = 422;
+      otpErr.code = 'OTP_REQUIRED';
+      otpErr.data = errorData;
+      throw otpErr;
+    }
+
+    // 503 OPERATOR_MAINTENANCE : Opérateur ou pays temporairement indisponible
+    if (apiErr.status === 503 || errorStr.includes('operator_maintenance') || errorStr.includes('maintenance')) {
+      const maintErr = new Error(`L'opérateur ou le pays est temporairement en maintenance (OPERATOR_MAINTENANCE). Veuillez réessayer plus tard.`);
+      maintErr.status = 503;
+      maintErr.code = 'OPERATOR_MAINTENANCE';
+      maintErr.data = errorData;
+      throw maintErr;
+    }
+
+    // Alternative Opérateur : Si le code court ('orange') a été rejeté, tentative avec le slug officiel ('orange-bf')
+    if ((apiErr.status === 400 || apiErr.status === 422) && body.operator !== operatorSlug) {
+      console.warn(`[SEBPAY AUTO-ADAPT OPERATOR SLUG] Sebpay a rejeté "${body.operator}". Nouvelle tentative avec le slug officiel : "${operatorSlug}"`);
+      body.operator = operatorSlug;
       console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
       try {
         rawResponse = await callSebpayApi('collections', {
@@ -959,82 +925,83 @@ async function createSebpayCollection(params) {
           body
         });
         return rawResponse;
-      } catch (errId) {
-        // 4. Tentative avec l'objet complet opérateur
-        console.warn(`[SEBPAY AUTO-ADAPT OPERATOR OBJECT] Nouvelle tentative avec l'objet opérateur complet`);
-        body.operator = operatorObject;
-        console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
-        rawResponse = await callSebpayApi('collections', {
-          method: 'POST',
-          body
-        });
+      } catch (errSlug) {
+        console.warn(`[SEBPAY AUTO-ADAPT NOTICE] Échec avec slug "${operatorSlug}" :`, errSlug.message);
       }
-    } else {
-      throw apiErr;
     }
+
+    throw apiErr;
   }
 
-  // Dépaquetage du wrapper Sebpay : { success, data: { ... }, message }
-  // Les données utiles sont dans rawResponse.data.data ou rawResponse.data
+  // Dépaquetage du wrapper Sebpay : { success: true, data: { ... }, message: "..." }
   let innerData = rawResponse?.data;
   if (innerData && typeof innerData === 'object' && innerData.data) {
     innerData = innerData.data;
   }
   const sebpayData = innerData || rawResponse;
 
-  // Détection du lien de redirection (Spécifique Wave / Provider Link)
+  // Détection du lien de redirection (Spécifique Wave / Provider Link documenté)
   const providerLink = sebpayData?.provider_link || sebpayData?.redirect_url || sebpayData?.payment_url || null;
 
   return {
     success: rawResponse?.success !== false,
     action: providerLink ? 'redirect' : 'pending',
+    transaction_id: sebpayData?.transaction_id || sebpayData?.id || null,
+    status: sebpayData?.status || 'pending',
+    external_reference: sebpayData?.external_reference || safeExternalReference,
+    amount: Number(sebpayData?.amount || amount),
+    currency: sebpayData?.currency || resolved.currency,
     provider_link: providerLink,
     redirectUrl: providerLink,
-    external_reference: externalReference,
+    message: sebpayData?.message || rawResponse?.message || (providerLink ? 'Redirection vers la passerelle opérateur requise' : 'Demande de paiement initiée avec succès.'),
+    idempotent_replay: Boolean(sebpayData?.idempotent_replay),
     tenantId,
     orderId,
-    amount: Number(amount),
-    currency: resolved.currency,
     country: resolved.country,
-    txId: sebpayData?.transaction_id || sebpayData?.id || externalReference,
-    data: sebpayData,
-    message: rawResponse?.message || (providerLink ? 'Redirection vers la passerelle opérateur' : 'Paiement initié avec succès')
+    txId: sebpayData?.transaction_id || sebpayData?.id || safeExternalReference,
+    data: sebpayData
   };
 }
 
 /**
- * 2. GET /collections/{external_reference} - Route de vérification de secours
- * Permet au client de vérifier instantanément son paiement même si le webhook tarde
+ * 2. GET /collections/{id_or_reference} - Lecture d'une collecte
+ * Récupère une collecte créée par POST /collections, via son identifiant SebPay ou external_reference.
+ * Revérifie automatiquement son statut auprès de l'opérateur si elle est en attente.
+ * 
+ * @param {string} idOrReference - Identifiant de transaction SebPay ou external_reference
  */
-async function getSebpayCollection(externalReference) {
-  if (!externalReference) {
-    throw new Error('external_reference requis pour la vérification');
+async function getSebpayCollection(idOrReference) {
+  if (!idOrReference) {
+    throw new Error('Identifiant SebPay ou external_reference requis pour la vérification');
   }
 
-  const cleanRef = externalReference.trim();
+  const cleanRef = String(idOrReference).trim();
   console.log(`[SEBPAY GET COLLECTION] Vérification de ${cleanRef}...`);
 
   const rawResponse = await callSebpayApi(`collections/${encodeURIComponent(cleanRef)}`, {
     method: 'GET'
   });
 
-  // Dépaquetage du wrapper Sebpay
+  // Dépaquetage du wrapper officiel Sebpay : { success: true, data: { ... }, message: "..." }
   let innerData = rawResponse?.data;
   if (innerData && typeof innerData === 'object' && innerData.data) {
     innerData = innerData.data;
   }
   const sebpayData = innerData || rawResponse;
 
-  const statusStr = String(sebpayData?.status || '').toUpperCase();
-  const isPaid = ['SUCCESS', 'COMPLETED', 'PAID', 'APPROVED', 'VALIDATED'].includes(statusStr);
+  const rawStatus = String(sebpayData?.status || '').toLowerCase();
+  const isPaid = rawStatus === 'approved' || rawStatus === 'success' || rawStatus === 'completed';
 
   return {
     success: isPaid,
-    status: statusStr || (isPaid ? 'COMPLETED' : 'PENDING'),
+    transaction_id: sebpayData?.transaction_id || null,
+    external_reference: sebpayData?.external_reference || cleanRef,
+    status: sebpayData?.status || (isPaid ? 'approved' : 'pending'),
     isPaid,
-    external_reference: cleanRef,
     amount: Number(sebpayData?.amount || 0),
     currency: sebpayData?.currency || 'XOF',
+    created_at: sebpayData?.created_at || null,
+    updated_at: sebpayData?.updated_at || null,
     data: sebpayData,
     message: rawResponse?.message || (isPaid ? 'Paiement validé avec succès par Sebpay.' : 'Paiement en attente de confirmation.')
   };
