@@ -284,6 +284,10 @@ export async function getSBackendStatus(): Promise<{
 export interface SCollectionRequest {
   tenantId?: string;
   storeId?: string;
+  shopName?: string;
+  storeName?: string;
+  externalReference?: string;
+  external_reference?: string;
   orderId: string;
   amount: number;
   currency?: string;
@@ -328,13 +332,29 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
   const resolvedCountry = (params.country || params.country_code || params.countryCode || 'BF').toUpperCase();
   const resolvedCurrency = (params.currency || 'XOF').toUpperCase();
 
+  // Nettoyage standardisé du nom de la boutique pour une external_reference unique et propre
+  const rawShopName = params.shopName || params.storeName || params.tenantId || params.storeId || 'boutique';
+  const cleanShopName = String(rawShopName)
+    .toLowerCase()
+    .replace(/^nanasore_/, '')
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'boutique';
+
+  const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
+
   // 1. Initialisation persistante de l'intention dans Firestore (Flux 100% Production Réel)
   try {
     const { doc, setDoc } = await import('firebase/firestore');
     const { db } = await import('../firebase');
-    const intentRef = doc(db, 'payment_intents', orderId);
-    await setDoc(intentRef, {
+    const intentPayload = {
+      id: orderId,
       orderId,
+      externalReference,
+      external_reference: externalReference,
+      storeName: params.storeName || rawShopName,
+      shopName: params.shopName || rawShopName,
+      tenantId: `nanasore_${cleanShopName}`,
       amount: params.amount,
       currency: resolvedCurrency,
       country: resolvedCountry,
@@ -348,7 +368,11 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
       environment: 'production',
       createdAt: Date.now(),
       updatedAt: Date.now()
-    }, { merge: true });
+    };
+    await setDoc(doc(db, 'payment_intents', orderId), intentPayload, { merge: true });
+    if (externalReference && externalReference !== orderId) {
+      await setDoc(doc(db, 'payment_intents', externalReference), intentPayload, { merge: true });
+    }
   } catch (err: any) {
     console.warn('[FIRESTORE INTENT INIT]', err.message);
   }
@@ -359,6 +383,8 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
       callback_url: 'https://nana-payment-api.onrender.com/api/payment/webhook',
       callbackUrl: 'https://nana-payment-api.onrender.com/api/payment/webhook',
       ...params,
+      externalReference,
+      external_reference: externalReference,
       country: resolvedCountry,
       countryCode: resolvedCountry,
       currency: resolvedCurrency

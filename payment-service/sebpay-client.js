@@ -610,7 +610,17 @@ async function createSebpayCollection(params) {
   }
 
   const effectivePhone = (phone || customerPhone || '').replace(/[^0-9+]/g, '');
-  const externalReference = params.externalReference || `${tenantId}___${orderId}`;
+
+  // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
+  const rawShopName = params.shopName || params.storeName || tenantId || 'boutique';
+  const cleanShopName = String(rawShopName)
+    .toLowerCase()
+    .replace(/^nanasore_/, '')
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'boutique';
+
+  const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
   const effectiveCallback = callbackUrl || process.env.PAYMENT_CALLBACK_URL || process.env.PAYMENT_WEBHOOK_URL || 'https://nana-payment-api.onrender.com/api/payment/webhook';
 
   // Résolution obligatoire du code ISO pays (ex: "BF"), ID et devise (ex: "XOF")

@@ -439,7 +439,17 @@ async function createSaspayPayin(params) {
   // Formatage obligatoire du montant en chaîne décimale ("2500.00")
   const formattedAmount = formatSaspayAmount(amount);
   const effectivePhone = (phone || customerPhone || '').replace(/[^0-9+]/g, '');
-  const externalReference = params.externalReference || `${tenantId}___${orderId}`;
+
+  // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
+  const rawShopName = params.shopName || params.storeName || tenantId || 'boutique';
+  const cleanShopName = String(rawShopName)
+    .toLowerCase()
+    .replace(/^nanasore_/, '')
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'boutique';
+
+  const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
   const countryIso = String(country || 'BF').trim().toUpperCase();
 
   const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
@@ -563,7 +573,16 @@ async function createSaspayPayout(params) {
 
   const formattedAmount = formatSaspayAmount(amount);
   const effectivePhone = (phone || beneficiaryPhone || '').replace(/[^0-9+]/g, '');
-  const externalReference = params.externalReference || `${tenantId}___${payoutId}`;
+
+  const rawShopName = params.shopName || params.storeName || tenantId || 'boutique';
+  const cleanShopName = String(rawShopName)
+    .toLowerCase()
+    .replace(/^nanasore_/, '')
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'boutique';
+
+  const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${payoutId}`;
   const countryIso = String(country || 'BF').trim().toUpperCase();
 
   const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);

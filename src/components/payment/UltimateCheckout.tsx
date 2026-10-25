@@ -633,6 +633,8 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
     try {
       const res = await initiateSPayment({
         orderId,
+        shopName: effectiveStoreName,
+        storeName: effectiveStoreName,
         amount: finalTotal,
         currency: selectedCountry.currency || 'XOF',
         country: selectedCountry.code || 'BF',

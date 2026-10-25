@@ -48,12 +48,22 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       throw new Error('[SEBPAY INITIATE ERROR] orderId et amount (> 0) sont obligatoires.');
     }
 
-    // Référence composite pour le multi-tenant : "storeId___orderId"
-    const externalReference = storeId ? `${storeId}___${orderId}` : String(orderId);
+    // Référence composite standardisée pour le multi-tenant : "nanasore_${cleanShopName}___${orderId}"
+    const rawShopName = params.shopName || params.storeName || storeId || 'boutique';
+    const cleanShopName = String(rawShopName)
+      .toLowerCase()
+      .replace(/^nanasore_/, '')
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || 'boutique';
+
+    const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
     const resolvedPhone = customerPhone || phone || '+22670000000';
 
     const sebpayPayload = {
-      tenantId: storeId,
+      tenantId: `nanasore_${cleanShopName}`,
+      shopName: rawShopName,
+      storeName: rawShopName,
       orderId,
       amount: Math.round(Number(amount)),
       currency: currency.toUpperCase(),

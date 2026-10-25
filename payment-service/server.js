@@ -930,7 +930,17 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
       return res.status(400).json({ error: 'Montant de paiement invalide.' });
     }
 
-    const externalReference = req.body.externalReference || `${tenantId}___${orderId}`;
+    // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
+    const rawShopName = req.body.shopName || req.body.storeName || tenantId || 'boutique';
+    const cleanShopName = String(rawShopName)
+      .toLowerCase()
+      .replace(/^nanasore_/, '')
+      .replace(/[^a-z0-9]/g, '_') // Remplace les espaces et caractères spéciaux par des underscores
+      .replace(/_+/g, '_')          // Évite les underscores multiples
+      .replace(/^_|_$/g, '') || 'boutique';
+
+    // Génération de la référence unique avec le vrai nom de la boutique
+    const externalReference = req.body.externalReference || req.body.external_reference || `nanasore_${cleanShopName}___${orderId}`;
 
     const callbackUrl =
       req.body.callback_url ||
@@ -1129,7 +1139,16 @@ app.post(['/api/payment/saspay/payin', '/api/payment/saspay/initiate'], async (r
       return res.status(400).json({ success: false, error: 'Montant de paiement invalide.' });
     }
 
-    const externalReference = req.body.externalReference || `${tenantId}___${orderId}`;
+    // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
+    const rawShopName = req.body.shopName || req.body.storeName || tenantId || 'boutique';
+    const cleanShopName = String(rawShopName)
+      .toLowerCase()
+      .replace(/^nanasore_/, '')
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || 'boutique';
+
+    const externalReference = req.body.externalReference || req.body.external_reference || `nanasore_${cleanShopName}___${orderId}`;
     const callbackUrl =
       req.body.callback_url ||
       req.body.callbackUrl ||
@@ -1501,11 +1520,25 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       return res.status(400).json({ success: false, error: 'Montant de paiement invalide (amount > 0 requis).' });
     }
 
+    // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
+    const rawShopName = req.body.shopName || req.body.storeName || storeId || 'boutique';
+    const cleanShopName = String(rawShopName)
+      .toLowerCase()
+      .replace(/^nanasore_/, '')
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || 'boutique';
+
+    const externalReference = req.body.externalReference || req.body.external_reference || `nanasore_${cleanShopName}___${orderId}`;
+
     console.log(`[NANASWITCH INITIATE] Initiation paiement commande #${orderId} (${amount} ${currency}) via passerelle demandée: [${gateway}]...`);
 
     const initResult = await switchManager.initiatePaymentWithFailover(gateway, {
       orderId,
       storeId,
+      shopName: rawShopName,
+      storeName: rawShopName,
+      externalReference,
       amount: Number(amount),
       currency,
       customerPhone: customerPhone || phone,

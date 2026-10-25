@@ -217,8 +217,11 @@ export const SPaymentGateway: React.FC<SPaymentGatewayProps> = ({
 
     try {
       const formattedPhone = phone.trim();
+      const shopName = sellerConfig?.shopName || sellerConfig?.storeName || sellerConfig?.name || 'nanasore';
       const res = await initiateSPayment({
         orderId,
+        shopName,
+        storeName: shopName,
         amount,
         currency: 'XOF',
         phone: formattedPhone,

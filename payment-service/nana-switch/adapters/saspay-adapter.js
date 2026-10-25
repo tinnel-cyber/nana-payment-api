@@ -49,12 +49,23 @@ class SaspayAdapter extends PaymentGatewayAdapter {
       throw new Error('[SASPAY INITIATE ERROR] orderId et amount (> 0) sont obligatoires.');
     }
 
-    const externalReference = storeId ? `${storeId}___${orderId}` : String(orderId);
+    // Référence composite standardisée pour le multi-tenant : "nanasore_${cleanShopName}___${orderId}"
+    const rawShopName = params.shopName || params.storeName || storeId || 'boutique';
+    const cleanShopName = String(rawShopName)
+      .toLowerCase()
+      .replace(/^nanasore_/, '')
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || 'boutique';
+
+    const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
     const resolvedPhone = customerPhone || phone || '+22670000000';
     const resolvedCountry = (country || countryCode || 'BF').toUpperCase();
 
     const saspayPayload = {
-      tenantId: storeId,
+      tenantId: `nanasore_${cleanShopName}`,
+      shopName: rawShopName,
+      storeName: rawShopName,
       orderId,
       externalReference,
       amount: Math.round(Number(amount)),
