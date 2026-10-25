@@ -74,6 +74,20 @@ const isPhoneFormatOk =
   testPhone4 === '70123456' &&
   testPhone5 === '76543210';
 
+console.log('\n=== TEST CONFORMITÉ OPÉRATEUR ORANGE BF ===');
+const { normalizeSebpayOperator } = require('./sebpay-client');
+const testNormOrange = normalizeSebpayOperator('BF', 'orange');
+const testNormOrangeMoney = normalizeSebpayOperator('BF', 'ORANGE_MONEY');
+const testNormMoov = normalizeSebpayOperator('BF', 'MOOV_MONEY');
+console.log('  Normalisation "orange"       ->', testNormOrange);
+console.log('  Normalisation "ORANGE_MONEY" ->', testNormOrangeMoney);
+console.log('  Normalisation "MOOV_MONEY"   ->', testNormMoov);
+
+const isOperatorNormOk =
+  testNormOrange === 'orange' &&
+  testNormOrangeMoney === 'orange' &&
+  testNormMoov === 'moov';
+
 if (
   headers['X-Public-Key'] === 'pk_live_sample_key_12345' &&
   headers['X-Secret-Key'] === 'sk_live_sample_secret_67890' &&
@@ -85,9 +99,10 @@ if (
   Boolean(proxyAgent) &&
   Boolean(axiosConfig.httpsAgent) &&
   axiosConfig.proxy === false &&
-  isPhoneFormatOk
+  isPhoneFormatOk &&
+  isOperatorNormOk
 ) {
-  console.log('\n>>> VALIDATION REUSSIE : L\'instance réseau Sebpay, formatage local 8 chiffres et validation country/currency sont 100% conformes !');
+  console.log('\n>>> VALIDATION REUSSIE : L\'instance réseau Sebpay, formatage local 8 chiffres, opérateurs BF et validation country/currency sont 100% conformes !');
   process.exit(0);
 } else {
   console.error('\n>>> ECHEC VALIDATION');

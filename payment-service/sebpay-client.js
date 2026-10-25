@@ -721,6 +721,20 @@ async function createSebpayCollection(params) {
   const operatorId = bfOpInfo?.id;
   const isOtpRequired = Boolean(bfOpInfo?.otp_required) || Boolean(effectiveOtp);
 
+  // Objet opérateur complet strictement conforme à la documentation officielle Sebpay (/api/v1/operators)
+  const operatorObject = {
+    id: operatorId || "20260506192835289381",
+    name: bfOpInfo?.name || "Orange Money",
+    slug: operatorSlug, // "orange-bf"
+    code: operatorCode, // "orange"
+    country: {
+      id: countryObject.id,
+      country_name: countryObject.country_name,
+      country_code: countryIso
+    },
+    otp_required: isOtpRequired
+  };
+
   const body = {
     amount: Math.round(Number(amount)),
     currency: resolved.currency,
@@ -738,11 +752,13 @@ async function createSebpayCollection(params) {
     customer_email: customerEmail || 'client@nanasore.com',
     external_reference: externalReference,
     callback_url: effectiveCallback,
-    // Identification exacte de l'opérateur selon l'API Sebpay (slug: "orange-bf", code: "orange")
+    // Identification exacte de l'opérateur selon l'API Sebpay (slug: "orange-bf", code: "orange", id: "20260506192835289381")
     operator: operatorSlug,
     provider: operatorSlug,
+    operator_id: operatorObject.id,
     operator_code: operatorCode,
     operator_slug: operatorSlug,
+    operator_name: operatorObject.name,
     slug: operatorSlug,
     code: operatorCode,
     description: description || `Paiement Commande ${orderId}`,
@@ -763,6 +779,7 @@ async function createSebpayCollection(params) {
   // Ré-application stricte des identifiants opérateur pour éviter tout écrasement via customPayload
   body.operator = operatorSlug;
   body.provider = operatorSlug;
+  body.operator_id = operatorObject.id;
   body.operator_code = operatorCode;
   body.operator_slug = operatorSlug;
   body.slug = operatorSlug;
@@ -788,7 +805,8 @@ async function createSebpayCollection(params) {
     console.warn(`[SEBPAY OTP NOTICE] Orange Burkina Faso (${countryIso}) ciblé sans code OTP. Si Orange exige un OTP (*144*4*6*montant#), la transaction risque d'être rejetée.`);
   }
 
-  console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${operatorSlug} (Code: ${operatorCode}) | OTP Présent: ${Boolean(effectiveOtp)}`);
+  console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${operatorSlug} (ID: ${operatorObject.id}) | OTP Présent: ${Boolean(effectiveOtp)}`);
+  console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
 
   let rawResponse;
   try {
@@ -800,6 +818,8 @@ async function createSebpayCollection(params) {
     // Mécanisme d'auto-adaptation polymorphe anti-422 / anti-400 :
     const errorData = apiErr.data || {};
     const errorStr = JSON.stringify(errorData).toLowerCase();
+    console.error('[SEBPAY API ERROR DETAIL]', JSON.stringify(errorData));
+
     const isCountryStringRequired =
       apiErr.status === 422 &&
       (errorStr.includes('must be a string') || errorStr.includes('must be 2 characters') || (errorData.errors && errorData.errors.country));
@@ -808,21 +828,46 @@ async function createSebpayCollection(params) {
       console.warn(`[SEBPAY AUTO-ADAPT 422] Le validateur Sebpay attend le code ISO pays. Adaptation automatique : country="${countryIso}"`);
       body.country = countryIso;
       body.country_details = countryObject;
+      console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
       rawResponse = await callSebpayApi('collections', {
         method: 'POST',
         body
       });
-    } else if ((apiErr.status === 400 || apiErr.status === 422) && body.operator === operatorSlug && operatorSlug !== operatorCode) {
-      // Si Sebpay refuse le slug composé (orange-bf) et attend le code court (orange)
-      console.warn(`[SEBPAY AUTO-ADAPT OPERATOR] Sebpay a rejeté "${operatorSlug}". Nouvelle tentative avec le code court : "${operatorCode}"`);
-      body.operator = operatorCode;
-      body.provider = operatorCode;
-      body.operator_slug = operatorCode;
-      body.slug = operatorCode;
-      rawResponse = await callSebpayApi('collections', {
-        method: 'POST',
-        body
-      });
+    } else if ((apiErr.status === 400 || apiErr.status === 422) && body.operator === operatorSlug) {
+      // 1. Tentative avec l'ID unique de l'opérateur (ex: "20260506192835289381")
+      console.warn(`[SEBPAY AUTO-ADAPT OPERATOR ID] Sebpay a rejeté "${operatorSlug}". Nouvelle tentative avec l'id unique : "${operatorObject.id}"`);
+      body.operator = operatorObject.id;
+      body.operator_id = operatorObject.id;
+      console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
+      try {
+        rawResponse = await callSebpayApi('collections', {
+          method: 'POST',
+          body
+        });
+      } catch (errId) {
+        // 2. Tentative avec le code court (ex: "orange")
+        console.warn(`[SEBPAY AUTO-ADAPT OPERATOR CODE] Nouvelle tentative avec le code court : "${operatorCode}"`);
+        body.operator = operatorCode;
+        body.provider = operatorCode;
+        body.operator_slug = operatorCode;
+        body.slug = operatorCode;
+        console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
+        try {
+          rawResponse = await callSebpayApi('collections', {
+            method: 'POST',
+            body
+          });
+        } catch (errCode) {
+          // 3. Tentative avec l'objet complet opérateur
+          console.warn(`[SEBPAY AUTO-ADAPT OPERATOR OBJECT] Nouvelle tentative avec l'objet opérateur complet`);
+          body.operator = operatorObject;
+          console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
+          rawResponse = await callSebpayApi('collections', {
+            method: 'POST',
+            body
+          });
+        }
+      }
     } else {
       throw apiErr;
     }
