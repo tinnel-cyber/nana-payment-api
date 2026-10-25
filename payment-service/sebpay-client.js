@@ -687,8 +687,39 @@ async function createSebpayCollection(params) {
     ''
   ).trim();
 
-  const isOrangeBf = countryIso === 'BF' && (normalizedOperator === 'orange' || normalizedOperator.includes('orange'));
-  const isOtpRequired = isOrangeBf || Boolean(effectiveOtp);
+  // Table de correspondance officielle certifiée des opérateurs Sebpay pour le Burkina Faso (/api/v1/operators?country=BF)
+  const BF_OPERATORS_MAP = {
+    'orange': {
+      slug: 'orange-bf',
+      code: 'orange',
+      id: '20260506192835289381',
+      name: 'Orange Money',
+      otp_required: true,
+      ussd_code: '*144*4*6*montant#'
+    },
+    'moov': {
+      slug: 'moov-bf',
+      code: 'moov',
+      id: '20260506192835278434',
+      name: 'Moov Money',
+      otp_required: false,
+      ussd_code: null
+    },
+    'wligdicash': {
+      slug: 'wligdicash-bf',
+      code: 'wligdicash',
+      id: '20260506192835300791',
+      name: 'Wallet LigdiCash',
+      otp_required: false,
+      ussd_code: null
+    }
+  };
+
+  const bfOpInfo = countryIso === 'BF' ? (BF_OPERATORS_MAP[normalizedOperator] || null) : null;
+  const operatorSlug = bfOpInfo?.slug || normalizedOperator;
+  const operatorCode = bfOpInfo?.code || normalizedOperator;
+  const operatorId = bfOpInfo?.id;
+  const isOtpRequired = Boolean(bfOpInfo?.otp_required) || Boolean(effectiveOtp);
 
   const body = {
     amount: Math.round(Number(amount)),
@@ -707,15 +738,20 @@ async function createSebpayCollection(params) {
     customer_email: customerEmail || 'client@nanasore.com',
     external_reference: externalReference,
     callback_url: effectiveCallback,
-    // Identification de l'opérateur conforme à la documentation Sebpay (slug, code, operator)
-    operator: normalizedOperator,
-    provider: normalizedOperator,
-    operator_code: normalizedOperator,
-    operator_slug: normalizedOperator,
-    slug: normalizedOperator,
+    // Identification exacte de l'opérateur selon l'API Sebpay (slug: "orange-bf", code: "orange")
+    operator: operatorSlug,
+    provider: operatorSlug,
+    operator_code: operatorCode,
+    operator_slug: operatorSlug,
+    slug: operatorSlug,
+    code: operatorCode,
     description: description || `Paiement Commande ${orderId}`,
     ...customPayload
   };
+
+  if (operatorId) {
+    body.operator_id = operatorId;
+  }
 
   // Forcer le formatage sur le champ du téléphone juste avant l'envoi de la requête HTTP vers l'API Sebpay
   const finalLocalPhone = formatLocalPhoneNumber(body.phone || body.customer_phone || effectivePhone);
@@ -725,11 +761,12 @@ async function createSebpayCollection(params) {
   if (body.client_phone) body.client_phone = finalLocalPhone;
 
   // Ré-application stricte des identifiants opérateur pour éviter tout écrasement via customPayload
-  body.operator = normalizedOperator;
-  body.provider = normalizedOperator;
-  body.operator_code = normalizedOperator;
-  body.operator_slug = normalizedOperator;
-  body.slug = normalizedOperator;
+  body.operator = operatorSlug;
+  body.provider = operatorSlug;
+  body.operator_code = operatorCode;
+  body.operator_slug = operatorSlug;
+  body.slug = operatorSlug;
+  body.code = operatorCode;
 
   // Sebpay ne dispose d'aucun environnement Sandbox/Test (flux 100% Production/Live réel)
   // Neutralisation stricte et suppression définitive de tout flag de test
@@ -751,7 +788,7 @@ async function createSebpayCollection(params) {
     console.warn(`[SEBPAY OTP NOTICE] Orange Burkina Faso (${countryIso}) ciblé sans code OTP. Si Orange exige un OTP (*144*4*6*montant#), la transaction risque d'être rejetée.`);
   }
 
-  console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${normalizedOperator}`);
+  console.log(`[SEBPAY INITIATE] Collection pour ${externalReference} | ${amount} ${resolved.currency} | Pays: ${countryObject.country_name} (${countryIso}) | Opérateur: ${operatorSlug} (Code: ${operatorCode}) | OTP Présent: ${Boolean(effectiveOtp)}`);
 
   let rawResponse;
   try {
@@ -760,8 +797,7 @@ async function createSebpayCollection(params) {
       body
     });
   } catch (apiErr) {
-    // Mécanisme d'auto-adaptation polymorphe anti-422 :
-    // Si le validateur de l'API Sebpay exige que country soit une chaîne de 2 caractères :
+    // Mécanisme d'auto-adaptation polymorphe anti-422 / anti-400 :
     const errorData = apiErr.data || {};
     const errorStr = JSON.stringify(errorData).toLowerCase();
     const isCountryStringRequired =
@@ -772,6 +808,17 @@ async function createSebpayCollection(params) {
       console.warn(`[SEBPAY AUTO-ADAPT 422] Le validateur Sebpay attend le code ISO pays. Adaptation automatique : country="${countryIso}"`);
       body.country = countryIso;
       body.country_details = countryObject;
+      rawResponse = await callSebpayApi('collections', {
+        method: 'POST',
+        body
+      });
+    } else if ((apiErr.status === 400 || apiErr.status === 422) && body.operator === operatorSlug && operatorSlug !== operatorCode) {
+      // Si Sebpay refuse le slug composé (orange-bf) et attend le code court (orange)
+      console.warn(`[SEBPAY AUTO-ADAPT OPERATOR] Sebpay a rejeté "${operatorSlug}". Nouvelle tentative avec le code court : "${operatorCode}"`);
+      body.operator = operatorCode;
+      body.provider = operatorCode;
+      body.operator_slug = operatorCode;
+      body.slug = operatorCode;
       rawResponse = await callSebpayApi('collections', {
         method: 'POST',
         body
