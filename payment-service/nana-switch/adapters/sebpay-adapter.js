@@ -30,12 +30,17 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       amount,
       currency = 'XOF',
       customerPhone,
-      customerEmail,
+      phone,
+      customerEmail = 'client@wameet.africa',
       customerName = 'Client Wameet',
       description = 'Commande Wameet / Nanasore Live',
       returnUrl,
       callbackUrl,
       storeId = 'nanasore_central_hub',
+      country,
+      countryCode,
+      operator,
+      otpCode,
       metadata = {}
     } = params;
 
@@ -45,17 +50,26 @@ class SebpayAdapter extends PaymentGatewayAdapter {
 
     // Référence composite pour le multi-tenant : "storeId___orderId"
     const externalReference = storeId ? `${storeId}___${orderId}` : String(orderId);
+    const resolvedPhone = customerPhone || phone || '+22670000000';
 
     const sebpayPayload = {
+      tenantId: storeId,
+      orderId,
       amount: Math.round(Number(amount)),
       currency: currency.toUpperCase(),
-      description: description.substring(0, 120),
-      external_reference: externalReference,
+      country: country || countryCode,
+      phone: resolvedPhone,
+      customerPhone: resolvedPhone,
       client_name: customerName,
       client_email: customerEmail || 'client@wameet.africa',
-      client_phone: customerPhone || '+22670000000',
+      client_phone: resolvedPhone,
+      operator,
+      otpCode,
+      description: description.substring(0, 120),
+      external_reference: externalReference,
+      externalReference,
       return_url: returnUrl || 'https://pos-app-1759a.web.app/orders',
-      callback_url: callbackUrl || 'https://nana-payment-api.onrender.com/api/payments/webhook/sebpay',
+      callback_url: callbackUrl || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/webhook/sebpay',
       custom_data: {
         storeId,
         orderId,
@@ -115,11 +129,11 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       };
     }
 
-    const secretKey = process.env.SEBPAY_SECRET_KEY || process.env.PAYMENT_WEBHOOK_SECRET;
+    const secretKey = process.env.SEBPAY_WEBHOOK_SECRET || process.env.SEBPAY_SECRET_KEY || process.env.PAYMENT_WEBHOOK_SECRET;
     if (!secretKey) {
       return {
         isValid: false,
-        errorMessage: 'Clé secrète SEBPAY_SECRET_KEY non configurée sur le serveur.'
+        errorMessage: 'Clé secrète SEBPAY_WEBHOOK_SECRET (ou SEBPAY_SECRET_KEY) non configurée sur le serveur.'
       };
     }
 

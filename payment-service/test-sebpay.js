@@ -4,6 +4,7 @@
 
 process.env.SEBPAY_PUBLIC_KEY = 'pk_live_sample_key_12345';
 process.env.SEBPAY_SECRET_KEY = 'sk_live_sample_secret_67890';
+process.env.SEBPAY_FIXIE_URL = 'http://fixie:test_token_fixie@velvet.usefixie.com:80';
 
 const {
   getSebpayBaseUrl,

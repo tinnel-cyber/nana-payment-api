@@ -47,6 +47,21 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
 const { getFixieUrlSaspay, getFixieAgentsSaspay } = require('./fixie-proxy');
 
+// Clients HTTP permissifs de secours
+let axiosClient = null;
+try {
+  axiosClient = require('axios');
+} catch {
+  axiosClient = null;
+}
+
+let nodeFetchClient = null;
+try {
+  nodeFetchClient = require('node-fetch');
+} catch {
+  nodeFetchClient = null;
+}
+
 // URL de base officielle SasPay
 const SASPAY_DEFAULT_BASE_URL = 'https://api.saspay.me/api/v1/';
 
@@ -212,12 +227,16 @@ async function callSaspayApi(endpoint, options = {}) {
     signal: AbortSignal.timeout(timeoutMs)
   };
 
-  // Décaissement (Pay-Out) -> Injecte Fixie (FIXIE_URL_SASPAY)
+  // Décaissement (Pay-Out) -> Injecte Fixie (SASPAY_FIXIE_URL en priorité)
   // Encaissement (Pay-In) -> Direct en clair
-  const isPayoutCall = Boolean(isPayout || cleanEndpoint.startsWith('payouts') || cleanEndpoint.startsWith('wallet-transfers'));
+  const isPayoutCall = Boolean(isPayout || cleanEndpoint.startsWith('payouts') || cleanEndpoint.startsWith('wallet-transfers') || options.forceFixie);
 
   if (isPayoutCall) {
-    const { httpsAgent, undiciAgent } = getFixieAgentsSaspay();
+    const txId = options.transactionId || options.idempotencyKey || idempotencyKey || 'SASPAY_OUTBOUND';
+    const { httpsAgent, undiciAgent, variableName } = getFixieAgentsSaspay({
+      transactionId: txId,
+      forceAlternate: Boolean(options.forceAlternateProxy)
+    });
     if (httpsAgent) {
       fetchOptions.agent = httpsAgent;
       fetchOptions.httpsAgent = httpsAgent;
@@ -227,7 +246,7 @@ async function callSaspayApi(endpoint, options = {}) {
     if (undiciAgent) {
       fetchOptions.dispatcher = undiciAgent;
     }
-    console.log(`[SASPAY PAYOUT OUTBOUND] ${method} ${targetUrl} (via Proxy Fixie FIXIE_URL_SASPAY pour IP Whitelisting)...`);
+    console.log(`[SASPAY PAYOUT OUTBOUND] ${method} ${targetUrl} (via Proxy Fixie [${variableName}] pour IP Whitelisting)...`);
   } else {
     // ENCAISSEMENT : 100% DIRECT EN CLAIR
     delete fetchOptions.agent;
@@ -241,7 +260,61 @@ async function callSaspayApi(endpoint, options = {}) {
     fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  const response = await fetch(targetUrl, fetchOptions);
+  let response;
+  try {
+    response = await fetch(targetUrl, fetchOptions);
+  } catch (fetchErr) {
+    const errMsg = String(fetchErr.message || '');
+    const isProxyTunnelError =
+      fetchErr.name === 'RequestAbortedError' ||
+      fetchErr.name === 'AbortError' ||
+      errMsg.includes('407') ||
+      errMsg.includes('HTTP Tunneling') ||
+      errMsg.includes('Proxy response');
+
+    if (isProxyTunnelError && isPayoutCall && fetchOptions.agent) {
+      console.warn(`[SASPAY FALLBACK] Échec du tunneling Undici ProxyAgent (407). Basculement automatique vers le client permissif https-proxy-agent / axios... Cause : ${errMsg}`);
+      if (axiosClient) {
+        const axiosRes = await axiosClient({
+          url: targetUrl,
+          method,
+          headers: reqHeaders,
+          data: body,
+          httpsAgent: fetchOptions.agent,
+          httpAgent: fetchOptions.agent,
+          proxy: false,
+          timeout: timeoutMs,
+          validateStatus: () => true
+        });
+        if (axiosRes.status < 200 || axiosRes.status >= 300) {
+          const err = new Error(`Erreur Saspay (${axiosRes.status}): ${JSON.stringify(axiosRes.data)}`);
+          err.status = axiosRes.status;
+          err.data = axiosRes.data;
+          throw err;
+        }
+        return axiosRes.data;
+      }
+      if (nodeFetchClient) {
+        const nfRes = await nodeFetchClient(targetUrl, {
+          method,
+          headers: reqHeaders,
+          body: (body && method !== 'GET' && method !== 'HEAD') ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+          agent: fetchOptions.agent,
+          timeout: timeoutMs
+        });
+        const ct = nfRes.headers.get('content-type') || '';
+        const data = ct.includes('application/json') ? await nfRes.json().catch(() => ({})) : await nfRes.text();
+        if (!nfRes.ok) {
+          const err = new Error(`Erreur Saspay (${nfRes.status}): ${JSON.stringify(data)}`);
+          err.status = nfRes.status;
+          err.data = data;
+          throw err;
+        }
+        return data;
+      }
+    }
+    throw fetchErr;
+  }
 
   const contentType = response.headers.get('content-type') || '';
   let responseData = null;

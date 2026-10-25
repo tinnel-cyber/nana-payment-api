@@ -13,10 +13,22 @@ services:
         value: 10000
       - key: FIREBASE_PROJECT_ID
         value: pos-app-1759a
+      # Proxies Fixie dédiés avec priorité & fallback
+      - key: SEBPAY_FIXIE_URL
+        sync: false
+      - key: SASPAY_FIXIE_URL
+        sync: false
       - key: FIXIE_URL
+        sync: false
+      - key: SEBPAY_WEBHOOK_SECRET
         sync: false
       - key: PAYMENT_WEBHOOK_SECRET
         value: konkobo_telecom_webhook_secret_key_2026
+      # SasPay Gateway (Secours & Multi-Pays)
+      - key: SASPAY_API_KEY
+        sync: false
+      - key: SASPAY_WEBHOOK_SECRET
+        sync: false
       # YouTube OAuth 2.0 (Google Cloud Console)
       - key: YOUTUBE_CLIENT_ID
         sync: false

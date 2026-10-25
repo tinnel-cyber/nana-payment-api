@@ -23,7 +23,107 @@ delete process.env.all_proxy;
 
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
-const { fetchViaFixie, getFixieUrl, getFixieAgents, FIXIE_URL } = require('./fixie-proxy');
+const {
+  fetchViaFixie,
+  getFixieUrl,
+  getFixieAgents,
+  getFixieAgentsSebpay,
+  logProxyRouterUsage,
+  getAxiosProxyConfig,
+  maskProxyUrl
+} = require('./fixie-proxy');
+
+// Clients HTTP permissifs de secours pour le tunneling HTTP Proxy
+let axiosClient = null;
+try {
+  axiosClient = require('axios');
+} catch {
+  axiosClient = null;
+}
+
+let nodeFetchClient = null;
+try {
+  nodeFetchClient = require('node-fetch');
+} catch {
+  nodeFetchClient = null;
+}
+
+/**
+ * Exécute un appel réseau vers l'API Sebpay via un client permissif (Axios ou node-fetch avec https-proxy-agent)
+ * Utilisé en cas d'échec 407 / AbortError d'undici HTTP Tunneling
+ */
+async function callSebpayApiViaPermissiveClient(targetUrl, { method, headers, body, httpsAgent, timeoutMs }) {
+  console.log(`[SEBPAY PERMISSIVE CLIENT] Exécution via HttpsProxyAgent (${axiosClient ? 'Axios' : 'node-fetch'})...`);
+
+  if (axiosClient) {
+    try {
+      const axiosRes = await axiosClient({
+        url: targetUrl,
+        method,
+        headers,
+        data: body,
+        httpsAgent,
+        httpAgent: httpsAgent,
+        proxy: false,
+        timeout: timeoutMs,
+        validateStatus: () => true
+      });
+
+      const responseData = axiosRes.data;
+      if (axiosRes.status < 200 || axiosRes.status >= 300) {
+        const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error))
+          ? (responseData.message || responseData.error)
+          : `HTTP ${axiosRes.status} ${axiosRes.statusText || 'Error'}`;
+        const error = new Error(`Erreur Sebpay (${axiosRes.status}): ${errorMsg}`);
+        error.status = axiosRes.status;
+        error.data = responseData;
+        throw error;
+      }
+      return responseData;
+    } catch (axiosErr) {
+      if (axiosErr.status || (axiosErr.response && axiosErr.response.status)) {
+        throw axiosErr;
+      }
+      console.warn('[SEBPAY AXIOS NOTICE] Erreur Axios, tentative de secours via node-fetch :', axiosErr.message);
+    }
+  }
+
+  if (nodeFetchClient) {
+    const fetchBody = (body && method !== 'GET' && method !== 'HEAD')
+      ? (typeof body === 'string' ? body : JSON.stringify(body))
+      : undefined;
+
+    const nfRes = await nodeFetchClient(targetUrl, {
+      method,
+      headers,
+      body: fetchBody,
+      agent: httpsAgent,
+      timeout: timeoutMs
+    });
+
+    const contentType = nfRes.headers.get('content-type') || '';
+    let responseData = null;
+    if (contentType.includes('application/json')) {
+      responseData = await nfRes.json().catch(() => ({}));
+    } else {
+      responseData = await nfRes.text();
+    }
+
+    if (!nfRes.ok) {
+      const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error))
+        ? (responseData.message || responseData.error)
+        : `HTTP ${nfRes.status} ${nfRes.statusText}`;
+      const error = new Error(`Erreur Sebpay (${nfRes.status}): ${errorMsg}`);
+      error.status = nfRes.status;
+      error.data = responseData;
+      throw error;
+    }
+
+    return responseData;
+  }
+
+  throw new Error('Aucun client HTTP permissif (Axios ou node-fetch) disponible pour le contournement 407.');
+}
 
 // URL de base officielle Sebpay
 const SEBPAY_DEFAULT_BASE_URL = 'https://newapi.sebpay.bj/api/v1/';
@@ -359,24 +459,15 @@ async function callSebpayApi(endpoint, options = {}) {
 
   const reqHeaders = getSebpayHeaders(headers);
 
-  // Lecture dynamique systématique de process.env.FIXIE_URL_SEBPAY (avec fallback FIXIE_URL)
-  const fixieUrl = process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || FIXIE_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
-  let httpsAgent = null;
-  let undiciAgent = null;
+  // Résolution dynamique du proxy avec priorité SEBPAY_FIXIE_URL
+  const txId = options.transactionId || options.orderId || options.externalReference || (typeof body === 'object' && body?.external_reference) || null;
+  const { httpsAgent, undiciAgent, variableName, fixieUrl } = getFixieAgents('sebpay', {
+    transactionId: txId,
+    forceAlternate: Boolean(options.forceAlternateProxy)
+  });
 
-  if (fixieUrl) {
-    try {
-      httpsAgent = new HttpsProxyAgent(fixieUrl);
-    } catch (agentErr) {
-      console.error('[SEBPAY PROXY ERROR] Impossible d\'initialiser HttpsProxyAgent :', agentErr.message);
-    }
-    try {
-      undiciAgent = new ProxyAgent(fixieUrl);
-    } catch (undiciErr) {
-      console.error('[SEBPAY UNDICI ERROR] Impossible d\'initialiser ProxyAgent undici :', undiciErr.message);
-    }
-  } else {
-    console.warn('[SEBPAY PROXY WARNING] Variable FIXIE_URL non définie sur Render. L\'IP dynamique Render risque d\'être rejetée par Sebpay.');
+  if (!fixieUrl) {
+    console.warn('[SEBPAY PROXY WARNING] Aucune variable de proxy (SEBPAY_FIXIE_URL ou FIXIE_URL) configurée. L\'IP dynamique Render risque d\'être rejetée par Sebpay.');
   }
 
   const fetchOptions = {
@@ -402,7 +493,31 @@ async function callSebpayApi(endpoint, options = {}) {
 
   console.log(`[SEBPAY REQUEST] ${method} ${targetUrl} (via Fixie IP Statique / HttpsProxyAgent isolé)...`);
 
-  const response = await fetch(targetUrl, fetchOptions);
+  let response;
+  try {
+    response = await fetch(targetUrl, fetchOptions);
+  } catch (fetchErr) {
+    const errMsg = String(fetchErr.message || '');
+    const isProxyTunnelError =
+      fetchErr.name === 'RequestAbortedError' ||
+      fetchErr.name === 'AbortError' ||
+      errMsg.includes('407') ||
+      errMsg.includes('HTTP Tunneling') ||
+      errMsg.includes('Proxy response');
+
+    if (isProxyTunnelError && httpsAgent) {
+      console.warn(`[SEBPAY FALLBACK] Échec du tunneling Undici ProxyAgent (407). Basculement automatique vers le client permissif https-proxy-agent / axios... Cause : ${errMsg}`);
+      return await callSebpayApiViaPermissiveClient(targetUrl, {
+        method,
+        headers: reqHeaders,
+        body,
+        httpsAgent,
+        timeoutMs
+      });
+    }
+
+    throw fetchErr;
+  }
 
   const contentType = response.headers.get('content-type') || '';
   let responseData = null;
@@ -974,11 +1089,11 @@ async function getSebpayCountries(forceRefresh = false) {
 }
 
 /**
- * Retourne une instance de HttpsProxyAgent configurée avec process.env.FIXIE_URL_SEBPAY
+ * Retourne une instance de HttpsProxyAgent configurée dynamiquement avec priorité SEBPAY_FIXIE_URL
  */
-function getFixieHttpsProxyAgent() {
-  const fixieUrl = process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL || process.env.QUOTAGUARDSTATIC_URL || 'http://fixie:KFdz8Wm8fUS5Bqo@ventoux.usefixie.com:80';
-  return fixieUrl ? new HttpsProxyAgent(fixieUrl) : null;
+function getFixieHttpsProxyAgent(options = {}) {
+  const { httpsAgent } = getFixieAgents('sebpay', options);
+  return httpsAgent;
 }
 
 /**

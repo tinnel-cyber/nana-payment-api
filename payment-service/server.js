@@ -255,15 +255,16 @@ app.use(cors({
 app.get('/api/payment/ip', async (req, res) => {
   try {
     const force = req.query.force === 'true';
-    const ipResult = await getOutboundIp(force);
+    const gateway = req.query.gateway || 'sebpay';
+    const ipResult = await getOutboundIp(force, gateway);
     return res.json({
       status: 'success',
       service: 'nana-payment-gateway',
-      proxyIsolatedToSebpay: true,
+      targetGateway: gateway,
       ...ipResult,
       whitelistingInstructions: ipResult.success
-        ? `Ajoutez l'adresse IP ${ipResult.ip} dans la liste blanche (IP Whitelisting) de votre partenaire bancaire.`
-        : 'Vérifiez la variable FIXIE_URL sur Render pour activer le proxy statique.'
+        ? `Ajoutez l'adresse IP ${ipResult.ip} dans la liste blanche (IP Whitelisting) de votre partenaire (${gateway}).`
+        : `Vérifiez les variables SEBPAY_FIXIE_URL / SASPAY_FIXIE_URL / FIXIE_URL sur Render.`
     });
   } catch (err) {
     return res.status(500).json({
@@ -281,13 +282,15 @@ app.get(['/', '/health', '/api/health', '/healthz', '/ping', '/api/ping'], (req,
   return res.status(200).json({
     status: 'online',
     service: 'nana-payment-gateway-api',
-    version: '1.0.0',
+    version: '2.2.0',
     environment: process.env.NODE_ENV || 'production',
     proxyStrategy: {
       globalProxy: false,
-      sebpayProxy: Boolean(process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL),
-      saspayPayoutProxy: Boolean(process.env.FIXIE_URL_SASPAY),
-      saspayPayinProxy: false // Pay-In est direct sans proxy Fixie
+      sebpayProxyConfigured: Boolean(process.env.SEBPAY_FIXIE_URL || process.env.FIXIE_URL_SEBPAY || process.env.FIXIE_URL),
+      saspayProxyConfigured: Boolean(process.env.SASPAY_FIXIE_URL || process.env.FIXIE_URL_SASPAY || process.env.FIXIE_URL),
+      globalFallbackConfigured: Boolean(process.env.FIXIE_URL),
+      failoverReady: true
+    },
     },
     aggregators: {
       sebpay: Boolean(process.env.SEBPAY_PUBLIC_KEY && process.env.SEBPAY_SECRET_KEY),
@@ -333,7 +336,14 @@ app.get('/api/payment/saspay/status', (req, res) => {
  * pour garantir que le formatage exact des octets reçus de Sebpay est préservé pour le HMAC.
  */
 app.post(
-  ['/api/payment/webhook', '/api/webhooks/payment', '/api/payments/webhook/sebpay', '/api/payment/webhook/sebpay'],
+  [
+    '/webhook/sebpay',
+    '/api/webhook/sebpay',
+    '/api/payment/webhook',
+    '/api/webhooks/payment',
+    '/api/payments/webhook/sebpay',
+    '/api/payment/webhook/sebpay'
+  ],
   express.raw({ type: 'application/json', limit: '5mb' }),
   async (req, res) => {
     try {
@@ -348,15 +358,19 @@ app.post(
         req.query.signature;
 
       if (!sebpaySignature) {
-        console.error('[SECURITY REJECT] Webhook rejeté : En-tête X-SebPay-Signature manquant.');
+        console.error('[SECURITY REJECT] Webhook Sebpay rejeté : En-tête X-SebPay-Signature manquant.');
         return res.status(401).json({ error: 'Signature cryptographique X-SebPay-Signature absente.' });
       }
 
-      // Clé secrète Sebpay pour la vérification HMAC
-      const secretKey = process.env.SEBPAY_SECRET_KEY || process.env.PAYMENT_WEBHOOK_SECRET;
+      // Clé secrète Sebpay pour la vérification HMAC (priorité à SEBPAY_WEBHOOK_SECRET)
+      const secretKey =
+        process.env.SEBPAY_WEBHOOK_SECRET ||
+        process.env.SEBPAY_SECRET_KEY ||
+        process.env.PAYMENT_WEBHOOK_SECRET;
+
       if (!secretKey) {
-        console.error('[SECURITY CONFIG ERROR] process.env.SEBPAY_SECRET_KEY non configuré.');
-        return res.status(500).json({ error: 'Configuration serveur incomplète (Clé secrète manquante).' });
+        console.error('[SECURITY CONFIG ERROR] process.env.SEBPAY_WEBHOOK_SECRET (ou SEBPAY_SECRET_KEY) non configuré.');
+        return res.status(500).json({ error: 'Configuration serveur incomplète (Clé secrète Sebpay manquante).' });
       }
 
       // 2. Récupération du buffer brut (rawBody)
@@ -926,21 +940,47 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
       process.env.PAYMENT_WEBHOOK_URL ||
       'https://nana-payment-api.onrender.com/api/payment/webhook';
 
-    const sebpayResult = await createSebpayCollection({
-      tenantId,
-      orderId,
-      externalReference,
-      amount,
-      currency,
-      country: req.body.country || req.body.country_code || req.body.countryCode,
-      phone: phone || customerPhone,
-      customerName,
-      customerEmail,
-      operator,
-      otpCode,
-      description,
-      callbackUrl
-    });
+    const autoFailover = req.query.failover !== 'false' && req.body.failover !== false;
+    let sebpayResult;
+
+    if (autoFailover) {
+      sebpayResult = await switchManager.initiatePaymentWithFailover('sebpay', {
+        orderId,
+        storeId: tenantId,
+        tenantId,
+        externalReference,
+        amount,
+        currency,
+        country: req.body.country || req.body.country_code || req.body.countryCode,
+        phone: phone || customerPhone,
+        customerPhone: phone || customerPhone,
+        customerName,
+        customerEmail,
+        operator,
+        otpCode,
+        description,
+        callbackUrl,
+        returnUrl: req.body.returnUrl || req.body.return_url
+      }, { db });
+    } else {
+      sebpayResult = await createSebpayCollection({
+        tenantId,
+        orderId,
+        externalReference,
+        amount,
+        currency,
+        country: req.body.country || req.body.country_code || req.body.countryCode,
+        phone: phone || customerPhone,
+        customerName,
+        customerEmail,
+        operator,
+        otpCode,
+        description,
+        callbackUrl
+      });
+    }
+
+    const resolvedGateway = sebpayResult.gateway || 'sebpay';
 
     // Enregistre l'intention dans Firestore si disponible
     if (db) {
@@ -954,21 +994,29 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
           amount: Number(amount),
           currency,
           customerPhone: phone || customerPhone,
-          operator: operator || 'SEBPAY',
-          provider: 'SEBPAY',
+          operator: operator || resolvedGateway.toUpperCase(),
+          provider: resolvedGateway.toUpperCase(),
+          gateway: resolvedGateway,
+          failedOver: Boolean(sebpayResult.failedOver),
+          originalGateway: sebpayResult.originalGateway || null,
+          failoverReason: sebpayResult.failoverReason || null,
           status: 'PENDING',
           paymentStatus: 'PENDING',
           environment: 'production',
           isTest: false,
-          providerLink: sebpayResult.provider_link || null,
-          redirectUrl: sebpayResult.provider_link || null,
-          action: sebpayResult.action,
+          providerLink: sebpayResult.paymentUrl || sebpayResult.provider_link || null,
+          redirectUrl: sebpayResult.paymentUrl || sebpayResult.provider_link || null,
+          action: sebpayResult.action || 'redirect',
           createdAt: nowServer,
           updatedAt: nowServer
         };
 
         await db.collection('payment_intents').doc(orderId).set(intentData, { merge: true });
         await db.collection('payment_intents').doc(externalReference).set(intentData, { merge: true });
+      } catch (fbErr) {
+        console.warn('[FIRESTORE INTENT] Enregistrement intention :', fbErr.message);
+      }
+    }
       } catch (fbErr) {
         console.warn('[FIRESTORE INTENT] Enregistrement intention :', fbErr.message);
       }
@@ -1122,6 +1170,7 @@ app.post(['/api/payment/saspay/payin', '/api/payment/saspay/initiate'], async (r
           customerPhone: phone || customerPhone,
           operator: operator || network || 'SASPAY',
           provider: 'SASPAY',
+          gateway: 'saspay',
           status: 'PENDING',
           paymentStatus: 'PENDING',
           environment: 'production',
@@ -1251,30 +1300,47 @@ app.get('/api/payment/saspay/countries', (req, res) => {
 // ROUTE SASPAY 5 : Webhook Sécurisé SasPay (Signature HMAC-SHA256 & Timestamp 300s)
 // ============================================================================
 app.post(
-  ['/api/payment/saspay/webhook', '/api/webhooks/saspay'],
+  [
+    '/webhook/saspay',
+    '/api/webhook/saspay',
+    '/api/payment/saspay/webhook',
+    '/api/webhooks/saspay'
+  ],
   express.raw({ type: 'application/json', limit: '5mb' }),
   async (req, res) => {
     try {
-      const signature = req.headers['x-webhook-signature'] || req.headers['X-Webhook-Signature'];
-      const timestamp = req.headers['x-webhook-timestamp'] || req.headers['X-Webhook-Timestamp'];
+      const signature =
+        req.headers['x-saspay-signature'] ||
+        req.headers['X-Saspay-Signature'] ||
+        req.headers['x-webhook-signature'] ||
+        req.headers['X-Webhook-Signature'];
+
+      const timestamp =
+        req.headers['x-webhook-timestamp'] ||
+        req.headers['X-Webhook-Timestamp'] ||
+        req.headers['x-saspay-timestamp'];
+
       const eventName = req.headers['x-webhook-event'] || req.headers['X-Webhook-Event'];
 
       const rawBuffer = Buffer.isBuffer(req.body)
         ? req.body
         : Buffer.from(req.rawBody || req.body || '', 'utf8');
 
-      // Vérification cryptographique stricte si SASPAY_WEBHOOK_SECRET est configuré
+      // Vérification cryptographique stricte avec SASPAY_WEBHOOK_SECRET
       if (process.env.SASPAY_WEBHOOK_SECRET) {
         const sigCheck = verifySaspayWebhookSignature({
           rawBody: rawBuffer,
           signature,
-          timestamp
+          timestamp,
+          secret: process.env.SASPAY_WEBHOOK_SECRET
         });
 
         if (!sigCheck.valid) {
-          console.error(`[SASPAY WEBHOOK REJECT] Échec vérification cryptographique : ${sigCheck.reason}`);
+          console.error(`[SASPAY WEBHOOK REJECT] Échec vérification cryptographique HMAC : ${sigCheck.reason}`);
           return res.status(401).json({ error: `Signature webhook SasPay invalide (${sigCheck.reason})` });
         }
+      } else {
+        console.warn('[SASPAY WEBHOOK WARNING] Variable SASPAY_WEBHOOK_SECRET non configurée sur Render.');
       }
 
       // Règle SasPay : Réponse HTTP 2xx rapide immédiate pour accuser réception
@@ -1413,7 +1479,7 @@ app.post('/api/payment/bank-proxy', async (req, res) => {
  * POST /api/payments/initiate & POST /api/switch/initiate
  * Initiation unifiée via la passerelle choisie (Sebpay, Wave, etc.)
  */
-app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) => {
+app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch/initiate'], async (req, res) => {
   try {
     const {
       gateway = 'sebpay',
@@ -1422,11 +1488,16 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
       amount,
       currency = 'XOF',
       customerPhone,
+      phone,
       customerEmail,
       customerName = 'Client Wameet',
       description = 'Commande Wameet / Nanasore Live',
       returnUrl,
       callbackUrl,
+      country,
+      countryCode,
+      operator,
+      otpCode,
       metadata = {}
     } = req.body;
 
@@ -1434,21 +1505,27 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
       return res.status(400).json({ success: false, error: 'Montant de paiement invalide (amount > 0 requis).' });
     }
 
-    console.log(`[NANASWITCH INITIATE] Initiation paiement commande #${orderId} (${amount} ${currency}) via passerelle ${gateway}...`);
+    console.log(`[NANASWITCH INITIATE] Initiation paiement commande #${orderId} (${amount} ${currency}) via passerelle demandée: [${gateway}]...`);
 
-    const initResult = await switchManager.initiatePayment(gateway, {
+    const initResult = await switchManager.initiatePaymentWithFailover(gateway, {
       orderId,
       storeId,
       amount: Number(amount),
       currency,
-      customerPhone,
+      customerPhone: customerPhone || phone,
+      phone: customerPhone || phone,
       customerEmail,
       customerName,
+      country: country || countryCode,
+      operator,
+      otpCode,
       description,
       returnUrl,
       callbackUrl,
       metadata
-    });
+    }, { db });
+
+    const finalGateway = initResult.gateway || gateway;
 
     if (db) {
       try {
@@ -1459,12 +1536,17 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
           storeId,
           amount: Number(amount),
           currency,
-          gateway,
-          provider: gateway.toUpperCase(),
+          gateway: finalGateway,
+          provider: finalGateway.toUpperCase(),
+          failedOver: Boolean(initResult.failedOver),
+          originalGateway: initResult.originalGateway || null,
+          failoverReason: initResult.failoverReason || null,
           status: 'PENDING',
           paymentStatus: 'PENDING',
-          paymentUrl: initResult.paymentUrl,
-          customerPhone: customerPhone || null,
+          paymentUrl: initResult.paymentUrl || initResult.checkout_url || null,
+          redirectUrl: initResult.paymentUrl || initResult.checkout_url || null,
+          transactionId: initResult.transactionId || null,
+          customerPhone: customerPhone || phone || null,
           customerEmail: customerEmail || null,
           customerName: customerName || null,
           description,
@@ -1473,6 +1555,7 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
         };
 
         await db.collection('payment_intents').doc(orderId).set(intentPayload, { merge: true });
+        console.log(`[FIRESTORE TRANSACTION] Document payment_intents/${orderId} persisté avec gateway="${finalGateway}"`);
       } catch (fbErr) {
         console.warn('[FIRESTORE INTENT WARNING]', fbErr.message);
       }
@@ -1480,12 +1563,16 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
 
     return res.status(200).json({
       success: true,
-      gateway,
+      gateway: finalGateway,
+      failedOver: Boolean(initResult.failedOver),
+      originalGateway: initResult.originalGateway || null,
+      failoverReason: initResult.failoverReason || null,
       orderId,
       storeId,
       amount: Number(amount),
       currency,
-      paymentUrl: initResult.paymentUrl,
+      paymentUrl: initResult.paymentUrl || initResult.checkout_url,
+      redirectUrl: initResult.paymentUrl || initResult.checkout_url,
       transactionId: initResult.transactionId,
       reference: initResult.reference,
       rawResponse: initResult.rawResponse
@@ -1494,7 +1581,9 @@ app.post(['/api/payments/initiate', '/api/switch/initiate'], async (req, res) =>
     console.error('[NANASWITCH INITIATE ERROR]', err);
     return res.status(500).json({
       success: false,
-      error: err.message
+      error: err.message,
+      primaryError: err.primaryError?.message || null,
+      fallbackError: err.fallbackError?.message || null
     });
   }
 });
