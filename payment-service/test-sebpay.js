@@ -13,6 +13,8 @@ const {
   getFixieHttpsProxyAgent,
   getSebpayAxiosConfig,
   formatLocalPhoneNumber,
+  formatBurkinaPhoneNumber,
+  formatSebpayPhoneNumber,
   SUPPORTED_COUNTRIES,
   resolveCountryAndCurrency
 } = require('./sebpay-client');
@@ -74,6 +76,26 @@ const isPhoneFormatOk =
   testPhone4 === '70123456' &&
   testPhone5 === '76543210';
 
+console.log('\n=== TEST FORMATAGE NUMÉRO AVEC INDICATIF 226 (BURKINA FASO) ===');
+const testBfPhone1 = formatBurkinaPhoneNumber('+22670123456');
+const testBfPhone2 = formatBurkinaPhoneNumber('22670123456');
+const testBfPhone3 = formatBurkinaPhoneNumber('00226 70 12 34 56');
+const testBfPhone4 = formatBurkinaPhoneNumber('70123456');
+const testBfPhone5 = formatBurkinaPhoneNumber('+226 76-54-32-10');
+
+console.log('  +22670123456      ->', testBfPhone1);
+console.log('  22670123456       ->', testBfPhone2);
+console.log('  00226 70 12 34 56 ->', testBfPhone3);
+console.log('  70123456          ->', testBfPhone4);
+console.log('  +226 76-54-32-10  ->', testBfPhone5);
+
+const isBfPhoneFormatOk =
+  testBfPhone1 === '22670123456' &&
+  testBfPhone2 === '22670123456' &&
+  testBfPhone3 === '22670123456' &&
+  testBfPhone4 === '22670123456' &&
+  testBfPhone5 === '22676543210';
+
 console.log('\n=== TEST CONFORMITÉ OPÉRATEUR ORANGE BF ===');
 const { normalizeSebpayOperator } = require('./sebpay-client');
 const testNormOrange = normalizeSebpayOperator('BF', 'orange');
@@ -100,6 +122,7 @@ if (
   Boolean(axiosConfig.httpsAgent) &&
   axiosConfig.proxy === false &&
   isPhoneFormatOk &&
+  isBfPhoneFormatOk &&
   isOperatorNormOk
 ) {
   console.log('\n>>> VALIDATION REUSSIE : L\'instance réseau Sebpay, formatage local 8 chiffres, opérateurs BF et validation country/currency sont 100% conformes !');

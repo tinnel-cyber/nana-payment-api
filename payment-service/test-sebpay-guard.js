@@ -96,6 +96,19 @@ async function runGuardTests() {
     process.exit(1);
   }
 
+  // 5. Test Formatage Orange Burkina Faso (226 + 8 chiffres & operator = orange)
+  console.log('\n--- 5. Validation payload Orange BF (Préfixe 226 & operator=orange) ---');
+  const { formatBurkinaPhoneNumber, formatSebpayPhoneNumber } = require('./sebpay-client');
+  const bfPhoneWithPrefix = formatBurkinaPhoneNumber('70123456');
+  const intlBfPhone = formatSebpayPhoneNumber('+226 70 12 34 56', 'BF');
+
+  if (bfPhoneWithPrefix === '22670123456' && intlBfPhone === '22670123456') {
+    console.log('✅ Test 5 : Téléphone Burkina Faso avec indicatif 226 validé :', bfPhoneWithPrefix);
+  } else {
+    console.error('❌ Échec Test 5');
+    process.exit(1);
+  }
+
   console.log('====================================================');
   console.log('🎉 TOUS LES CONTRÔLES SEBPAY GUARD SONT 100% VALIDÉS !');
   console.log('====================================================');

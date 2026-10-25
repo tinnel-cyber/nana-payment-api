@@ -207,6 +207,49 @@ function formatLocalPhoneNumber(phone) {
 }
 
 /**
+ * Nettoie et formate un numéro de téléphone pour le Burkina Faso en y ajoutant l'indicatif 226
+ * Conforme aux spécifications officielles de l'API Sebpay (ex: 22670123456 pour Orange BF)
+ * 
+ * @param {string|number} phone - Numéro de téléphone brut
+ * @returns {string} Numéro au format international sans '+' (ex: '22670123456')
+ */
+function formatBurkinaPhoneNumber(phone) {
+  if (!phone) return '';
+  const local8 = formatLocalPhoneNumber(phone);
+  return local8.length === 8 ? `226${local8}` : local8;
+}
+
+/**
+ * Formate le numéro de téléphone selon les exigences de l'API Sebpay par pays
+ * - BF (Burkina Faso) : force l'indicatif 226 (ex: '22670123456' - 11 chiffres)
+ * - CI (Côte d'Ivoire) : force l'indicatif 225 (ex: '2250700000000' - 13 chiffres)
+ * - Autres pays : préfixe officiel sans le '+'
+ * 
+ * @param {string|number} phone - Numéro de téléphone brut
+ * @param {string} countryIso - Code ISO du pays (ex: 'BF', 'CI')
+ * @returns {string} Numéro international sans '+'
+ */
+function formatSebpayPhoneNumber(phone, countryIso = 'BF') {
+  if (!phone) return '';
+  const iso = String(countryIso || 'BF').toUpperCase();
+
+  if (iso === 'BF') {
+    return formatBurkinaPhoneNumber(phone);
+  }
+
+  let cleaned = String(phone).replace(/\D/g, '');
+  const countryInfo = SUPPORTED_COUNTRIES[iso];
+  if (countryInfo && countryInfo.prefix) {
+    const pfx = countryInfo.prefix.replace('+', '');
+    if (!cleaned.startsWith(pfx)) {
+      return `${pfx}${cleaned}`;
+    }
+  }
+
+  return cleaned;
+}
+
+/**
  * Résout dynamiquement le code ISO pays (ex: "BF"), son ID officiel Sebpay et la devise nationale (ex: "XOF")
  * Résolution par ordre de priorité :
  * 1. Code pays explicite à 2 lettres (ex: "BF", "BJ", "CI")
@@ -789,10 +832,13 @@ async function createSebpayCollection(params) {
     otp_required: operatorDetails.otp_required
   };
 
+  // Préparation du numéro de téléphone au format Sebpay (avec indicatif 226 pour le BF, ex: 22670123456)
+  const sebpayPhone = formatSebpayPhoneNumber(effectivePhone, countryIso);
+
   const body = {
     amount: Math.round(Number(amount)),
     currency: resolved.currency || 'XOF',
-    phone: localPhoneNumber,
+    phone: sebpayPhone,
     operator: operatorCode || 'orange', // 'orange' selon la documentation officielle Sebpay
     country: countryIso, // 'BF' (code ISO string requis par l'API)
     external_reference: externalReference,
@@ -800,9 +846,9 @@ async function createSebpayCollection(params) {
     description: description || `Paiement Commande ${orderId}`,
 
     // Alias et champs de compatibilité certifiés
-    customer_phone: localPhoneNumber,
-    msisdn: localPhoneNumber,
-    client_phone: localPhoneNumber,
+    customer_phone: sebpayPhone,
+    msisdn: sebpayPhone,
+    client_phone: sebpayPhone,
     customer_name: customerName || 'Client Nanasore',
     customer_email: customerEmail || 'client@nanasore.com',
     country_code: countryIso,
@@ -819,12 +865,12 @@ async function createSebpayCollection(params) {
     body.operator_id = operatorId;
   }
 
-  // Forcer le formatage sur le champ du téléphone juste avant l'envoi de la requête HTTP vers l'API Sebpay
-  const finalLocalPhone = formatLocalPhoneNumber(body.phone || body.customer_phone || effectivePhone);
-  body.phone = finalLocalPhone;
-  body.customer_phone = finalLocalPhone;
-  if (body.msisdn) body.msisdn = finalLocalPhone;
-  if (body.client_phone) body.client_phone = finalLocalPhone;
+  // Forcer le formatage sur le champ du téléphone avec indicatif 226 juste avant l'envoi vers l'API Sebpay
+  const finalSebpayPhone = formatSebpayPhoneNumber(body.phone || body.customer_phone || effectivePhone, countryIso);
+  body.phone = finalSebpayPhone;
+  body.customer_phone = finalSebpayPhone;
+  if (body.msisdn) body.msisdn = finalSebpayPhone;
+  if (body.client_phone) body.client_phone = finalSebpayPhone;
 
   // Ré-application stricte des identifiants opérateur pour éviter tout écrasement via customPayload
   body.operator = operatorCode || 'orange';
@@ -1522,6 +1568,8 @@ module.exports = {
   SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY,
   BF_OPERATORS_MAP,
   formatLocalPhoneNumber,
+  formatBurkinaPhoneNumber,
+  formatSebpayPhoneNumber,
   resolveCountryAndCurrency,
   normalizeSebpayOperator,
   resolveSebpayOperatorDetails,
