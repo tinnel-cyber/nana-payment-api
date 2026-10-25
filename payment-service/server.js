@@ -8,6 +8,14 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
+
+// Suppression expresse de tout proxy global pour empêcher Firebase, les logs ou les pings de passer par Fixie
+delete process.env.HTTP_PROXY;
+delete process.env.HTTPS_PROXY;
+delete process.env.http_proxy;
+delete process.env.https_proxy;
+delete process.env.ALL_PROXY;
+delete process.env.all_proxy;
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
@@ -228,19 +236,21 @@ app.use(cors({
 }));
 
 // ============================================================================
-// ROUTE 1 : Diagnostic & Contrôle de l'Adresse IP Statique Fixie
+// ROUTE 1 : Diagnostic & Contrôle de l'Adresse IP Statique Fixie (avec Cache)
 // ============================================================================
 /**
  * GET /api/payment/ip
- * Appelle un service externe (api.ipify.org) à travers le proxy Fixie
- * et retourne l'adresse IP statique vue par les banques.
+ * Diagnostic de l'IP statique sortante Fixie (résultat mis en cache 1h pour éviter
+ * toute surconsommation par les robots de monitoring).
  */
 app.get('/api/payment/ip', async (req, res) => {
   try {
-    const ipResult = await getOutboundIp();
+    const force = req.query.force === 'true';
+    const ipResult = await getOutboundIp(force);
     return res.json({
       status: 'success',
       service: 'nana-payment-gateway',
+      proxyIsolatedToSebpay: true,
       ...ipResult,
       whitelistingInstructions: ipResult.success
         ? `Ajoutez l'adresse IP ${ipResult.ip} dans la liste blanche (IP Whitelisting) de votre partenaire bancaire.`
@@ -256,15 +266,16 @@ app.get('/api/payment/ip', async (req, res) => {
 });
 
 // ============================================================================
-// ROUTE 2 : Healthcheck
+// ROUTE 2 : Healthcheck Render & Monitoring (Réponse 100% Locale, ZÉRO appel réseau Fixie)
 // ============================================================================
-app.get(['/', '/health', '/api/health'], async (req, res) => {
-  res.json({
+app.get(['/', '/health', '/api/health', '/healthz', '/ping', '/api/ping'], (req, res) => {
+  return res.status(200).json({
     status: 'online',
     service: 'nana-payment-gateway-api',
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'production',
-    fixieEnabled: Boolean(FIXIE_URL),
+    proxyIsolatedToSebpay: true,
+    fixieConfigured: Boolean(process.env.FIXIE_URL),
     sebpayConfigured: Boolean(process.env.SEBPAY_PUBLIC_KEY && process.env.SEBPAY_SECRET_KEY),
     firebaseConnected: isFirebaseInitialized,
     uptimeSeconds: Math.floor(process.uptime()),

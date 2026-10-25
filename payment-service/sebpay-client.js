@@ -13,6 +13,14 @@
  * - Isolation stricte côté backend : X-Secret-Key n'est JAMAIS transmise au frontend
  */
 
+// Neutralisation stricte de tout proxy global pour isoler le reste du serveur
+delete process.env.HTTP_PROXY;
+delete process.env.HTTPS_PROXY;
+delete process.env.http_proxy;
+delete process.env.https_proxy;
+delete process.env.ALL_PROXY;
+delete process.env.all_proxy;
+
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ProxyAgent } = require('undici');
 const { fetchViaFixie, getFixieUrl, getFixieAgents, FIXIE_URL } = require('./fixie-proxy');
@@ -392,9 +400,9 @@ async function callSebpayApi(endpoint, options = {}) {
     fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  console.log(`[SEBPAY REQUEST] ${method} ${targetUrl} (via Fixie IP Statique / HttpsProxyAgent)...`);
+  console.log(`[SEBPAY REQUEST] ${method} ${targetUrl} (via Fixie IP Statique / HttpsProxyAgent isolé)...`);
 
-  const response = await fetchViaFixie(targetUrl, fetchOptions);
+  const response = await fetch(targetUrl, fetchOptions);
 
   const contentType = response.headers.get('content-type') || '';
   let responseData = null;
