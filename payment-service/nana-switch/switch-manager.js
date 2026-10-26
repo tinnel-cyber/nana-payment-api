@@ -22,10 +22,73 @@ class NaNaSwitchManager {
   constructor() {
     this.adapters = new Map();
 
+    // Configuration dynamique des passerelles (prioritaire et de secours)
+    this.primaryGateway = (process.env.PRIMARY_GATEWAY || 'saspay').toLowerCase().trim();
+    this.fallbackGateway = (process.env.FALLBACK_GATEWAY || (this.primaryGateway === 'saspay' ? 'sebpay' : 'saspay')).toLowerCase().trim();
+
     // Enregistrement par défaut des adaptateurs supportés
     this.registerAdapter(new SebpayAdapter());
     this.registerAdapter(new SaspayAdapter());
     this.registerAdapter(new WaveAdapter());
+  }
+
+  /**
+   * Récupère la passerelle prioritaire configurée
+   * @returns {string} Identifiant de la passerelle ('saspay', 'sebpay', etc.)
+   */
+  getPrimaryGateway() {
+    return (process.env.PRIMARY_GATEWAY || this.primaryGateway || 'saspay').toLowerCase().trim();
+  }
+
+  /**
+   * Modifie dynamiquement la passerelle prioritaire
+   * @param {string} gatewayId
+   */
+  setPrimaryGateway(gatewayId) {
+    if (!gatewayId) return;
+    const cleanId = String(gatewayId).toLowerCase().trim();
+    this.primaryGateway = cleanId;
+    process.env.PRIMARY_GATEWAY = cleanId;
+    console.log(`[NANASWITCH CONFIG] Passerelle principale configurée dynamiquement sur : [${cleanId}]`);
+  }
+
+  /**
+   * Récupère la passerelle de secours (failover)
+   * @param {string} [primaryId]
+   * @returns {string} Identifiant de la passerelle de secours
+   */
+  getFallbackGateway(primaryId = null) {
+    const currentPrimary = primaryId || this.getPrimaryGateway();
+    if (process.env.FALLBACK_GATEWAY) {
+      return process.env.FALLBACK_GATEWAY.toLowerCase().trim();
+    }
+    if (this.fallbackGateway && this.fallbackGateway !== currentPrimary) {
+      return this.fallbackGateway;
+    }
+    return (currentPrimary === 'saspay' ? 'sebpay' : 'saspay');
+  }
+
+  /**
+   * Modifie dynamiquement la passerelle de secours
+   * @param {string} gatewayId
+   */
+  setFallbackGateway(gatewayId) {
+    if (!gatewayId) return;
+    const cleanId = String(gatewayId).toLowerCase().trim();
+    this.fallbackGateway = cleanId;
+    process.env.FALLBACK_GATEWAY = cleanId;
+    console.log(`[NANASWITCH CONFIG] Passerelle de secours configurée dynamiquement sur : [${cleanId}]`);
+  }
+
+  /**
+   * Retourne la configuration de routage active
+   */
+  getRoutingConfig() {
+    return {
+      primaryGateway: this.getPrimaryGateway(),
+      fallbackGateway: this.getFallbackGateway(),
+      availableGateways: Array.from(this.adapters.keys())
+    };
   }
 
   /**
@@ -66,10 +129,10 @@ class NaNaSwitchManager {
 
   /**
    * Évalue si une erreur rencontrée justifie un basculement automatique vers la passerelle de secours :
-   * - 403 Forbidden (Quota opérateur atteint, IP non whitelistée, compte suspendu)
-   * - 429 Too Many Requests (Dépassement de quota ou de rate limit)
-   * - 502 / 503 / 504 (Passerelle aval indisponible ou timeout)
-   * - Erreurs réseau critiques (ECONNREFUSED, ETIMEDOUT, ENOTFOUND, Timeout, Fetch failure)
+   * - Erreurs API (400, 401, 403, 404, 409, 422, 429, 500, 502, 503, 504...)
+   * - Rejet opérateur (ex: "The operator declined the payment request", PAYMENT_DECLINED, etc.)
+   * - Quota atteint ou IP non whitelistée
+   * - Erreurs réseau et timeouts critiques (ECONNREFUSED, ETIMEDOUT, Socket hang up, etc.)
    * 
    * @param {Error|object} err
    * @returns {boolean}
@@ -77,21 +140,30 @@ class NaNaSwitchManager {
   isEligibleForFailover(err) {
     if (!err) return false;
 
-    // Barrière de sécurité : Les erreurs de validation utilisateur (OTP requis, numéro invalide)
-    // ne doivent JAMAIS déclencher de failover vers une autre passerelle
-    if (err.code === 'OTP_REQUIRED' || err.code === 'INVALID_PHONE_NUMBER' || err.code === 'INVALID_OPERATOR') {
-      return false;
-    }
-
-    const status = Number(err.status || err.statusCode || 0);
-    if (status === 403 || status === 429 || status === 502 || status === 503 || status === 504) {
+    // Erreurs d'API ou HTTP (400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504...)
+    const status = Number(err.status || err.statusCode || err.response?.status || 0);
+    if (status >= 400 && status <= 599) {
       return true;
     }
 
-    const errorStr = (String(err.message || '') + ' ' + JSON.stringify(err.data || {})).toLowerCase();
+    const errorStr = (
+      String(err.message || '') + ' ' +
+      String(err.code || '') + ' ' +
+      JSON.stringify(err.data || {}) + ' ' +
+      JSON.stringify(err.response?.data || {})
+    ).toLowerCase();
 
-    // Mots-clés caractéristiques de quota ou d'indisponibilité réseau
+    // Mots-clés caractéristiques de rejet opérateur, quota ou indisponibilité réseau
     const failoverKeywords = [
+      'declined',
+      'payment_declined',
+      'rejected',
+      'refused',
+      'failed',
+      'insufficient_balance',
+      'operator',
+      'the operator declined',
+      'operator declined',
       'quota',
       'limit',
       'rate limit',
@@ -99,6 +171,8 @@ class NaNaSwitchManager {
       'ip_not_whitelisted',
       'ip not whitelisted',
       'forbidden',
+      'unauthorized',
+      'not found',
       'econnrefused',
       'etimedout',
       'enotfound',
@@ -109,38 +183,50 @@ class NaNaSwitchManager {
       'fetch failed',
       'service unavailable',
       'bad gateway',
-      'gateway timeout'
+      'gateway timeout',
+      'network error',
+      'socket hang up',
+      'api error'
     ];
 
-    return failoverKeywords.some(kw => errorStr.includes(kw));
+    if (failoverKeywords.some(kw => errorStr.includes(kw))) {
+      return true;
+    }
+
+    // Par défaut, toute exception survenue lors de l'appel d'une passerelle
+    // justifie le déclenchement de la passerelle de secours
+    return true;
   }
 
   /**
-   * Initialise un paiement avec logique de priorité et basculement automatique (Failover)
+   * Initialise un paiement avec logique de priorité dynamique et basculement automatique (Failover)
    * 
-   * Logique de continuité de service :
-   * - Tente en priorité la passerelle demandée (ex: Sebpay).
-   * - Si Sebpay échoue avec 403, 429 ou erreur réseau/quota, bascule instantanément vers SasPay
-   *   pour assurer une expérience fluide et transparente pour l'utilisateur final.
-   * - Retourne la réponse de la passerelle finale en enrichissant les métadonnées de basculement.
-   * 
-   * @param {string} [primaryGatewayId='sebpay']
+   * @param {string} [primaryGatewayId] - Passerelle prioritaire (si non fourni, utilise PRIMARY_GATEWAY)
    * @param {object} params
    * @param {object} [options]
-   * @param {string} [options.fallbackGatewayId] - Passerelle de repli explicite (par défaut: saspay si sebpay, sinon sebpay)
+   * @param {string} [options.fallbackGatewayId] - Passerelle de repli explicite (par défaut FALLBACK_GATEWAY)
    * @param {boolean} [options.disableFailover=false]
    * @param {admin.firestore.Firestore} [options.db] - Instance Firestore optionnelle pour persistance directe
    */
-  async initiatePaymentWithFailover(primaryGatewayId = 'sebpay', params = {}, options = {}) {
-    const primaryId = String(primaryGatewayId || 'sebpay').toLowerCase().trim();
+  async initiatePaymentWithFailover(primaryGatewayId = null, params = {}, options = {}) {
+    const configuredPrimary = this.getPrimaryGateway();
+    const primaryId = (primaryGatewayId && primaryGatewayId !== 'auto' && primaryGatewayId !== 'default')
+      ? String(primaryGatewayId).toLowerCase().trim()
+      : configuredPrimary;
+
     const fallbackId = String(
-      options.fallbackGatewayId || (primaryId === 'sebpay' ? 'saspay' : 'sebpay')
+      options.fallbackGatewayId || this.getFallbackGateway(primaryId)
     ).toLowerCase().trim();
+
+    // S'assurer que la passerelle de secours est distincte de la passerelle principale
+    const effectiveFallbackId = (fallbackId !== primaryId)
+      ? fallbackId
+      : (primaryId === 'saspay' ? 'sebpay' : 'saspay');
 
     const orderId = params.orderId || `ORD_${Date.now()}`;
     const amount = params.amount;
 
-    console.log(`[NANASWITCH ROUTER] Initiation transaction #${orderId} (${amount} ${params.currency || 'XOF'}) | Passerelle prioritaire : [${primaryId}]`);
+    console.log(`[NANASWITCH ROUTER] Initiation transaction #${orderId} (${amount} ${params.currency || 'XOF'}) | Passerelle prioritaire : [${primaryId}] | Secours : [${effectiveFallbackId}]`);
 
     try {
       const primaryAdapter = this.getAdapter(primaryId);
@@ -167,19 +253,18 @@ class NaNaSwitchManager {
         throw primaryErr;
       }
 
-      // Log d'avertissement explicite requis : [FAILOVER] Sebpay indisponible/quota atteint, basculement vers SasPay
-      console.warn(`[FAILOVER] ${primaryId === 'sebpay' ? 'Sebpay' : primaryId} indisponible/quota atteint, basculement vers ${fallbackId === 'saspay' ? 'SasPay' : fallbackId} (Erreur initiale : ${primaryErr.message})`);
+      console.warn(`[FAILOVER TRIGGERED] Échec de la passerelle principale [${primaryId}] (Erreur: ${primaryErr.message}). Basculement automatique immédiat vers la passerelle de secours [${effectiveFallbackId}]...`);
 
       try {
-        const fallbackAdapter = this.getAdapter(fallbackId);
+        const fallbackAdapter = this.getAdapter(effectiveFallbackId);
         const fallbackResult = await fallbackAdapter.initiatePayment(params);
 
-        console.log(`[FAILOVER SUCCESS] Transaction #${orderId} basculée avec succès sur ${fallbackAdapter.name} (Gateway: ${fallbackId}) !`);
+        console.log(`[FAILOVER SUCCESS] Transaction #${orderId} initiée avec succès sur la passerelle de secours ${fallbackAdapter.name} (Gateway: ${effectiveFallbackId}) !`);
 
         const resolved = {
           ...fallbackResult,
-          gateway: fallbackId,
-          provider: fallbackId.toUpperCase(),
+          gateway: effectiveFallbackId,
+          provider: effectiveFallbackId.toUpperCase(),
           failedOver: true,
           failover: true,
           originalGateway: primaryId,
@@ -192,13 +277,35 @@ class NaNaSwitchManager {
 
         return resolved;
       } catch (fallbackErr) {
-        console.error(`[FAILOVER CRITICAL] Échec de la passerelle de secours [${fallbackId}] pour #${orderId} :`, fallbackErr.message);
-        const compositeErr = new Error(`Échec paiement multi-passerelle (${primaryId}: ${primaryErr.message} -> ${fallbackId}: ${fallbackErr.message})`);
+        console.error(`[FAILOVER CRITICAL] Échec de la passerelle de secours [${effectiveFallbackId}] pour #${orderId} :`, fallbackErr.message);
+        const compositeErr = new Error(`Échec paiement multi-passerelle (${primaryId}: ${primaryErr.message} -> ${effectiveFallbackId}: ${fallbackErr.message})`);
         compositeErr.primaryError = primaryErr;
         compositeErr.fallbackError = fallbackErr;
         compositeErr.status = primaryErr.status || fallbackErr.status || 500;
         throw compositeErr;
       }
+    }
+  }
+
+  /**
+   * Vérification universelle du statut d'une transaction
+   * @param {string} transactionId
+   * @param {string} [gatewayId]
+   * @param {string} [externalRef]
+   */
+  async checkPaymentStatus(transactionId, gatewayId = null, externalRef = null) {
+    let targetGateway = gatewayId ? String(gatewayId).toLowerCase().trim() : null;
+
+    if (targetGateway && this.adapters.has(targetGateway)) {
+      return await this.getAdapter(targetGateway).checkPaymentStatus(transactionId, externalRef);
+    }
+
+    const primary = this.getPrimaryGateway();
+    try {
+      return await this.getAdapter(primary).checkPaymentStatus(transactionId, externalRef);
+    } catch {
+      const fallback = this.getFallbackGateway(primary);
+      return await this.getAdapter(fallback).checkPaymentStatus(transactionId, externalRef);
     }
   }
 

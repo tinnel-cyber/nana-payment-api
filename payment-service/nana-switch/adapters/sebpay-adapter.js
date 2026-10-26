@@ -117,6 +117,10 @@ class SebpayAdapter extends PaymentGatewayAdapter {
     return {
       success: true,
       paymentUrl,
+      checkout_url: paymentUrl,
+      redirectUrl: paymentUrl,
+      provider_link: paymentUrl,
+      action: sebpayRes.action || 'redirect',
       transactionId,
       reference: externalReference,
       orderId,

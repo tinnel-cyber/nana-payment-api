@@ -945,14 +945,17 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
       process.env.PAYMENT_WEBHOOK_URL ||
       'https://nana-payment-api.onrender.com/api/payment/webhook';
 
+    const requestedGateway = req.body.gateway || req.query.gateway || switchManager.getPrimaryGateway();
     const autoFailover = req.query.failover !== 'false' && req.body.failover !== false;
     let sebpayResult;
 
     if (autoFailover) {
-      sebpayResult = await switchManager.initiatePaymentWithFailover('sebpay', {
+      sebpayResult = await switchManager.initiatePaymentWithFailover(requestedGateway, {
         orderId,
         storeId: tenantId,
         tenantId,
+        shopName: rawShopName,
+        storeName: rawShopName,
         externalReference,
         amount,
         currency,
@@ -968,20 +971,25 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
         returnUrl: req.body.returnUrl || req.body.return_url
       }, { db });
     } else {
-      sebpayResult = await createSebpayCollection({
-        tenantId,
+      sebpayResult = await switchManager.getAdapter(requestedGateway).initiatePayment({
         orderId,
+        storeId: tenantId,
+        tenantId,
+        shopName: rawShopName,
+        storeName: rawShopName,
         externalReference,
         amount,
         currency,
         country: req.body.country || req.body.country_code || req.body.countryCode,
         phone: phone || customerPhone,
+        customerPhone: phone || customerPhone,
         customerName,
         customerEmail,
         operator,
         otpCode,
         description,
-        callbackUrl
+        callbackUrl,
+        returnUrl: req.body.returnUrl || req.body.return_url
       });
     }
 
@@ -1529,7 +1537,7 @@ app.post('/api/payment/bank-proxy', async (req, res) => {
 app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch/initiate'], async (req, res) => {
   try {
     const {
-      gateway = 'sebpay',
+      gateway = switchManager.getPrimaryGateway(),
       orderId = `ORD_${Date.now()}`,
       storeId = 'nanasore_central_hub',
       amount,
@@ -1662,8 +1670,57 @@ app.get(['/api/payments/gateways', '/api/switch/gateways'], (req, res) => {
   return res.json({
     success: true,
     service: 'NaNaSwitch Payment Bridge',
+    routing: switchManager.getRoutingConfig(),
     gateways: switchManager.listGateways()
   });
+});
+
+/**
+ * GET & POST /api/switch/config & /api/payments/config
+ * Lecture et mise à jour dynamique de la configuration de routage et de failover
+ */
+app.get(['/api/switch/config', '/api/payments/config'], (req, res) => {
+  return res.json({
+    success: true,
+    routing: switchManager.getRoutingConfig(),
+    gateways: switchManager.listGateways()
+  });
+});
+
+app.post(['/api/switch/config', '/api/payments/config'], express.json(), (req, res) => {
+  const { primaryGateway, fallbackGateway, primary, fallback } = req.body;
+  if (primaryGateway || primary) {
+    switchManager.setPrimaryGateway(primaryGateway || primary);
+  }
+  if (fallbackGateway || fallback) {
+    switchManager.setFallbackGateway(fallbackGateway || fallback);
+  }
+  return res.json({
+    success: true,
+    message: 'Configuration NaNaSwitch mise à jour avec succès.',
+    routing: switchManager.getRoutingConfig()
+  });
+});
+
+/**
+ * GET /api/switch/verify/:transactionId & /api/payments/verify/:transactionId
+ * Vérification universelle et unifiée du statut d'une transaction
+ */
+app.get(['/api/switch/verify/:transactionId', '/api/payments/verify/:transactionId'], async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const gateway = req.query.gateway || null;
+    const externalRef = req.query.externalReference || req.query.external_reference || null;
+    const statusResult = await switchManager.checkPaymentStatus(transactionId, gateway, externalRef);
+    return res.json({
+      success: true,
+      transactionId,
+      gateway: gateway || switchManager.getPrimaryGateway(),
+      ...statusResult
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // ============================================================================
@@ -1701,21 +1758,24 @@ app.post(['/api/escrow/initiate', '/api/payments/escrow/initiate'], async (req, 
 
     const callbackUrl = process.env.PAYMENT_CALLBACK_URL || process.env.PAYMENT_WEBHOOK_URL || 'https://nana-payment-api.onrender.com/api/payment/webhook';
 
-    const sebpayResult = await createSebpayCollection({
+    const targetGateway = req.body.gateway || switchManager.getPrimaryGateway();
+    const sebpayResult = await switchManager.initiatePaymentWithFailover(targetGateway, {
       tenantId: sellerId || 'wameet_seller',
+      storeId: sellerId || 'wameet_seller',
       orderId: transactionId,
       externalReference,
       amount: Number(amount),
       currency,
       country: req.body.country || req.body.country_code || req.body.countryCode,
       phone: buyerPhone,
+      customerPhone: buyerPhone,
       customerName: buyerName,
       operator,
       description: `Smart Escrow: ${itemTitle}`,
       callbackUrl
-    });
+    }, { db });
 
-    const paymentUrl = sebpayResult.provider_link || sebpayResult.redirectUrl;
+    const paymentUrl = sebpayResult.paymentUrl || sebpayResult.checkout_url || sebpayResult.provider_link || sebpayResult.redirectUrl;
 
     if (db) {
       const nowServer = admin.firestore.FieldValue.serverTimestamp();

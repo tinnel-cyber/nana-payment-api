@@ -111,6 +111,8 @@ class SaspayAdapter extends PaymentGatewayAdapter {
       paymentUrl,
       checkout_url: paymentUrl,
       redirectUrl: paymentUrl,
+      provider_link: paymentUrl,
+      action: saspayRes.action || (saspayRes.checkout_url ? 'redirect' : 'ussd_push'),
       transactionId,
       reference: externalReference,
       orderId,
