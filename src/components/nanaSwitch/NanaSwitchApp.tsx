@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  Camera, Mail, User,
+  Camera, Mail, User, Cpu, ArrowRight,
   LayoutDashboard, Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, Link2, 
   ShoppingCart, Users, BarChart3, Building2, UserCheck, ShieldCheck, 
   Key, Radio, History, AlertTriangle, Percent, HelpCircle, Settings, 
@@ -663,16 +663,24 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
             <span>Documentation API</span>
           </button>
 
-          {/* External BYOK Switcher Button */}
-          <a 
-            href="#byok-cloud"
-            onClick={(e) => { e.preventDefault(); showToast("Espace Développeur BYOK SaaS disponible sur /nana-switch/billing"); }}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition"
+          {/* Bouton de Commutation Inter-Applications : Vers la Console Cloud BYOK */}
+          <button 
+            type="button"
+            onClick={() => {
+              try {
+                window.history.pushState({}, '', '/nana-switch');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              } catch {
+                window.location.href = '/nana-switch';
+              }
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white shadow-sm border border-slate-700/80 transition cursor-pointer active:scale-95"
+            title="Basculer vers la Console Cloud BYOK (SaaS & Clés Passerelles SasPay/Sebpay)"
           >
-            <Layers className="w-4 h-4 text-blue-400" />
-            <span>Switch Développeurs</span>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-          </a>
+            <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="hidden sm:inline font-extrabold">Console Cloud BYOK</span>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+          </button>
 
           {/* Super Admin Toggle Switch */}
           <button

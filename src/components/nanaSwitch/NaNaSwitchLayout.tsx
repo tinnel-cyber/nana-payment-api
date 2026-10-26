@@ -355,6 +355,28 @@ export const NaNaSwitchLayout: React.FC<NaNaSwitchLayoutProps> = ({
             </button>
           </div>
 
+          {/* Bouton de Commutation Inter-Applications : Vers le Dashboard Marchand Agrégé */}
+          <div className="flex items-center pl-1 sm:pl-2 border-l border-slate-200">
+            <button
+              type="button"
+              onClick={() => {
+                playValidationBeep();
+                try {
+                  window.history.pushState({}, '', '/app/nanaswitch');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                } catch {
+                  window.location.href = '/app/nanaswitch';
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-blue-700 to-[#1E40AF] hover:from-blue-800 hover:to-[#1E3A8A] text-white shadow-sm border border-blue-500/30 transition cursor-pointer active:scale-95"
+              title="Basculer vers le Dashboard Marchand Agrégé (Multi-comptes, 14+ modules & KYC)"
+            >
+              <Layers className="w-3.5 h-3.5 text-blue-200 shrink-0" />
+              <span className="hidden md:inline font-extrabold">Dashboard Marchand</span>
+              <ArrowRight className="w-3.5 h-3.5 text-blue-200" />
+            </button>
+          </div>
+
           {/* Verrouillage Rapide par Code PIN de Sécurité */}
           <div className="flex items-center gap-1.5 pl-1 sm:pl-2">
             {!switchAccount?.pinHash ? (
