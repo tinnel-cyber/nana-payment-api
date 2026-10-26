@@ -181,33 +181,119 @@ service cloud.firestore {
     }
 
     // ==========================================================================
-    // 2. ARBORESCENCE MULTI-TENANT ALTERNATIVE : /merchants/{userId}
-    // Respecte la spécification /merchants/{userId}/products
+    // 2. COMPTES MARCHANDS & CLIENTS EXTERNES B2B : /merchants/{merchantId}
+    // Sécurité stricte multi-tenant, protection des secrets d'API et soldes
     // ==========================================================================
-    match /merchants/{userId} {
-      allow read: if isOwner(userId) || isSuperAdmin();
+    
+    // Fonctions d'intégrité et de protection des données marchands
+    function merchantSecretKeyHashUnchanged() {
+      return (!('nanaswitch_keys' in request.resource.data && 'secret_key_hash' in request.resource.data.nanaswitch_keys) &&
+              !('nanaswitch_keys' in resource.data && 'secret_key_hash' in resource.data.nanaswitch_keys)) ||
+             ('nanaswitch_keys' in request.resource.data && 'secret_key_hash' in request.resource.data.nanaswitch_keys &&
+              'nanaswitch_keys' in resource.data && 'secret_key_hash' in resource.data.nanaswitch_keys &&
+              request.resource.data.nanaswitch_keys.secret_key_hash == resource.data.nanaswitch_keys.secret_key_hash);
+    }
 
-      // Création : propriétaire ou Super Admin (hors compte démo)
-      allow create: if (isOwner(userId) || isSuperAdmin()) && isNotDemo() &&
-        (isSuperAdmin() || !('approval' in request.resource.data) || (
+    function merchantCustomCredentialsUnchanged() {
+      return (!('integration_config' in request.resource.data && 'custom_credentials' in request.resource.data.integration_config) &&
+              !('integration_config' in resource.data && 'custom_credentials' in resource.data.integration_config)) ||
+             ('integration_config' in request.resource.data && 'custom_credentials' in request.resource.data.integration_config &&
+              'integration_config' in resource.data && 'custom_credentials' in resource.data.integration_config &&
+              request.resource.data.integration_config.custom_credentials == resource.data.integration_config.custom_credentials);
+    }
+
+    function merchantApiPricingUnchanged() {
+      return (
+        (!('api_pricing_config' in request.resource.data) && !('api_pricing_config' in resource.data)) ||
+        (
+          (!('api_pricing_config' in request.resource.data && 'api_credits_balance' in request.resource.data.api_pricing_config) &&
+           !('api_pricing_config' in resource.data && 'api_credits_balance' in resource.data.api_pricing_config)) ||
+          ('api_pricing_config' in request.resource.data && 'api_credits_balance' in request.resource.data.api_pricing_config &&
+           'api_pricing_config' in resource.data && 'api_credits_balance' in resource.data.api_pricing_config &&
+           request.resource.data.api_pricing_config.api_credits_balance == resource.data.api_pricing_config.api_credits_balance)
+        ) && (
+          (!('api_pricing_config' in request.resource.data && 'cost_per_request_xof' in request.resource.data.api_pricing_config) &&
+           !('api_pricing_config' in resource.data && 'cost_per_request_xof' in resource.data.api_pricing_config)) ||
+          ('api_pricing_config' in request.resource.data && 'cost_per_request_xof' in request.resource.data.api_pricing_config &&
+           'api_pricing_config' in resource.data && 'cost_per_request_xof' in resource.data.api_pricing_config &&
+           request.resource.data.api_pricing_config.cost_per_request_xof == resource.data.api_pricing_config.cost_per_request_xof)
+        )
+      );
+    }
+
+    function merchantFinancialsUnchanged() {
+      return (
+        (!('financials' in request.resource.data) && !('financials' in resource.data)) ||
+        (
+          (!('financials' in request.resource.data && 'wallet_balance_xof' in request.resource.data.financials) &&
+           !('financials' in resource.data && 'wallet_balance_xof' in resource.data.financials)) ||
+          ('financials' in request.resource.data && 'wallet_balance_xof' in request.resource.data.financials &&
+           'financials' in resource.data && 'wallet_balance_xof' in resource.data.financials &&
+           request.resource.data.financials.wallet_balance_xof == resource.data.financials.wallet_balance_xof)
+        ) && (
+          (!('financials' in request.resource.data && 'pricing_tier' in request.resource.data.financials) &&
+           !('financials' in resource.data && 'pricing_tier' in resource.data.financials)) ||
+          ('financials' in request.resource.data && 'pricing_tier' in request.resource.data.financials &&
+           'financials' in resource.data && 'pricing_tier' in resource.data.financials &&
+           request.resource.data.financials.pricing_tier == resource.data.financials.pricing_tier)
+        )
+      );
+    }
+
+    match /merchants/{merchantId} {
+      // 1. Lecture : seul le marchand connecté ou le Super Admin peut consulter son propre document
+      allow read: if merchantId == request.auth.uid || isOwner(merchantId) || isSuperAdmin();
+
+      // 2. Création : propriétaire ou Super Admin (hors compte démo)
+      // Seul le Super Admin peut approuver immédiatement ou provisionner des soldes/secrets initiaux
+      allow create: if isSuperAdmin() || (
+        (merchantId == request.auth.uid || isOwner(merchantId)) && isNotDemo() &&
+        (!('status' in request.resource.data) || request.resource.data.status == 'PENDING_VERIFICATION') &&
+        (!('approval' in request.resource.data) || (
           'status' in request.resource.data.approval && request.resource.data.approval.status == 'PENDING'
-        ));
-
-      // Mise à jour :
-      // Seul le propriétaire ou le Super Admin peut écrire.
-      // Seul le Super Admin peut modifier le statut d'approbation (approval) ou les abonnements d'autrui.
-      allow update: if isSuperAdmin() || (
-        isOwner(userId) && 
-        isNotDemo() && 
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['approval', 'storeApprovalStatus'])
+        )) &&
+        (!('storeApprovalStatus' in request.resource.data) || request.resource.data.storeApprovalStatus == 'PENDING') &&
+        (!('nanaswitch_keys' in request.resource.data) || !('secret_key_hash' in request.resource.data.nanaswitch_keys)) &&
+        (!('integration_config' in request.resource.data) || !('custom_credentials' in request.resource.data.integration_config)) &&
+        (!('api_pricing_config' in request.resource.data) || (
+          (!('api_credits_balance' in request.resource.data.api_pricing_config) || request.resource.data.api_pricing_config.api_credits_balance == 0) &&
+          !('cost_per_request_xof' in request.resource.data.api_pricing_config)
+        )) &&
+        (!('financials' in request.resource.data) || (
+          (!('wallet_balance_xof' in request.resource.data.financials) || request.resource.data.financials.wallet_balance_xof == 0) &&
+          !('pricing_tier' in request.resource.data.financials)
+        ))
       );
 
-      // Suppression : strictement réservée au Super Admin
+      // 3. Mise à jour :
+      // - Super Admin : modification illimitée
+      // - Marchand connecté :
+      //   * Ne peut JAMAIS modifier status, approval, storeApprovalStatus
+      //   * Ne peut JAMAIS altérer nanaswitch_keys.secret_key_hash
+      //   * Ne peut JAMAIS altérer integration_config.custom_credentials
+      //   * Ne peut JAMAIS modifier api_pricing_config.api_credits_balance ni cost_per_request_xof
+      //   * Ne peut JAMAIS modifier financials.wallet_balance_xof ni pricing_tier
+      allow update: if isSuperAdmin() || (
+        (merchantId == request.auth.uid || isOwner(merchantId)) && 
+        isNotDemo() && 
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'approval', 
+          'storeApprovalStatus', 
+          'status'
+        ]) &&
+        merchantSecretKeyHashUnchanged() &&
+        merchantCustomCredentialsUnchanged() &&
+        merchantApiPricingUnchanged() &&
+        merchantFinancialsUnchanged()
+      );
+
+      // 4. Suppression : strictement réservée au Super Admin
       allow delete: if isSuperAdmin();
 
+      // Sous-collections du marchand (produits, notifications, abonnements, quotas IA, etc.)
       match /{allChildren=**} {
-        allow read: if isOwner(userId) || isSuperAdmin();
-        allow write: if (isOwner(userId) || isSuperAdmin()) && isNotDemo();
+        allow read: if merchantId == request.auth.uid || isOwner(merchantId) || isSuperAdmin();
+        allow write: if (merchantId == request.auth.uid || isOwner(merchantId) || isSuperAdmin()) && isNotDemo();
       }
     }
 
@@ -381,6 +467,19 @@ service cloud.firestore {
 
     // Formules et plans d'abonnement SaaS (plans)
     match /plans/{planId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+
+      match /{allChildren=**} {
+        allow read: if true;
+        allow write: if isSuperAdmin();
+      }
+    }
+
+    // Configuration système globale & matrice tarifaire dynamique (/system_settings/{settingId})
+    // Notamment pricing_matrix : consultation publique / authentifiée de la grille tarifaire
+    // et modifications strictement réservées au Super Admin
+    match /system_settings/{settingId} {
       allow read: if true;
       allow write: if isSuperAdmin();
 
@@ -627,19 +726,60 @@ service cloud.firestore {
       }
     }
 
-    match /switch_logs/{logId} {
-      allow create: if isSignedIn() || isSuperAdmin();
-      allow read, update, delete: if isSignedIn() && (
-        ('userId' in resource.data && (resource.data.userId == request.auth.uid || isOwner(resource.data.userId))) ||
-        ('tenantId' in resource.data && (resource.data.tenantId == request.auth.uid || isOwner(resource.data.tenantId))) ||
-        isSuperAdmin()
+    // Fonction d'autorisation propriétaire pour traces d'audit et logs d'utilisation API
+    function isSwitchLogOwner(logData, docId) {
+      return (
+        ('merchant_id' in logData && (logData.merchant_id == request.auth.uid || isOwner(logData.merchant_id))) ||
+        ('tenantId' in logData && (logData.tenantId == request.auth.uid || isOwner(logData.tenantId))) ||
+        ('userId' in logData && (logData.userId == request.auth.uid || isOwner(logData.userId))) ||
+        docId == request.auth.uid ||
+        isOwner(docId)
       );
+    }
+
+    match /switch_logs/{logId} {
+      // 1. Lecture : Chaque client externe / marchand ne peut consulter QUE ses propres logs d'utilisation
+      allow read: if isSuperAdmin() || (isSignedIn() && isSwitchLogOwner(resource.data, logId));
+
+      // 2. Écriture (création) : réservée au Super Admin ou utilisateurs authentifiés pour leur propre merchant_id
+      allow create: if isSuperAdmin() || (
+        isSignedIn() && isNotDemo() && isSwitchLogOwner(request.resource.data, logId)
+      );
+
+      // 3. Mise à jour : réservée au Super Admin ou utilisateur propriétaire
+      allow update: if isSuperAdmin() || (
+        isSignedIn() && isNotDemo() && isSwitchLogOwner(resource.data, logId)
+      );
+
+      // 4. Suppression : strictement réservée au Super Admin
+      allow delete: if isSuperAdmin();
+
       match /{allChildren=**} {
-        allow read, write: if isSignedIn() && (
-          ('userId' in resource.data && (resource.data.userId == request.auth.uid || isOwner(resource.data.userId))) ||
-          ('tenantId' in resource.data && (resource.data.tenantId == request.auth.uid || isOwner(resource.data.tenantId))) ||
-          isSuperAdmin()
-        );
+        allow read: if isSuperAdmin() || (isSignedIn() && isSwitchLogOwner(resource.data, logId));
+        allow write: if isSuperAdmin() || (isSignedIn() && isNotDemo() && isSwitchLogOwner(resource.data, logId));
+      }
+    }
+
+    match /api_usage/{usageId} {
+      // 1. Lecture : Chaque client externe / marchand ne peut consulter QUE ses propres logs d'utilisation
+      allow read: if isSuperAdmin() || (isSignedIn() && isSwitchLogOwner(resource.data, usageId));
+
+      // 2. Écriture (création) : réservée au Super Admin ou utilisateurs authentifiés pour leur propre merchant_id
+      allow create: if isSuperAdmin() || (
+        isSignedIn() && isNotDemo() && isSwitchLogOwner(request.resource.data, usageId)
+      );
+
+      // 3. Mise à jour : réservée au Super Admin ou utilisateur propriétaire
+      allow update: if isSuperAdmin() || (
+        isSignedIn() && isNotDemo() && isSwitchLogOwner(resource.data, usageId)
+      );
+
+      // 4. Suppression : strictement réservée au Super Admin
+      allow delete: if isSuperAdmin();
+
+      match /{allChildren=**} {
+        allow read: if isSuperAdmin() || (isSignedIn() && isSwitchLogOwner(resource.data, usageId));
+        allow write: if isSuperAdmin() || (isSignedIn() && isNotDemo() && isSwitchLogOwner(resource.data, usageId));
       }
     }
 

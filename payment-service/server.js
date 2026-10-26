@@ -63,6 +63,7 @@ const {
 const { analyzeChatIntent, DEFAULT_MOCK_INVENTORY } = require('./ai-checkout');
 const { createChatFinanceRouter } = require('./chat-finance-controller');
 const { LiveCommerceEngine, createLiveCommerceRouter } = require('./live-commerce-controller');
+const { merchantService, DEFAULT_PRICING_MATRIX } = require('./nana-switch/merchant-service');
 
 const app = express();
 const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'konkobo_telecom_webhook_secret_key_2026';
@@ -99,6 +100,12 @@ try {
 } catch (fbErr) {
   console.warn('[FIREBASE ADMIN NOTICE] Initialisation sans clé de service :', fbErr.message);
   console.log('[FIREBASE ADMIN] Les mises à jour Firestore utiliseront le mode REST fallback si nécessaire.');
+}
+
+// Initialisation du compte de référence B2B NANASORE TECHNOLOGIES & de la matrice tarifaire
+if (db) {
+  merchantService.ensureDefaultNanasoreMerchant(db).catch(err => console.warn('[STARTUP MERCHANT SEED]', err.message));
+  merchantService.getPricingMatrix(db).catch(err => console.warn('[STARTUP PRICING SEED]', err.message));
 }
 
 // ============================================================================
@@ -1867,6 +1874,7 @@ app.post('/api/payment/bank-proxy', async (req, res) => {
  * Initiation unifiée via la passerelle choisie (Sebpay, Wave, etc.)
  */
 app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch/initiate'], async (req, res) => {
+  const startTs = Date.now();
   try {
     const {
       gateway = switchManager.getPrimaryGateway(),
@@ -1892,24 +1900,40 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       return res.status(400).json({ success: false, error: 'Montant de paiement invalide (amount > 0 requis).' });
     }
 
-    // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
-    const rawShopName = req.body.shopName || req.body.storeName || storeId || 'boutique';
-    const cleanShopName = String(rawShopName)
-      .toLowerCase()
-      .replace(/^nanasore_/, '')
-      .replace(/[^a-z0-9]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '') || 'boutique';
+    // 1. Authentification & Résolution du Marchand (B2B Hybride : Agrégé vs Développeurs BYOK)
+    const apiKeyHeader = req.headers['x-api-key'] || req.headers['x-nanaswitch-key'] || req.headers['authorization'] || '';
+    const merchantIdParam = req.body.merchantId || req.body.merchant_id || storeId;
+    const merchant = await merchantService.resolveMerchant(db, apiKeyHeader, merchantIdParam);
 
-    const externalReference = req.body.externalReference || req.body.external_reference || `nanasore_${cleanShopName}___${orderId}`;
+    // 2. Coupe-circuit immédiat si solde de crédits API épuisé (0.02 XOF / 1 crédit par appel)
+    const creditsBalance = merchant?.api_pricing_config?.api_credits_balance ?? 5000;
+    const autoBlock = merchant?.api_pricing_config?.auto_block_on_zero ?? true;
+    if (creditsBalance <= 0 && autoBlock) {
+      return res.status(402).json({
+        success: false,
+        errorCode: '402_INSUFFICIENT_CLOUD_CREDITS',
+        message: 'Coupe-circuit activé : Solde de crédits API épuisé (0 crédit restant). Veuillez recharger votre portefeuille sur NanaSwitch Cloud.',
+        remainingCredits: 0,
+        merchantId: merchant.merchant_id
+      });
+    }
 
-    console.log(`[NANASWITCH INITIATE] Initiation paiement commande #${orderId} (${amount} ${currency}) via passerelle demandée: [${gateway}]...`);
+    // 3. Formatage de la référence externe standardisée : ${merchant_id}___${order_id}
+    const resolvedMerchantId = merchant?.merchant_id || 'm_live_bf_001';
+    const externalReference = req.body.externalReference || req.body.external_reference || `${resolvedMerchantId}___${orderId}`;
+
+    // Clés personnalisées si le marchand est en mode BYOK
+    const customCredentials = (merchant?.integration_config?.mode === 'BYOK')
+      ? merchant.integration_config.custom_credentials
+      : null;
+
+    console.log(`[NANASWITCH INITIATE] Initiation paiement #${orderId} (${amount} ${currency}) | Marchand: [${resolvedMerchantId}] (Mode: ${merchant?.integration_config?.mode || 'AGREGATED'}) | Passerelle: [${gateway}]...`);
 
     const initResult = await switchManager.initiatePaymentWithFailover(gateway, {
       orderId,
-      storeId,
-      shopName: rawShopName,
-      storeName: rawShopName,
+      storeId: resolvedMerchantId,
+      tenantId: resolvedMerchantId,
+      merchantId: resolvedMerchantId,
       externalReference,
       amount: Number(amount),
       currency,
@@ -1923,7 +1947,8 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       description,
       returnUrl,
       callbackUrl,
-      metadata
+      metadata,
+      customCredentials
     }, { db });
 
     const finalGateway = initResult.gateway || gateway;
@@ -1962,6 +1987,20 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       }
     }
 
+    // 4. Déduction atomique de 0.02 XOF (1 crédit) et traçabilité dans api_usage & switch_logs
+    if (db) {
+      merchantService.recordApiUsageAndDebit(db, {
+        merchantId: resolvedMerchantId,
+        orderId,
+        amount: Number(amount),
+        currency,
+        country: country || countryCode || 'BF',
+        gateway: finalGateway,
+        status: initResult.failedOver ? 'FAILOVER_SUCCESS' : 'SUCCESS',
+        latencyMs: Math.max(10, Date.now() - startTs)
+      }).catch(err => console.warn('[API METERING NOTICE]', err.message));
+    }
+
     return res.status(200).json({
       success: true,
       action: initResult.action || (initResult.paymentUrl || initResult.checkout_url ? 'REDIRECT' : 'DIRECT'),
@@ -1972,7 +2011,9 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
       originalGateway: initResult.originalGateway || null,
       failoverReason: initResult.failoverReason || null,
       orderId,
-      storeId,
+      storeId: resolvedMerchantId,
+      merchantId: resolvedMerchantId,
+      externalReference,
       amount: Number(amount),
       currency,
       checkout_url: initResult.checkout_url || initResult.paymentUrl,
@@ -2009,6 +2050,22 @@ app.get(['/api/payments/gateways', '/api/switch/gateways'], (req, res) => {
     routing: switchManager.getRoutingConfig(),
     gateways: switchManager.listGateways()
   });
+});
+
+/**
+ * GET /api/system/pricing-matrix & GET /api/payments/pricing-matrix
+ * Matrice tarifaire dynamique B2B (+1.5% de marge NanaSwitch)
+ */
+app.get(['/api/system/pricing-matrix', '/api/payments/pricing-matrix'], async (req, res) => {
+  try {
+    const matrix = await merchantService.getPricingMatrix(db);
+    return res.status(200).json({
+      success: true,
+      pricing_matrix: matrix
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 /**
