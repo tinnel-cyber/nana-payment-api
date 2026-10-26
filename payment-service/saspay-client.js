@@ -494,10 +494,16 @@ async function createSaspayPayin(params) {
   const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
   const idempotencyKey = getOrGenerateIdempotencyKey(params.idempotencyKey);
 
-  // Découpage nom client pour l'objet customer requis
-  const nameParts = customerName.trim().split(/\s+/);
+  // Découpage nom client pour l'objet customer requis (first_name et last_name obligatoires)
+  const cleanName = (customerName || '').trim() || 'Client Nanasore';
+  const nameParts = cleanName.split(/\s+/).filter(Boolean);
   const firstName = nameParts[0] || 'Client';
   const lastName = nameParts.slice(1).join(' ') || 'Nanasore';
+
+  // Sécurisation stricte du format email (requis string<email>)
+  const cleanEmail = (customerEmail && typeof customerEmail === 'string' && customerEmail.includes('@'))
+    ? customerEmail.trim()
+    : 'client@nanasore.com';
 
   const useSoftpay = type === 'softpay' || (type === 'auto' && Boolean(effectivePhone && resolvedNetwork));
 
@@ -512,7 +518,7 @@ async function createSaspayPayin(params) {
       network: resolvedNetwork,
       description: description || `Paiement ${orderId}`,
       customer: {
-        email: customerEmail,
+        email: cleanEmail,
         first_name: firstName,
         last_name: lastName,
         phone: effectivePhone
