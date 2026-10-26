@@ -262,18 +262,37 @@ class NaNaSwitchManager {
 
       try {
         const fallbackAdapter = this.getAdapter(effectiveFallbackId);
-        const fallbackResult = await fallbackAdapter.initiatePayment(params);
 
-        console.log(`[FAILOVER SUCCESS] Transaction #${orderId} initiée avec succès sur la passerelle de secours ${fallbackAdapter.name} (Gateway: ${effectiveFallbackId}) !`);
+        // Transmission garantie du numéro de téléphone saisi lors du premier essai pour pré-remplir la page Sebpay
+        const resolvedCustomerPhone = params.customerPhone || params.phone || params.customer_phone || '';
+        const fallbackParams = {
+          ...params,
+          failover: true,
+          customerPhone: resolvedCustomerPhone,
+          customer_phone: resolvedCustomerPhone,
+          phone: resolvedCustomerPhone
+        };
+
+        const fallbackResult = await fallbackAdapter.initiatePayment(fallbackParams);
+
+        console.log(`[FAILOVER SUCCESS] Transaction #${orderId} basculée avec succès sur la passerelle de secours ${fallbackAdapter.name} (Gateway: ${effectiveFallbackId}) !`);
+
+        const checkoutUrl = fallbackResult.checkout_url || fallbackResult.redirectUrl || fallbackResult.paymentUrl;
 
         const resolved = {
           ...fallbackResult,
+          success: true,
+          action: 'REDIRECT',
+          redirectUrl: checkoutUrl,
+          checkout_url: checkoutUrl,
+          paymentUrl: checkoutUrl,
           gateway: effectiveFallbackId,
           provider: effectiveFallbackId.toUpperCase(),
           failedOver: true,
           failover: true,
           originalGateway: primaryId,
-          failoverReason: primaryErr.message
+          failoverReason: primaryErr.message,
+          message: 'Redirection vers le canal sécurisé Sebpay'
         };
 
         if (options.db) {

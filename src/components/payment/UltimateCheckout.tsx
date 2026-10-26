@@ -22,6 +22,7 @@ import {
   X,
   CreditCard,
   AlertCircle,
+  AlertTriangle,
   HelpCircle,
   RefreshCw
 } from 'lucide-react';
@@ -348,6 +349,7 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [sResponse, setSResponse] = useState<SCollectionResponse | null>(null);
+  const [failoverAlert, setFailoverAlert] = useState<{ active: boolean; url: string; message?: string } | null>(null);
 
   // 6. Succès & Détails finaux
   const [completedDetails, setCompletedDetails] = useState<PaymentSuccessDetails | null>(null);
@@ -660,6 +662,17 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
       // Redirection immédiate pour LigdiCash, Wave ou passerelle externe
       const redirectLink = res.checkout_url || res.redirectUrl || res.provider_link || (res as any).paymentUrl;
       if (redirectLink && typeof window !== 'undefined') {
+        if (res.failover) {
+          setFailoverAlert({
+            active: true,
+            url: redirectLink,
+            message: res.message || `Le canal direct ${selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...`
+          });
+          setTimeout(() => {
+            window.location.href = redirectLink;
+          }, 1800);
+          return;
+        }
         window.location.href = redirectLink;
         return;
       }
@@ -1649,6 +1662,35 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
 
           </div>
 
+        </div>
+      )}
+
+      {/* Modale / Toast Transparent lors d'un Failover NanaSwitch vers Sebpay Hosted Checkout */}
+      {failoverAlert?.active && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="max-w-md w-full p-6 sm:p-7 rounded-3xl bg-slate-900 border-2 border-amber-500/50 shadow-2xl text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/20">
+              <AlertTriangle className="w-8 h-8 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-300">
+                <span>Passerelle de secours activée</span>
+              </span>
+              <h3 className="text-lg sm:text-xl font-black text-white">
+                Canal direct temporairement indisponible
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Le canal direct {selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...
+              </p>
+            </div>
+            <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-amber-300">
+              <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+              <span>Redirection automatique en cours...</span>
+            </div>
+            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-amber-400 h-full animate-[progress_1.8s_ease-in-out_forwards]" style={{ width: '100%' }} />
+            </div>
+          </div>
         </div>
       )}
 

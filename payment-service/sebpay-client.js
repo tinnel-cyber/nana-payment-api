@@ -983,6 +983,210 @@ async function createSebpayCollection(params) {
 }
 
 /**
+ * 1b. POST /checkout/sessions - Création d'une session de paiement hébergée Sebpay
+ * Redirection sécurisée du client vers l'interface Hosted Checkout Sebpay avec pré-remplissage.
+ * 
+ * @param {object} params
+ */
+async function createSebpayCheckoutSession(params = {}) {
+  const {
+    amount,
+    currency = 'XOF',
+    orderId,
+    storeId = 'nanasore_central_hub',
+    tenantId,
+    shopName,
+    externalReference,
+    external_reference,
+    redirectUrl,
+    redirect_url,
+    returnUrl,
+    return_url,
+    callbackUrl,
+    callback_url,
+    customerPhone,
+    phone,
+    customer_phone,
+    customerEmail,
+    email,
+    customer_email,
+    customerName,
+    name,
+    customer_name,
+    country,
+    countryCode,
+    metadata = {}
+  } = params;
+
+  if (!amount || Number(amount) <= 0) {
+    throw new Error('[SEBPAY CHECKOUT SESSION] Le montant (amount > 0) est obligatoire.');
+  }
+
+  const effectiveOrderId = orderId || params.id || `ORD-${Date.now()}`;
+  const rawShopName = shopName || tenantId || storeId || 'boutique';
+  const cleanShopName = String(rawShopName)
+    .toLowerCase()
+    .replace(/^nanasore_/, '')
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'boutique';
+
+  const safeExternalReference = String(
+    externalReference ||
+    external_reference ||
+    `nanasore_${cleanShopName}___${effectiveOrderId}`
+  ).trim().slice(0, 255);
+
+  const rawPhone = customerPhone || customer_phone || phone || '';
+  const resolvedCountry = String(country || countryCode || 'BF').trim().toUpperCase();
+  const formattedPhone = rawPhone ? formatSebpayPhoneNumber(rawPhone, resolvedCountry) : undefined;
+
+  const effectiveRedirectUrl = redirectUrl || redirect_url || returnUrl || return_url || 'https://nanasore.com/checkout/return';
+  const effectiveCallbackUrl = callbackUrl || callback_url || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/api/payment/webhook';
+
+  const body = {
+    amount: Math.round(Number(amount)),
+    currency: String(currency || 'XOF').toUpperCase(),
+    redirect_url: effectiveRedirectUrl,
+    external_reference: safeExternalReference,
+    callback_url: effectiveCallbackUrl,
+    metadata: {
+      orderId: effectiveOrderId,
+      storeId: tenantId || storeId || 'nanasore_central_hub',
+      ...metadata
+    }
+  };
+
+  if (formattedPhone) {
+    body.customer_phone = formattedPhone;
+  }
+  const effectiveCustomerEmail = customerEmail || email || customer_email;
+  if (effectiveCustomerEmail) {
+    body.customer_email = String(effectiveCustomerEmail).trim();
+  }
+  const effectiveCustomerName = customerName || name || customer_name;
+  if (effectiveCustomerName) {
+    body.customer_name = String(effectiveCustomerName).trim();
+  }
+
+  console.log(`[SEBPAY CHECKOUT SESSION] Création Hosted Session pour ${safeExternalReference} (${amount} ${body.currency}) | Tél: ${formattedPhone || 'N/A'}`);
+  console.log('[SEBPAY CHECKOUT PAYLOAD]', JSON.stringify(body, null, 2));
+
+  let rawResponse;
+  try {
+    rawResponse = await callSebpayApi('checkout/sessions', {
+      method: 'POST',
+      body
+    });
+  } catch (err) {
+    console.error('[SEBPAY CHECKOUT SESSION ERROR]', err.message, err.data || '');
+    throw err;
+  }
+
+  let innerData = rawResponse?.data;
+  if (innerData && typeof innerData === 'object' && innerData.data) {
+    innerData = innerData.data;
+  }
+  const sessionData = innerData || rawResponse;
+
+  const checkoutUrl =
+    sessionData?.checkout_url ||
+    sessionData?.url ||
+    sessionData?.payment_url ||
+    sessionData?.redirect_url ||
+    rawResponse?.checkout_url ||
+    rawResponse?.url ||
+    `https://checkout.sebpay.bj/pay/${sessionData?.id || effectiveOrderId}`;
+
+  const sessionId = String(
+    sessionData?.id ||
+    sessionData?.checkout_session_id ||
+    sessionData?.session_id ||
+    rawResponse?.id ||
+    `cs_${Date.now()}`
+  );
+
+  return {
+    success: rawResponse?.success !== false,
+    action: 'REDIRECT',
+    redirectUrl: checkoutUrl,
+    checkout_url: checkoutUrl,
+    paymentUrl: checkoutUrl,
+    provider_link: checkoutUrl,
+    checkout_session_id: sessionId,
+    id: sessionId,
+    transaction_id: sessionId,
+    external_reference: safeExternalReference,
+    orderId: effectiveOrderId,
+    storeId: tenantId || storeId,
+    amount: Number(sessionData?.amount || amount),
+    currency: sessionData?.currency || body.currency,
+    message: rawResponse?.message || 'Session de paiement hébergée Sebpay créée avec succès.',
+    failover: Boolean(params.failover),
+    data: sessionData,
+    rawResponse
+  };
+}
+
+/**
+ * 1c. GET /checkout/sessions/{id} - Vérification du statut d'une session de paiement hébergée Sebpay
+ * Utilisé au retour client sur /checkout/return?checkout_session_id=...
+ * 
+ * @param {string} sessionId - Identifiant de la session de paiement
+ */
+async function getSebpayCheckoutSession(sessionId) {
+  if (!sessionId) {
+    throw new Error('[SEBPAY CHECKOUT SESSION] Identifiant de session (checkout_session_id) obligatoire.');
+  }
+  const cleanId = String(sessionId).trim();
+  console.log(`[SEBPAY CHECKOUT SESSION] Vérification de la session "${cleanId}" auprès de Sebpay...`);
+
+  let rawResponse;
+  try {
+    rawResponse = await callSebpayApi(`checkout/sessions/${cleanId}`, {
+      method: 'GET'
+    });
+  } catch (err) {
+    console.error(`[SEBPAY CHECKOUT SESSION GET ERROR] ${cleanId} :`, err.message);
+    throw err;
+  }
+
+  let innerData = rawResponse?.data;
+  if (innerData && typeof innerData === 'object' && innerData.data) {
+    innerData = innerData.data;
+  }
+  const session = innerData || rawResponse;
+
+  const transactionStatus = String(
+    session?.transaction_status ||
+    session?.status ||
+    session?.payment_status ||
+    'pending'
+  ).toLowerCase();
+
+  const isApproved = ['approved', 'success', 'paid', 'completed', 'validated', 'confirmed'].includes(transactionStatus);
+
+  return {
+    success: rawResponse?.success !== false,
+    id: cleanId,
+    checkout_session_id: cleanId,
+    transaction_status: transactionStatus,
+    isPaid: isApproved,
+    isApproved,
+    status: isApproved ? 'APPROVED' : transactionStatus.toUpperCase(),
+    amount: Number(session?.amount || 0),
+    currency: session?.currency || 'XOF',
+    external_reference: session?.external_reference || session?.metadata?.orderId || null,
+    orderId: session?.metadata?.orderId || null,
+    storeId: session?.metadata?.storeId || null,
+    customer_phone: session?.customer_phone || session?.phone || null,
+    metadata: session?.metadata || {},
+    data: session,
+    rawResponse
+  };
+}
+
+/**
  * 2. GET /collections/{id_or_reference} - Lecture d'une collecte
  * Récupère une collecte créée par POST /collections, via son identifiant SebPay ou external_reference.
  * Revérifie automatiquement son statut auprès de l'opérateur si elle est en attente.
@@ -1710,7 +1914,9 @@ module.exports = {
   getSebpayAxiosConfig,
   callSebpayApi,
   createSebpayCollection,
+  createSebpayCheckoutSession,
   getSebpayCollection,
+  getSebpayCheckoutSession,
   getSebpayCountries,
   getSebpayOperators
 };

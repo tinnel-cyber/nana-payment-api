@@ -808,5 +808,33 @@ export async function getInternationalCoverageCountries(forceRefresh = false): P
   };
 }
 
+/**
+ * Vérifie le statut d'une session de paiement hébergée Sebpay Hosted Checkout
+ * Appelé depuis /checkout/return?checkout_session_id=...
+ */
+export async function verifyCheckoutSession(sessionId: string): Promise<any> {
+  if (!sessionId) {
+    throw new Error('Identifiant checkout_session_id obligatoire pour la vérification.');
+  }
+
+  const baseUrl = getPaymentApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/payment/verify-session?checkout_session_id=${encodeURIComponent(sessionId)}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json'
+    },
+    signal: AbortSignal.timeout(20000)
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data?.error || data?.message || `Erreur serveur HTTP ${res.status}`);
+  }
+
+  return data;
+}
+
+
 
 

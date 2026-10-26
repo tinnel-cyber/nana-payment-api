@@ -126,6 +126,7 @@ const CertificatePage = React.lazy(() => import('./pages/CertificatePage').then(
 const StudentDashboardPage = React.lazy(() => import('./pages/StudentDashboardPage').then(m => ({ default: m.StudentDashboardPage || m.default })));
 const CashierConnectPage = React.lazy(() => import('./pages/CashierConnectPage').then(m => ({ default: m.CashierConnectPage || m.default })));
 const StandaloneAppHost = React.lazy(() => import('./components/apps/StandaloneAppHost').then(m => ({ default: m.StandaloneAppHost })));
+const CheckoutReturnView = React.lazy(() => import('./components/payment/CheckoutReturnView').then(m => ({ default: m.CheckoutReturnView || m.default })));
 import { getMarketplaceCourseById } from './services/marketplaceService';
 import { AuthProvider } from './context/AuthContext';
 import { useTenant } from './context/TenantContext';
@@ -750,6 +751,15 @@ export default function App() {
       return params.get('p') || params.get('project');
     }
     return null;
+  });
+
+  // Détection URL de retour après Paiement Sebpay Hosted Checkout (/checkout/return)
+  const [isCheckoutReturn, setIsCheckoutReturn] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      return pathname.startsWith('/checkout/return') || pathname.startsWith('/payment/return') || pathname === '/checkout-return';
+    }
+    return false;
   });
 
   // Détection URL publique de Live / Webinaire (/live/:webinarId ou ?live=...)
@@ -4898,6 +4908,22 @@ export default function App() {
             setIsCatalogView(true);
             if (typeof window !== 'undefined') {
               window.history.pushState({}, '', '/catalog');
+            }
+          }}
+        />
+      </React.Suspense>
+    );
+  }
+
+  // 0.00 Vue Publique Client : Page de Retour après Paiement Sebpay Hosted Checkout (/checkout/return)
+  if (isCheckoutReturn) {
+    return (
+      <React.Suspense fallback={<LazyModuleFallback label="Vérification de votre paiement Sebpay..." />}>
+        <CheckoutReturnView
+          onBackToStore={() => {
+            setIsCheckoutReturn(false);
+            if (typeof window !== 'undefined') {
+              window.location.href = '/';
             }
           }}
         />

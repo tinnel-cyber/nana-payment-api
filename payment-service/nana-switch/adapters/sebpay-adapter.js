@@ -12,7 +12,9 @@ const crypto = require('crypto');
 const PaymentGatewayAdapter = require('../gateway-adapter');
 const {
   createSebpayCollection,
+  createSebpayCheckoutSession,
   getSebpayCollection,
+  getSebpayCheckoutSession,
   getSebpayConfigStatus
 } = require('../../sebpay-client');
 
@@ -22,7 +24,8 @@ class SebpayAdapter extends PaymentGatewayAdapter {
   }
 
   /**
-   * 1. Initialise une demande de paiement auprès de l'API Sebpay
+   * 1. Initialise une demande de paiement auprès de l'API Sebpay Hosted Checkout Session
+   * Utilise POST /api/v1/checkout/sessions pour une redirection fluide avec pré-remplissage
    */
   async initiatePayment(params) {
     const {
@@ -31,11 +34,15 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       currency = 'XOF',
       customerPhone,
       phone,
+      customer_phone,
       customerEmail = 'client@wameet.africa',
       customerName = 'Client Wameet',
       description = 'Commande Wameet / Nanasore Live',
       returnUrl,
+      redirectUrl,
+      redirect_url,
       callbackUrl,
+      callback_url,
       storeId = 'nanasore_central_hub',
       country,
       countryCode,
@@ -58,84 +65,62 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       .replace(/^_|_$/g, '') || 'boutique';
 
     const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
-    const resolvedPhone = customerPhone || phone || '+22670000000';
-    const isLigdicash = String(operator || params.provider || '').toLowerCase().includes('ligdicash');
-    const effectiveOtp = isLigdicash ? '' : (params.otpCode || params.otp || params.otp_code || params.authorization_code || otpCode || '');
+    const resolvedPhone = customerPhone || customer_phone || phone || '';
 
-    const sebpayPayload = {
-      tenantId: `nanasore_${cleanShopName}`,
-      shopName: rawShopName,
-      storeName: rawShopName,
-      orderId,
+    const effectiveRedirectUrl = redirectUrl || redirect_url || returnUrl || 'https://nanasore.com/checkout/return';
+    const effectiveCallbackUrl = callbackUrl || callback_url || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/api/payment/webhook';
+
+    console.log(`[SEBPAY ADAPTER] Création Hosted Checkout Session pour commande ${orderId} (${amount} ${currency})...`);
+
+    const sessionRes = await createSebpayCheckoutSession({
       amount: Math.round(Number(amount)),
       currency: currency.toUpperCase(),
-      country: country || countryCode,
-      phone: resolvedPhone,
-      customerPhone: resolvedPhone,
-      client_name: customerName,
-      client_email: customerEmail || 'client@wameet.africa',
-      client_phone: resolvedPhone,
-      operator,
-      provider: operator,
-      operator_code: operator,
-      slug: operator,
-      description: description.substring(0, 120),
-      external_reference: externalReference,
+      orderId,
+      storeId,
+      tenantId: `nanasore_${cleanShopName}`,
+      shopName: rawShopName,
       externalReference,
-      return_url: returnUrl || 'https://pos-app-1759a.web.app/orders',
-      callback_url: callbackUrl || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/webhook/sebpay',
-      custom_data: {
-        storeId,
+      redirect_url: effectiveRedirectUrl,
+      redirectUrl: effectiveRedirectUrl,
+      callback_url: effectiveCallbackUrl,
+      callbackUrl: effectiveCallbackUrl,
+      customer_phone: resolvedPhone,
+      customerPhone: resolvedPhone,
+      phone: resolvedPhone,
+      customerEmail,
+      customerName,
+      country: country || countryCode || 'BF',
+      failover: Boolean(params.failover),
+      metadata: {
         orderId,
+        storeId,
+        shopName: rawShopName,
         ...metadata
       }
-    };
+    });
 
-    if (effectiveOtp) {
-      sebpayPayload.otpCode = effectiveOtp;
-      sebpayPayload.otp = effectiveOtp;
-      sebpayPayload.otp_code = effectiveOtp;
-    }
-
-    console.log(`[SEBPAY ADAPTER] Initiation paiement pour commande ${orderId} (${amount} ${currency}) via Sebpay...`);
-    const sebpayRes = await createSebpayCollection(sebpayPayload);
-
-    // Extraction robuste du lien de redirection (Spécifique LigdiCash / Wave / Checkout link Sebpay)
-    const paymentUrl =
-      sebpayRes.provider_link ||
-      sebpayRes.checkout_url ||
-      sebpayRes.payment_url ||
-      sebpayRes.redirectUrl ||
-      sebpayRes.paymentUrl ||
-      sebpayRes.data?.provider_link ||
-      sebpayRes.data?.checkout_url ||
-      sebpayRes.data?.payment_url ||
-      sebpayRes.data?.redirect_url ||
-      sebpayRes.data?.url ||
-      null;
-
-    const transactionId = String(
-      sebpayRes.transaction_id ||
-      sebpayRes.id ||
-      sebpayRes.data?.transaction_id ||
-      sebpayRes.data?.id ||
-      `seb_${Date.now()}`
-    );
+    const checkoutUrl = sessionRes.checkout_url || sessionRes.redirectUrl || sessionRes.paymentUrl;
+    const checkoutSessionId = sessionRes.checkout_session_id || sessionRes.id || sessionRes.transaction_id;
 
     return {
       success: true,
-      paymentUrl,
-      checkout_url: paymentUrl,
-      redirectUrl: paymentUrl,
-      provider_link: paymentUrl,
-      action: paymentUrl ? 'redirect' : (sebpayRes.action || 'pending'),
-      transactionId,
+      action: 'REDIRECT',
+      redirectUrl: checkoutUrl,
+      checkout_url: checkoutUrl,
+      paymentUrl: checkoutUrl,
+      provider_link: checkoutUrl,
+      checkout_session_id: checkoutSessionId,
+      id: checkoutSessionId,
+      transactionId: checkoutSessionId,
       reference: externalReference,
+      externalReference,
       orderId,
       storeId,
       amount: Math.round(Number(amount)),
       currency,
-      rawResponse: sebpayRes
+      failover: Boolean(params.failover),
+      message: params.failover ? 'Redirection vers le canal sécurisé Sebpay' : 'Redirection vers la page de paiement sécurisée Sebpay',
+      rawResponse: sessionRes
     };
   }
 
@@ -262,6 +247,19 @@ class SebpayAdapter extends PaymentGatewayAdapter {
           amount: 0,
           currency: 'XOF',
           message: 'En attente de transactionId officiel opérateur'
+        };
+      }
+
+      // Si l'identifiant correspond à une Hosted Checkout Session (cs_... ou non purement numérique)
+      if (String(refToQuery).startsWith('cs_') || String(refToQuery).includes('session')) {
+        const sessionRes = await getSebpayCheckoutSession(refToQuery);
+        return {
+          status: sessionRes.status,
+          isPaid: sessionRes.isPaid,
+          amount: sessionRes.amount,
+          currency: sessionRes.currency,
+          transaction_status: sessionRes.transaction_status,
+          rawData: sessionRes
         };
       }
 

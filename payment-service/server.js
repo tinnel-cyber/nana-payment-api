@@ -32,7 +32,9 @@ const {
   getSebpayConfigStatus,
   callSebpayApi,
   createSebpayCollection,
+  createSebpayCheckoutSession,
   getSebpayCollection,
+  getSebpayCheckoutSession,
   getSebpayCountries,
   getSebpayOperators,
   calculateSebpayFee
@@ -483,6 +485,8 @@ async function processWebhookTransaction(payload) {
   ).trim();
 
   const status = String(
+    txData.transaction_status ||
+    payload.transaction_status ||
     txData.status ||
     payload.status ||
     'SUCCESS'
@@ -501,9 +505,9 @@ async function processWebhookTransaction(payload) {
   ).toUpperCase();
   const paymentRef = txData.paymentRef || txData.payment_reference || externalRef || transactionId || `ref_${Date.now()}`;
 
-  // Résolution multi-tenant "${tenant_id}___${order_id}"
-  let resolvedTenantId = 'nanasore_central_hub';
-  let resolvedOrderId = externalRef || transactionId || `ORD_${Date.now()}`;
+  // Résolution multi-tenant "${tenant_id}___${order_id}" ou via metadata
+  let resolvedTenantId = txData.metadata?.storeId || payload.metadata?.storeId || 'nanasore_central_hub';
+  let resolvedOrderId = txData.metadata?.orderId || payload.metadata?.orderId || externalRef || transactionId || `ORD_${Date.now()}`;
   if (externalRef && externalRef.includes('___')) {
     const parts = externalRef.split('___');
     resolvedTenantId = parts[0] || resolvedTenantId;
@@ -910,6 +914,127 @@ app.get(['/api/payment/verify/:txId', '/api/payment/status/:txId'], async (req, 
 });
 
 // ============================================================================
+// ROUTE 3b-2 : Vérification de Session Hébergée Sebpay (Hosted Checkout Return)
+// Appelé au retour client sur /checkout/return?checkout_session_id=...
+// Interroge GET /api/v1/checkout/sessions/{id} et valide Firestore UNIQUEMENT si approved
+// ============================================================================
+app.get(['/api/payment/verify-session', '/api/payments/verify-session', '/api/payment/checkout/verify-session'], async (req, res) => {
+  try {
+    const sessionId = req.query.checkout_session_id || req.query.session_id || req.query.id || req.query.checkoutSessionId;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Identifiant checkout_session_id obligatoire en paramètre d\'URL.'
+      });
+    }
+
+    console.log(`[VERIFY SESSION] Interrogation Sebpay pour la session : "${sessionId}"`);
+    const sessionRes = await getSebpayCheckoutSession(sessionId);
+
+    const transactionStatus = String(sessionRes.transaction_status || 'pending').toLowerCase();
+    const isApproved = transactionStatus === 'approved';
+
+    const rawOrder = sessionRes.orderId || (sessionRes.external_reference && sessionRes.external_reference.includes('___') ? sessionRes.external_reference.split('___')[1] : sessionRes.external_reference);
+    const orderId = rawOrder || sessionId;
+    const storeId = sessionRes.storeId || (sessionRes.external_reference && sessionRes.external_reference.includes('___') ? sessionRes.external_reference.split('___')[0] : 'nanasore_central_hub');
+
+    console.log(`[VERIFY SESSION RESULT] Session: ${sessionId} | Statut: ${transactionStatus} | Approved: ${isApproved} | Commande: ${orderId}`);
+
+    // RÈGLE STRICTE : Valider la commande dans Firestore ("PAID") UNIQUEMENT si transaction_status === "approved"
+    if (isApproved && db && orderId) {
+      try {
+        const nowServer = admin.firestore.FieldValue.serverTimestamp();
+        const batch = db.batch();
+
+        const updatePayload = {
+          status: 'PAID',
+          paymentStatus: 'PAID',
+          isPaid: true,
+          gateway: 'sebpay',
+          provider: 'SEBPAY_HOSTED_CHECKOUT',
+          checkoutSessionId: sessionId,
+          transactionId: sessionId,
+          paidAt: nowServer,
+          updatedAt: nowServer,
+          amount: sessionRes.amount,
+          currency: sessionRes.currency || 'XOF'
+        };
+
+        // 1. payment_intents
+        const intentRef = db.collection('payment_intents').doc(orderId);
+        batch.set(intentRef, updatePayload, { merge: true });
+
+        // 2. orders
+        const orderRef = db.collection('orders').doc(orderId);
+        batch.set(orderRef, {
+          status: 'PAID',
+          paymentStatus: 'PAID',
+          isPaid: true,
+          deliveryStatus: 'PENDING_DISPATCH', // Déclenchement de la livraison
+          paidAt: nowServer,
+          updatedAt: nowServer
+        }, { merge: true });
+
+        // 3. customer_orders
+        const custOrderRef = db.collection('customer_orders').doc(orderId);
+        batch.set(custOrderRef, {
+          status: 'PAID',
+          paymentStatus: 'PAID',
+          isPaid: true,
+          deliveryStatus: 'PENDING_DISPATCH',
+          paidAt: nowServer,
+          updatedAt: nowServer
+        }, { merge: true });
+
+        // 4. processed_transactions (protection idempotence)
+        const processedRef = db.collection('processed_transactions').doc(sessionId);
+        batch.set(processedRef, {
+          transactionId: sessionId,
+          orderId,
+          storeId,
+          status: 'PAID',
+          processed: true,
+          gateway: 'sebpay',
+          amount: sessionRes.amount,
+          currency: sessionRes.currency,
+          createdAt: nowServer
+        }, { merge: true });
+
+        await batch.commit();
+        console.log(`[VERIFY SESSION FIRESTORE] Commande #${orderId} validée en "PAID" et livraison déclenchée avec succès.`);
+      } catch (dbErr) {
+        console.error('[VERIFY SESSION FIRESTORE ERROR]', dbErr.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      transaction_status: transactionStatus,
+      isPaid: isApproved,
+      isApproved,
+      orderId,
+      storeId,
+      amount: sessionRes.amount,
+      currency: sessionRes.currency,
+      session: sessionRes.data,
+      message: isApproved
+        ? 'Paiement confirmé avec succès par Sebpay.'
+        : `Statut de transaction : ${transactionStatus}`
+    });
+
+  } catch (err) {
+    console.error('[VERIFY SESSION ERROR]', err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      transaction_status: 'error',
+      isPaid: false
+    });
+  }
+});
+
+// ============================================================================
 // ROUTE 3c : Initiation Paiement Sebpay (POST /collections)
 // ============================================================================
 app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], async (req, res) => {
@@ -968,13 +1093,15 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
         country: req.body.country || req.body.country_code || req.body.countryCode,
         phone: phone || customerPhone,
         customerPhone: phone || customerPhone,
+        customer_phone: phone || customerPhone,
         customerName,
         customerEmail,
         operator,
         otpCode,
         description,
         callbackUrl,
-        returnUrl: req.body.returnUrl || req.body.return_url
+        returnUrl: req.body.returnUrl || req.body.return_url || req.body.redirectUrl || req.body.redirect_url || 'https://nanasore.com/checkout/return',
+        redirectUrl: req.body.returnUrl || req.body.return_url || req.body.redirectUrl || req.body.redirect_url || 'https://nanasore.com/checkout/return'
       }, { db });
     } else {
       sebpayResult = await switchManager.getAdapter(requestedGateway).initiatePayment({
@@ -989,13 +1116,15 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
         country: req.body.country || req.body.country_code || req.body.countryCode,
         phone: phone || customerPhone,
         customerPhone: phone || customerPhone,
+        customer_phone: phone || customerPhone,
         customerName,
         customerEmail,
         operator,
         otpCode,
         description,
         callbackUrl,
-        returnUrl: req.body.returnUrl || req.body.return_url
+        returnUrl: req.body.returnUrl || req.body.return_url || req.body.redirectUrl || req.body.redirect_url || 'https://nanasore.com/checkout/return',
+        redirectUrl: req.body.returnUrl || req.body.return_url || req.body.redirectUrl || req.body.redirect_url || 'https://nanasore.com/checkout/return'
       });
     }
 
