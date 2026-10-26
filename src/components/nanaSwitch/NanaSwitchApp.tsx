@@ -20,6 +20,7 @@ import {
   Send, ShieldAlert, BookOpen, Layers, Lock, Sparkles, AlertCircle, Upload, FileCheck, ArrowLeft,
   ChevronDown, PhoneCall, Code2, Globe2, Server
 } from 'lucide-react';
+import { DeveloperTab } from '../dashboard/DeveloperTab';
 import { db, auth } from '../../firebase';
 import { 
   collection, 
@@ -81,6 +82,28 @@ export interface AppKycData {
   contractSigned?: boolean;
 }
 
+export interface MerchantCustomCredentials {
+  saspay?: {
+    api_key?: string;
+  };
+  sebpay?: {
+    public_key?: string;
+    secret_key?: string;
+  };
+}
+
+export interface MerchantIntegrationConfig {
+  mode: 'AGREGATED' | 'BYOK';
+  custom_credentials?: MerchantCustomCredentials;
+}
+
+export interface MerchantApiPricingConfig {
+  cost_per_request_xof: number;
+  api_credits_balance: number;
+  low_balance_threshold?: number;
+  auto_block_on_zero?: boolean;
+}
+
 export interface NanaMerchantApp {
   id: string;
   name: string;
@@ -96,6 +119,11 @@ export interface NanaMerchantApp {
     secret_key: string;
     is_active: boolean;
   };
+  integration_mode?: 'AGREGATED' | 'BYOK';
+  integration_config?: MerchantIntegrationConfig;
+  custom_credentials?: MerchantCustomCredentials;
+  api_credits_balance?: number;
+  api_pricing_config?: MerchantApiPricingConfig;
 }
 
 export interface TransactionItem {
@@ -238,6 +266,11 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
     setTimeout(() => setToast(null), 4000);
   }, []);
 
+  const handleUpdateApp = useCallback((updated: NanaMerchantApp) => {
+    setSelectedApp(updated);
+    setApps(prev => prev.map(a => a.id === updated.id ? updated : a));
+  }, []);
+
   const copyToClipboard = useCallback((text?: string, label?: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -281,6 +314,18 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
                 whSecret: data.webhook_config?.secret_key || 'ns_whsec_master_2026'
               } : undefined,
               webhook_config: data.webhook_config,
+              integration_mode: data.integration_config?.mode || data.integration_mode || 'AGREGATED',
+              integration_config: data.integration_config || {
+                mode: data.integration_mode || 'AGREGATED',
+                custom_credentials: data.custom_credentials || {}
+              },
+              custom_credentials: data.integration_config?.custom_credentials || data.custom_credentials || {},
+              api_credits_balance: data.api_pricing_config?.api_credits_balance ?? data.switch_wallets?.api_credits_balance ?? 5000,
+              api_pricing_config: data.api_pricing_config || {
+                cost_per_request_xof: 0.02,
+                api_credits_balance: 5000,
+                low_balance_threshold: 500
+              },
               kyc: {
                 companyName: data.business_name,
                 rccm: data.rccm,
@@ -644,7 +689,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
             {activeTab === 'customers' && <TabCustomers />}
             {activeTab === 'analytics' && <TabAnalytics />}
             {activeTab === 'payouts' && <TabPayouts showToast={showToast} />}
-            {activeTab === 'developer' && <TabDeveloper app={selectedApp} copyToClipboard={copyToClipboard} showToast={showToast} />}
+            {activeTab === 'developer' && <DeveloperTab app={selectedApp} copyToClipboard={copyToClipboard} showToast={showToast} onUpdateApp={handleUpdateApp} />}
             {activeTab === 'webhooks' && <TabWebhooks app={selectedApp} copyToClipboard={copyToClipboard} showToast={showToast} />}
             {activeTab === 'webhook_logs' && <TabWebhookLogs />}
             {activeTab === 'disputes' && <TabDisputes />}
@@ -1391,7 +1436,16 @@ function TabPayouts({ showToast }: { showToast: (m: string) => void }) {
 }
 
 /* 9. TAB: DEVELOPER & API KEYS */
-function TabDeveloper({ app, copyToClipboard, showToast }: { app: NanaMerchantApp; copyToClipboard: (t?: string, l?: string) => void; showToast: (m: string) => void }) {
+function TabDeveloper(props: {
+  app: NanaMerchantApp;
+  copyToClipboard: (t?: string, l?: string) => void;
+  showToast: (m: string) => void;
+  onUpdateApp?: (app: NanaMerchantApp) => void;
+}) {
+  return <DeveloperTab {...props} />;
+}
+
+function LegacyTabDeveloperOld({ app, copyToClipboard, showToast }: { app: NanaMerchantApp; copyToClipboard: (t?: string, l?: string) => void; showToast: (m: string) => void }) {
   const [showSk, setShowSk] = useState(false);
 
   return (

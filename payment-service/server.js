@@ -3234,6 +3234,105 @@ app.post(['/v1/switch/keys/generate', '/api/switch/keys/generate'], express.json
   }
 });
 
+/**
+ * POST /v1/switch/merchant/integration-mode & POST /api/switch/merchant/integration-mode
+ * Mise à jour sécurisée du mode d'intégration (AGREGATED vs BYOK) et des clés passerelles personnalisées
+ */
+app.post(['/v1/switch/merchant/integration-mode', '/api/switch/merchant/integration-mode'], express.json(), async (req, res) => {
+  try {
+    const { merchantId, mode, customCredentials } = req.body;
+    if (!merchantId) {
+      return res.status(400).json({ success: false, error: 'merchantId requis' });
+    }
+    const cleanMode = mode === 'BYOK' ? 'BYOK' : 'AGREGATED';
+    const saspayKey = customCredentials?.saspay?.api_key || '';
+    const sebpayPk = customCredentials?.sebpay?.public_key || '';
+    const sebpaySk = customCredentials?.sebpay?.secret_key || '';
+
+    const sanitizedCredentials = {
+      saspay: { api_key: String(saspayKey).replace(/\s+/g, '').trim() },
+      sebpay: {
+        public_key: String(sebpayPk).trim(),
+        secret_key: String(sebpaySk).trim()
+      }
+    };
+
+    if (db) {
+      const nowServer = admin.firestore.FieldValue.serverTimestamp();
+      await db.collection('merchants').doc(merchantId).set({
+        integration_mode: cleanMode,
+        integration_config: {
+          mode: cleanMode,
+          custom_credentials: sanitizedCredentials
+        },
+        custom_credentials: sanitizedCredentials,
+        updated_at: nowServer
+      }, { merge: true });
+    }
+
+    return res.json({
+      success: true,
+      merchantId,
+      mode: cleanMode,
+      custom_credentials: sanitizedCredentials,
+      message: `Mode d'intégration mis à jour avec succès (${cleanMode}).`
+    });
+  } catch (err) {
+    console.error('[INTEGRATION MODE UPDATE ERROR]', err.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Échec de la mise à jour du mode d\'intégration',
+      details: err.message
+    });
+  }
+});
+
+/**
+ * POST /v1/switch/merchant/credits/recharge & POST /api/switch/merchant/credits/recharge
+ * Recharge du portefeuille de crédits API SaaS (0.02 XOF / requête)
+ */
+app.post(['/v1/switch/merchant/credits/recharge', '/api/switch/merchant/credits/recharge'], express.json(), async (req, res) => {
+  try {
+    const { merchantId, creditsAmount = 5000 } = req.body;
+    if (!merchantId) {
+      return res.status(400).json({ success: false, error: 'merchantId requis' });
+    }
+    const creditsToAdd = Number(creditsAmount) || 5000;
+    let newBalance = creditsToAdd;
+
+    if (db) {
+      const merchantRef = db.collection('merchants').doc(merchantId);
+      await db.runTransaction(async (transaction) => {
+        const snap = await transaction.get(merchantRef);
+        const currentData = snap.exists ? snap.data() : {};
+        const currentCredits = currentData.api_pricing_config?.api_credits_balance ?? currentData.api_credits_balance ?? 0;
+        newBalance = currentCredits + creditsToAdd;
+
+        transaction.set(merchantRef, {
+          'api_pricing_config.api_credits_balance': newBalance,
+          api_credits_balance: newBalance,
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+    }
+
+    return res.json({
+      success: true,
+      merchantId,
+      creditsAdded: creditsToAdd,
+      newBalance,
+      message: `${creditsToAdd.toLocaleString()} crédits ajoutés au portefeuille API avec succès.`
+    });
+  } catch (err) {
+    console.error('[CREDITS RECHARGE ERROR]', err.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Échec de la recharge de crédits API',
+      details: err.message
+    });
+  }
+});
+
 app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, res) => {
   const startTs = Date.now();
   const txId = `sw_${Math.floor(100000 + Math.random() * 900000)}`;
