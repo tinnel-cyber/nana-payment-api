@@ -128,3 +128,60 @@ export function formatPhoneWithCountry(phone: string, countryCode: string): stri
 
   return `${cleanDial}${digits}`;
 }
+
+/**
+ * Construit un libellé clair et dynamique combinant l'opérateur et le pays sélectionné
+ * Ne code rien en dur : s'adapte à tous les opérateurs et tous les pays (Burkina Faso, Côte d'Ivoire, Bénin, etc.)
+ */
+export function formatDynamicOperatorLabel(
+  operator?: { name?: string; code?: string; id?: string } | string | null,
+  country?: { name?: string; code?: string } | string | null
+): string {
+  const opName = typeof operator === 'string'
+    ? operator.trim()
+    : (operator?.name || operator?.id || 'Mobile Money').trim();
+
+  const countryName = typeof country === 'string'
+    ? country.trim()
+    : (country?.name || country?.code || '').trim();
+
+  const countryCode = typeof country === 'object' && country?.code
+    ? country.code.toUpperCase().trim()
+    : '';
+
+  if (!countryName && !countryCode) {
+    return opName;
+  }
+
+  const stripAccents = (str: string) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const cleanOp = stripAccents(opName);
+  const cleanCountry = stripAccents(countryName);
+
+  // Mots significatifs du pays (ex: "burkina", "faso", "ivoire", "senegal", "benin")
+  const countryWords = cleanCountry
+    .split(/[^a-z0-9]+/)
+    .filter(w => w.length >= 3);
+
+  const mentionsCountry =
+    cleanOp.includes(cleanCountry) ||
+    (countryWords.length > 0 && countryWords.some(w => cleanOp.includes(w))) ||
+    (countryCode && (cleanOp.includes(` ${countryCode.toLowerCase()}`) || cleanOp.endsWith(`_${countryCode.toLowerCase()}`)));
+
+  if (mentionsCountry) {
+    return opName;
+  }
+
+  return countryName ? `${opName} (${countryName})` : `${opName} (${countryCode})`;
+}
+
+/**
+ * Génère le message dynamique complet de basculement vers la passerelle de secours
+ */
+export function getDynamicFailoverNotice(
+  operator?: { name?: string; code?: string; id?: string } | string | null,
+  country?: { name?: string; code?: string } | string | null
+): string {
+  const label = formatDynamicOperatorLabel(operator, country);
+  return `Le canal direct ${label} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...`;
+}
+

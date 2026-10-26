@@ -35,7 +35,7 @@ import {
   SCollectionResponse
 } from '../../services/paymentApiService';
 import { getOperatorLogo } from '../../utils/operatorLogos';
-import { ALL_20_COUNTRIES_CONFIG, detectCountryFromPhone, CountryPaymentConfigItem } from '../../utils/countryPaymentConfig';
+import { ALL_20_COUNTRIES_CONFIG, detectCountryFromPhone, CountryPaymentConfigItem, getDynamicFailoverNotice } from '../../utils/countryPaymentConfig';
 
 // =============================================================================
 // TYPES DU CHECKOUT FINTECH ULTIME
@@ -663,10 +663,11 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
       const redirectLink = res.checkout_url || res.redirectUrl || res.provider_link || (res as any).paymentUrl;
       if (redirectLink && typeof window !== 'undefined') {
         if (res.failover) {
+          const failoverMsg = res.message || getDynamicFailoverNotice(selectedOperator, selectedCountry);
           setFailoverAlert({
             active: true,
             url: redirectLink,
-            message: res.message || `Le canal direct ${selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...`
+            message: failoverMsg
           });
           setTimeout(() => {
             window.location.href = redirectLink;
@@ -1680,7 +1681,7 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
                 Canal direct temporairement indisponible
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Le canal direct {selectedOperator.name.toLowerCase().includes('orange') ? 'Orange Money' : selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...
+                {failoverAlert?.message || getDynamicFailoverNotice(selectedOperator, selectedCountry)}
               </p>
             </div>
             <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-amber-300">

@@ -18,6 +18,56 @@ const WaveAdapter = require('./adapters/wave-adapter');
 const { executeFinancialSplit } = require('./split-engine');
 const { processPostPaymentCommunication } = require('./communication-service');
 
+/**
+ * Formate dynamiquement le libellé de l'opérateur et du pays pour les alertes de failover
+ * @param {object} params
+ */
+function getDynamicFailoverMessage(params = {}) {
+  const operatorNameMap = {
+    orange: 'Orange Money',
+    orange_bf: 'Orange Money Burkina',
+    orange_ci: 'Orange Money Côte d\'Ivoire',
+    orange_sn: 'Orange Money Sénégal',
+    moov: 'Moov Money',
+    moov_bf: 'Moov Money Burkina',
+    moov_ci: 'Moov Money Côte d\'Ivoire',
+    moov_bj: 'Moov Money Bénin',
+    mtn: 'MTN Mobile Money',
+    mtn_ci: 'MTN Mobile Money Côte d\'Ivoire',
+    mtn_bj: 'MTN Mobile Money Bénin',
+    wave: 'Wave',
+    wave_ci: 'Wave Côte d\'Ivoire',
+    wave_sn: 'Wave Sénégal',
+    ligdicash: 'LigdiCash',
+    celtiis: 'Celtiis Bénin',
+    airtel: 'Airtel Money',
+    telecel: 'Telecel Faso'
+  };
+
+  const rawOp = String(params.operatorName || params.operator || params.provider || '').trim();
+  const normalizedKey = rawOp.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  
+  let opLabel = params.operatorName || operatorNameMap[normalizedKey] || rawOp || 'Mobile Money';
+  
+  const rawCountry = String(params.country || params.countryCode || '').trim();
+  
+  if (rawCountry) {
+    const stripAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const cleanOp = stripAccents(opLabel);
+    const cleanCountry = stripAccents(rawCountry);
+    const countryWords = cleanCountry.split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+    const mentionsCountry = 
+      cleanOp.includes(cleanCountry) ||
+      (countryWords.length > 0 && countryWords.some(w => cleanOp.includes(w)));
+    
+    if (!mentionsCountry) {
+      opLabel = `${opLabel} (${rawCountry})`;
+    }
+  }
+
+  return `Le canal direct ${opLabel} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...`;
+}
+
 class NaNaSwitchManager {
   constructor() {
     this.adapters = new Map();
@@ -292,7 +342,7 @@ class NaNaSwitchManager {
           failover: true,
           originalGateway: primaryId,
           failoverReason: primaryErr.message,
-          message: 'Redirection vers le canal sécurisé Sebpay'
+          message: getDynamicFailoverMessage(params)
         };
 
         if (options.db) {
@@ -483,5 +533,6 @@ const switchManager = new NaNaSwitchManager();
 
 module.exports = {
   NaNaSwitchManager,
-  switchManager
+  switchManager,
+  getDynamicFailoverMessage
 };

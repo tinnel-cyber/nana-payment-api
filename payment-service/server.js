@@ -1964,16 +1964,20 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
 
     return res.status(200).json({
       success: true,
+      action: initResult.action || (initResult.paymentUrl || initResult.checkout_url ? 'REDIRECT' : 'DIRECT'),
+      failover: Boolean(initResult.failedOver || initResult.failover),
+      failedOver: Boolean(initResult.failedOver || initResult.failover),
+      message: initResult.message || null,
       gateway: finalGateway,
-      failedOver: Boolean(initResult.failedOver),
       originalGateway: initResult.originalGateway || null,
       failoverReason: initResult.failoverReason || null,
       orderId,
       storeId,
       amount: Number(amount),
       currency,
+      checkout_url: initResult.checkout_url || initResult.paymentUrl,
       paymentUrl: initResult.paymentUrl || initResult.checkout_url,
-      redirectUrl: initResult.paymentUrl || initResult.checkout_url,
+      redirectUrl: initResult.redirectUrl || initResult.paymentUrl || initResult.checkout_url,
       transactionId: initResult.transactionId,
       reference: initResult.reference,
       rawResponse: initResult.rawResponse
