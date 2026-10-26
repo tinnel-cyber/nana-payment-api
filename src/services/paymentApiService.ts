@@ -306,9 +306,11 @@ export interface SCollectionRequest {
 
 export interface SCollectionResponse {
   success: boolean;
-  action?: 'redirect' | 'pending';
+  action?: 'redirect' | 'pending' | 'ussd_push';
   provider_link?: string;
   redirectUrl?: string;
+  checkout_url?: string;
+  paymentUrl?: string;
   external_reference?: string;
   orderId?: string;
   tenantId?: string;

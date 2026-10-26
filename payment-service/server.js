@@ -1064,14 +1064,78 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
       return res.status(400).json({ error: 'external_reference requis.' });
     }
 
-    const verifyResult = await getSebpayCollection(externalRef);
+    const parts = externalRef.split('___');
+    const orderId = parts.length > 1 ? parts[1] : externalRef;
+
+    // 1. Vérification prioritaire dans Firestore (Webhook temps réel)
+    if (db) {
+      try {
+        const intentDoc = await db.collection('payment_intents').doc(orderId).get();
+        if (intentDoc.exists) {
+          const iData = intentDoc.data();
+          const isPaid = iData?.isPaid === true || iData?.paid === true || ['PAID', 'COMPLETED', 'SUCCESS'].includes(String(iData?.status || '').toUpperCase());
+          if (isPaid) {
+            return res.json({
+              success: true,
+              isPaid: true,
+              status: 'PAID',
+              orderId,
+              transaction_id: iData.transactionId,
+              amount: iData.amountPaid || iData.amount,
+              currency: iData.currency,
+              gateway: iData.gateway || 'saspay',
+              message: 'Paiement confirmé avec succès.'
+            });
+          }
+
+          // Si l'intention indique SasPay, vérifier auprès de l'API SasPay
+          if (iData?.gateway === 'saspay' || (!iData?.gateway && switchManager.getPrimaryGateway() === 'saspay')) {
+            const sasTxId = iData.transactionId || externalRef;
+            const sasVerify = await verifySaspayPayment(sasTxId).catch(() => null);
+            if (sasVerify) {
+              return res.json({
+                success: sasVerify.isPaid,
+                isPaid: sasVerify.isPaid,
+                status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
+                orderId,
+                transaction_id: sasTxId,
+                amount: sasVerify.amount || iData.amount,
+                currency: sasVerify.currency || iData.currency,
+                gateway: 'saspay',
+                message: sasVerify.isPaid ? 'Paiement validé par SasPay' : 'En attente de validation'
+              });
+            }
+          }
+        }
+      } catch (fbErr) {
+        console.warn('[INTENT FIRESTORE VERIFY NOTICE]', fbErr.message);
+      }
+    }
+
+    // 2. Si la transaction provient de Sebpay ou si non trouvée
+    let verifyResult;
+    try {
+      verifyResult = await getSebpayCollection(externalRef);
+    } catch (sebErr) {
+      // Si Sebpay renvoie 404, tenter la vérification via SasPay
+      const sasVerify = await verifySaspayPayment(externalRef).catch(() => null);
+      if (sasVerify) {
+        verifyResult = {
+          success: sasVerify.isPaid,
+          isPaid: sasVerify.isPaid,
+          status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
+          amount: sasVerify.amount,
+          currency: sasVerify.currency,
+          gateway: 'saspay'
+        };
+      } else {
+        throw sebErr;
+      }
+    }
 
     if (verifyResult.isPaid && db) {
       try {
         const nowServer = admin.firestore.FieldValue.serverTimestamp();
-        const parts = externalRef.split('___');
-        const orderId = parts.length > 1 ? parts[1] : externalRef;
-
         const updatePayload = {
           status: 'COMPLETED',
           paymentStatus: 'PAID',
@@ -1087,21 +1151,23 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
           id: externalRef,
           status: 'completed',
           amount: verifyResult.amount,
-          provider: 'SEBPAY',
+          provider: (verifyResult.gateway || 'SEBPAY').toUpperCase(),
           completedAt: nowServer
         }, { merge: true });
       } catch (dbErr) {
-        console.warn('[FIRESTORE UPDATE FROM SEBPAY GET]', dbErr.message);
+        console.warn('[FIRESTORE UPDATE FROM VERIFY]', dbErr.message);
       }
     }
 
     return res.json(verifyResult);
   } catch (err) {
-    console.error('[SEBPAY VERIFY ERROR]', err);
-    return res.status(500).json({
+    console.error('[UNIVERSAL VERIFY ERROR]', err);
+    return res.status(200).json({
       success: false,
+      isPaid: false,
+      status: 'PENDING',
       error: err.message,
-      details: err.data || null
+      message: 'En cours de validation opérateur'
     });
   }
 });

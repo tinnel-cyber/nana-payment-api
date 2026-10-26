@@ -218,6 +218,7 @@ function resolveSaspayNetwork(countryInput, rawOperator) {
   if (op.includes('afrimoney')) return `afrimoney_${cleanCountry}`;
   if (op.includes('djamo')) return `djamo_${cleanCountry}`;
   if (op.includes('ligdicash')) return `wligdicash_${cleanCountry}`;
+  if (op.includes('zamani')) return `zamani_${cleanCountry}`;
 
   return cInfo.networks[0] || `${op}_${cleanCountry}`;
 }
@@ -511,6 +512,7 @@ async function createSaspayPayin(params) {
   let payload = {};
 
   if (useSoftpay) {
+    const effectiveOtp = (params.otp || params.otpCode || params.otp_code || '').toString().trim();
     payload = {
       amount: formattedAmount,
       currency: currency.toUpperCase(),
@@ -524,6 +526,7 @@ async function createSaspayPayin(params) {
         phone: effectivePhone
       },
       fee_charge_mode: feeChargeMode,
+      ...(effectiveOtp ? { otp: effectiveOtp } : {}),
       metadata: {
         order_id: orderId,
         tenant_id: tenantId,

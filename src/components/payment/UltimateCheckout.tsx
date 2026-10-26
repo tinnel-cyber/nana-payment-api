@@ -657,12 +657,12 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
       setSResponse(res);
       playValidationBeep();
 
-      // Redirection Wave ou application externe si requis
-      if (res.action === 'redirect' && (res.provider_link || res.redirectUrl)) {
-        const link = res.provider_link || res.redirectUrl;
-        if (link && typeof window !== 'undefined') {
-          window.open(link, '_blank');
-        }
+      // Redirection Wave, Orange Web ou application externe si requis
+      const redirectLink = res.checkout_url || res.redirectUrl || res.provider_link || (res as any).paymentUrl;
+      if (redirectLink && typeof window !== 'undefined') {
+        try {
+          window.open(redirectLink, '_blank');
+        } catch {}
       }
 
       // Polling de confirmation sécurisé en tâche de fond (5 secondes)
@@ -1489,18 +1489,34 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
 
             {/* Bouton de secours si le paiement est en cours de traitement */}
             {isProcessingPayment && (
-              <div className="p-4.5 rounded-2xl bg-blue-50/60 border-2 border-blue-300 text-center space-y-2 animate-in fade-in duration-200">
+              <div className="p-4.5 rounded-2xl bg-blue-50/60 border-2 border-blue-300 text-center space-y-3 animate-in fade-in duration-200">
                 <p className="text-xs sm:text-sm text-slate-900 font-bold">
                   En attente du retour de l'opérateur sur votre téléphone...
                 </p>
-                <button
-                  type="button"
-                  onClick={handleManualCheck}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-black inline-flex items-center gap-2 transition cursor-pointer shadow-sm"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>J'ai déjà validé sur mon téléphone</span>
-                </button>
+
+                {/* Bouton d'ouverture directe si une URL de redirection existe (Wave, SasPay Checkout, etc.) */}
+                {sResponse && (sResponse.checkout_url || sResponse.redirectUrl || sResponse.provider_link) && (
+                  <a
+                    href={sResponse.checkout_url || sResponse.redirectUrl || sResponse.provider_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Ouvrir l'application opérateur pour valider</span>
+                  </a>
+                )}
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleManualCheck}
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-black inline-flex items-center gap-2 transition cursor-pointer shadow-sm"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>J'ai déjà validé sur mon téléphone</span>
+                  </button>
+                </div>
               </div>
             )}
 
