@@ -585,7 +585,7 @@ export const SPaymentGateway: React.FC<SPaymentGatewayProps> = ({
                 Canal direct temporairement indisponible
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Le canal direct {selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...
+                Le canal direct {selectedOperator.name.toLowerCase().includes('orange') ? 'Orange Money' : selectedOperator.name} est temporairement indisponible. Redirection sécurisée vers notre passerelle partenaire pour valider votre paiement...
               </p>
             </div>
             <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-amber-300">

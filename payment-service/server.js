@@ -351,6 +351,33 @@ app.post(
   express.raw({ type: 'application/json', limit: '5mb' }),
   async (req, res) => {
     try {
+      const rawBuffer = Buffer.isBuffer(req.body)
+        ? req.body
+        : Buffer.from(req.rawBody || req.body || '', 'utf8');
+
+      // Détection automatique si notification SasPay arrivant sur l'endpoint unifié
+      const isSaspayEvent = Boolean(req.headers['x-webhook-event'] || req.headers['X-Webhook-Event'] || req.headers['x-webhook-timestamp']);
+      if (isSaspayEvent) {
+        const sasSig = req.headers['x-webhook-signature'] || req.headers['X-Webhook-Signature'];
+        const sasTs = req.headers['x-webhook-timestamp'] || req.headers['X-Webhook-Timestamp'];
+        const sigCheck = verifySaspayWebhookSignature(rawBuffer, sasSig, sasTs);
+        if (!sigCheck.valid) {
+          console.warn(`[SECURITY REJECT] Webhook SasPay sur /api/payment/webhook invalide : ${sigCheck.reason}`);
+          return res.status(401).json({ error: `Signature SasPay invalide (${sigCheck.reason})` });
+        }
+        res.status(200).json({ received: true });
+        console.log('[SASPAY WEBHOOK] Reçu et validé sur endpoint unifié /api/payment/webhook (200 OK)');
+        setImmediate(async () => {
+          try {
+            const payload = JSON.parse(rawBuffer.toString('utf8'));
+            await processWebhookTransaction({ ...payload, provider: 'SASPAY' });
+          } catch (e) {
+            console.error('[SASPAY ASYNC WEBHOOK ERROR]', e.message);
+          }
+        });
+        return;
+      }
+
       // 1. Récupération stricte de la signature X-SebPay-Signature
       const sebpaySignature =
         req.get('X-SebPay-Signature') ||
@@ -358,6 +385,8 @@ app.post(
         req.headers['X-SebPay-Signature'] ||
         req.headers['x-webhook-signature'] ||
         req.headers['x-signature-sha256'] ||
+        req.headers['x-signature'] ||
+        req.headers['X-Signature'] ||
         req.headers['x-fedapay-signature'] ||
         req.headers['x-cinetpay-signature'] ||
         req.query.signature;
@@ -377,11 +406,6 @@ app.post(
         console.error('[SECURITY CONFIG ERROR] process.env.SEBPAY_SECRET_KEY (ou SEBPAY_WEBHOOK_SECRET) non configuré.');
         return res.status(500).json({ error: 'Configuration serveur incomplète (Clé secrète Sebpay manquante).' });
       }
-
-      // 2. Récupération du buffer brut (rawBody)
-      const rawBuffer = Buffer.isBuffer(req.body)
-        ? req.body
-        : Buffer.from(req.rawBody || req.body || '', 'utf8');
 
       // 3. Algorithme officiel Sebpay : HMAC-SHA256 hexadécimal à temps constant
       const cleanSignature = String(sebpaySignature).trim().toLowerCase();
