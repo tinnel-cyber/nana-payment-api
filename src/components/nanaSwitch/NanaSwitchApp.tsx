@@ -1927,6 +1927,7 @@ function DocPortalView({ onClose, copyToClipboard }: { onClose: () => void; copy
             { id: 'quickstart', label: 'Démarrage Rapide (Zero-Trust)' },
             { id: 'hmac', label: 'Vérification Signature HMAC' },
             { id: 'pricing', label: 'Débit Crédits (0.02 XOF SaaS)' },
+            { id: 'woocommerce', label: 'Plugin WooCommerce (.zip)' },
           ].map(t => (
             <button
               key={t.id}
@@ -1988,6 +1989,44 @@ function verifyWebhookSignature({ payload, signatureHeader, secretKey }) {
             <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
               <h2 className="text-lg font-bold text-slate-900">3. Modèle Hybride de Facturation (SaaS BYOK)</h2>
               <p>Les requêtes d'API externes sont décomptées à 0.02 XOF par transaction avec coupe-circuit 402 automatique lorsque le solde atteint 0.</p>
+            </div>
+          )}
+
+          {docTab === 'woocommerce' && (
+            <div className="space-y-5 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">Plugin Officiel WooCommerce — NanaSwitch Gateway</h2>
+                  <p className="text-slate-500 text-xs">Version 1.0.0 • Conforme HPOS & WordPress 5.8 à 6.7+</p>
+                </div>
+                <a 
+                  href="/downloads/nanaswitch-gateway.zip" 
+                  download="nanaswitch-gateway.zip"
+                  className="px-4 py-2.5 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-extrabold rounded-xl shadow-md shadow-blue-700/20 transition flex items-center justify-center gap-2 shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Télécharger l'archive .zip</span>
+                </a>
+              </div>
+
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                <h4 className="font-extrabold text-slate-900 text-sm">Guide d'installation pas à pas :</h4>
+                <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
+                  <li>Téléversez l'archive <code>nanaswitch-gateway.zip</code> dans <strong>Extensions &gt; Ajouter &gt; Téléverser</strong> sur votre administration WordPress.</li>
+                  <li>Activez l'extension puis rendez-vous dans <strong>WooCommerce &gt; Réglages &gt; Paiements &gt; NanaSwitch Gateway</strong>.</li>
+                  <li>Sélectionnez votre mode (<code>AGREGATED</code> ou <code>BYOK</code>) et collez votre <strong>Public Key</strong>, <strong>Secret Key</strong> et <strong>Secret Webhook</strong>.</li>
+                </ol>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-bold text-slate-800">Endpoint Webhook REST API automatique :</p>
+                <code className="block p-3.5 bg-slate-900 text-emerald-400 rounded-xl font-mono text-xs select-all">
+                  https://votre-boutique.com/wp-json/nanaswitch/v1/webhook
+                </code>
+                <p className="text-[11px] text-slate-500">
+                  Chaque notification entrante est vérifiée cryptographiquement avec l'en-tête <code>x-nanaswitch-signature</code> (HMAC-SHA256) et une fenêtre anti-rejeu stricte de 5 minutes.
+                </p>
+              </div>
             </div>
           )}
         </main>

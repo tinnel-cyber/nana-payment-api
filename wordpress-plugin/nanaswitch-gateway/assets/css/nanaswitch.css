@@ -1,0 +1,61 @@
+/**
+ * NanaSwitch WooCommerce Gateway Styles
+ */
+
+.nanaswitch-payment-desc {
+  font-size: 0.9em;
+  color: #475569;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.nanaswitch-operators-badge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.nanaswitch-op-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+}
+
+.nanaswitch-op-pill.orange {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+.nanaswitch-op-pill.moov {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.nanaswitch-op-pill.wave {
+  background-color: #f0fdfa;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+
+.nanaswitch-op-pill.mtn {
+  background-color: #fefce8;
+  color: #a16207;
+  border-color: #fef08a;
+}
+
+.nanaswitch-admin-note {
+  background: #f8fafc;
+  border-left: 4px solid #1e40af;
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: 4px;
+}
