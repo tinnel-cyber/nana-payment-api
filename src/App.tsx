@@ -118,6 +118,7 @@ const MarketDirectory = lazyWithRetry(() => import('./components/directory/Marke
 const StoreStudioPage = lazyWithRetry(() => import('./pages/StoreStudioPage'));
 const PublicStorefrontPage = lazyWithRetry(() => import('./pages/PublicStorefrontPage'));
 const NaNaSwitchAppPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchAppPage').then(m => ({ default: m.NaNaSwitchAppPage || m.default })));
+const NanaSwitchApp = React.lazy(() => import('./components/nanaSwitch/NanaSwitchApp').then(m => ({ default: m.NanaSwitchApp || m.default })));
 const WameetSupraApp = React.lazy(() => import('./pages/wameet/WameetSupraApp').then(m => ({ default: m.WameetSupraApp || m.default })));
 const SallesVipDiscoveryScreen = React.lazy(() => import('./components/vip/SallesVipDiscoveryScreen').then(m => ({ default: m.SallesVipDiscoveryScreen || m.default })));
 const SalleVipRoomView = React.lazy(() => import('./components/vip/SalleVipRoomView').then(m => ({ default: m.SalleVipRoomView || m.default })));
@@ -470,6 +471,7 @@ export default function App() {
           if (subMod === 'certificate-hub' || subMod === 'certificats') return 'CERTIFICATE';
           if (subMod === 'wameet-network' || subMod === 'wameet') return 'WAMEET';
           if (subMod === 'salles-vip' || subMod === 'vip') return 'SALLES_VIP';
+          if (subMod === 'nana-switch-app' || subMod === 'nanaswitch' || subMod === 'nanaswitch-app') return 'NANA_SWITCH_APP';
           if (subMod === 'nana-switch' || subMod === 'switch') return 'NANA_SWITCH';
           if (subMod === 'docusign-hub' || subMod === 'docusign') return 'DOCUSIGN';
           if (subMod === 'connectors-webhooks' || subMod === 'connecteurs') return 'SETTINGS_EXTENSIONS';
@@ -546,6 +548,9 @@ export default function App() {
         }
         if (modName === 'market' || modName === 'market-directory' || modName === 'annuaire') {
           return 'MARKET_DIRECTORY';
+        }
+        if (modName === 'nana-switch-app' || modName === 'nanaswitch-app') {
+          return 'NANA_SWITCH_APP';
         }
         if (modName === 'nana-switch' || modName === 'nanaswitch') {
           return 'NANA_SWITCH';
@@ -656,6 +661,20 @@ export default function App() {
         params.get('page') === 'annuaire'
       ) {
         return 'MARKET_DIRECTORY';
+      }
+      if (
+        pathname === '/app/nanaswitch' ||
+        pathname === '/apps/nanaswitch' ||
+        pathname === '/nana-switch-app' ||
+        pathname === '/nanaswitch-app' ||
+        pathname === '/dashboard/nanaswitch' ||
+        pathname === '/dashboard/apps/nana-switch-app' ||
+        params.get('app') === 'nanaswitch' ||
+        params.get('slug') === 'nanaswitch' ||
+        params.get('view') === 'nanaswitch_app' ||
+        params.get('view') === 'nana-switch-app'
+      ) {
+        return 'NANA_SWITCH_APP';
       }
       if (
         pathname === '/nana-switch' ||
@@ -1227,6 +1246,7 @@ export default function App() {
           if (subMod === 'certificate-hub' || subMod === 'certificats') return 'CERTIFICATE';
           if (subMod === 'wameet-network' || subMod === 'wameet') return 'WAMEET';
           if (subMod === 'salles-vip' || subMod === 'vip') return 'SALLES_VIP';
+          if (subMod === 'nana-switch-app' || subMod === 'nanaswitch' || subMod === 'nanaswitch-app') return 'NANA_SWITCH_APP';
           if (subMod === 'nana-switch' || subMod === 'switch') return 'NANA_SWITCH';
           if (subMod === 'docusign-hub' || subMod === 'docusign') return 'DOCUSIGN';
           if (subMod === 'connectors-webhooks' || subMod === 'connecteurs') return 'SETTINGS_EXTENSIONS';
@@ -1350,6 +1370,10 @@ export default function App() {
         if (modName === 'crm' || modName === 'crm-dashboard') {
           setIsCrmDashboardView(true);
           setCurrentView('CRM_DASHBOARD');
+          return;
+        }
+        if (modName === 'nana-switch-app' || modName === 'nanaswitch-app') {
+          setCurrentView('NANA_SWITCH_APP');
           return;
         }
         if (modName === 'nana-switch' || modName === 'nanaswitch') {
@@ -1776,6 +1800,24 @@ export default function App() {
         setShowWelcomeShowcase(false);
       }
 
+
+      // NaNaSwitch Partenaires B2B App (/app/nanaswitch, /dashboard/nanaswitch, /nana-switch-app)
+      if (
+        pathname === '/app/nanaswitch' ||
+        pathname === '/apps/nanaswitch' ||
+        pathname === '/nana-switch-app' ||
+        pathname === '/nanaswitch-app' ||
+        pathname === '/dashboard/nanaswitch' ||
+        pathname === '/dashboard/apps/nana-switch-app' ||
+        params.get('app') === 'nanaswitch' ||
+        params.get('slug') === 'nanaswitch' ||
+        params.get('view') === 'nanaswitch_app' ||
+        params.get('view') === 'nana-switch-app'
+      ) {
+        setCurrentView('NANA_SWITCH_APP');
+        setShowWelcomeShowcase(false);
+        return;
+      }
 
       // Landing NaNaSwitch Cloud (/nana-switch)
       if (
@@ -5168,6 +5210,20 @@ export default function App() {
       <ModuleErrorBoundary moduleName="Multi-Tenant - NaNaSwitch Cloud">
         <React.Suspense fallback={<LoadingScreen message="Connexion à NaNaSwitch Cloud..." />}>
           <NaNaSwitchAppPage />
+        </React.Suspense>
+      </ModuleErrorBoundary>
+    );
+  }
+
+  // 1cc. NaNaSwitch Partenaires B2B App : Application modulaire & multi-tenant B2B (/app/nanaswitch, /dashboard/nanaswitch, /nana-switch-app)
+  if (
+    currentView === 'NANA_SWITCH_APP' ||
+    currentView === 'nana_switch_app'
+  ) {
+    return (
+      <ModuleErrorBoundary moduleName="NaNaSwitch - Application Partenaire">
+        <React.Suspense fallback={<LoadingScreen message="Connexion à NanaSwitch App..." />}>
+          <NanaSwitchApp onBack={() => { setCurrentView('MASTER_HUB'); window.history.pushState({}, '', '/'); }} />
         </React.Suspense>
       </ModuleErrorBoundary>
     );

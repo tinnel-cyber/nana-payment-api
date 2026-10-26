@@ -38,6 +38,7 @@ const AffiliateDashboardModal = lazy(() => import('../AffiliateDashboardModal').
 const MarketDirectory = lazy(() => import('../directory/MarketDirectory'));
 const DocuSignHub = lazy(() => import('../DocuSignHub').then(m => ({ default: m.DocuSignHub })));
 const SettingsExtensionsView = lazy(() => import('../SettingsExtensionsView').then(m => ({ default: m.SettingsExtensionsView })));
+const NanaSwitchApp = lazy(() => import('../nanaSwitch/NanaSwitchApp').then(m => ({ default: m.NanaSwitchApp || m.default })));
 
 export interface StandaloneAppHostProps {
   appId: string;
@@ -358,6 +359,19 @@ export const StandaloneAppHost: React.FC<StandaloneAppHostProps> = ({
                   <SettingsExtensionsView
                     currentUser={currentUser}
                     onClose={() => onNavigate('MASTER_HUB')}
+                  />
+                </div>
+              );
+            }
+
+            // NaNaSwitch Partenaires B2B App
+            if (id === 'nana-switch-app' || id === 'nanaswitch' || id === 'nanaswitch-app') {
+              return (
+                <div className="w-full">
+                  <NanaSwitchApp
+                    slug={id}
+                    embedded={true}
+                    onBack={() => onNavigate('MASTER_HUB')}
                   />
                 </div>
               );

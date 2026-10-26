@@ -366,6 +366,26 @@ export const APPS_REGISTRY: AppRegistryItem[] = [
 
   // 3. Finances & Trésorerie
   {
+    id: "nana-switch-app",
+    appName: "NanaSwitch Partenaires B2B",
+    appLogo: "/assets/icons/apps/pos.svg",
+    shortDescription: "Hub de paiements unifié UEMOA, onboarding KYC dynamique et gestion des clés API & Webhooks.",
+    category: "Finances & Trésorerie",
+    keywords: ["nanaswitch", "switch", "paiement", "b2b", "mobile money", "orange", "moov", "wave", "kyc", "webhook"],
+    route: "/dashboard/apps/nana-switch-app",
+    installationType: "pwa_ready",
+    trialType: "freemium",
+    priceMonthly: 0,
+    palmares: "⚡ 14+ modules marchands unifiés",
+    badgePalmares: "🛡️ Certifié Zero-Trust HMAC",
+    trialLabel: "Accès Partenaire",
+    isPopular: true,
+    targetView: "NANA_SWITCH_APP",
+    taxonomyType: "Application",
+    badge: "Fintech B2B",
+    rating: 5.0
+  },
+  {
     id: "reports-analytics",
     appName: "Analytique & Courbe des Gains",
     appLogo: "/assets/icons/apps/pos.svg",
