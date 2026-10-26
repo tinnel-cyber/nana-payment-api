@@ -104,7 +104,7 @@ function getSaspayBaseUrl() {
  */
 function getSaspayApiKey() {
   const rawKey = process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '';
-  return String(rawKey).trim().replace(/[\r\n\t]/g, '');
+  return String(rawKey).replace(/\s+/g, '').trim();
 }
 
 /**
@@ -171,16 +171,16 @@ function getOrGenerateIdempotencyKey(key) {
  * Construit les en-têtes HTTP officiels SasPay (avec Authorization nettoyé)
  */
 function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
-  const apiKey = getSaspayApiKey();
+  const cleanKey = (process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '').replace(/\s+/g, '').trim();
   const headers = {
-    'Authorization': `Bearer ${apiKey}`,
+    'Authorization': `Bearer ${cleanKey}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     ...customHeaders
   };
 
   if (idempotencyKey) {
-    headers['Idempotency-Key'] = String(idempotencyKey).trim().replace(/[\r\n\t]/g, '');
+    headers['Idempotency-Key'] = String(idempotencyKey).replace(/\s+/g, '').trim();
   }
 
   return headers;
