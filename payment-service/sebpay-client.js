@@ -207,34 +207,32 @@ function formatLocalPhoneNumber(phone) {
 }
 
 /**
- * Nettoie et formate un numéro de téléphone pour le Burkina Faso en y ajoutant l'indicatif 226
- * Conforme aux spécifications officielles de l'API Sebpay (ex: 22670123456 pour Orange BF)
+ * Nettoie et formate un numéro de téléphone pour le Burkina Faso (strictement format local à 8 chiffres)
+ * Requis par Orange Burkina Faso pour éviter le rejet opérateur
  * 
- * @param {string|number} phone - Numéro de téléphone brut
- * @returns {string} Numéro au format international sans '+' (ex: '22670123456')
+ * @param {string|number} phone - Numéro de téléphone brut (ex: '+22665565805', '22665565805')
+ * @returns {string} Numéro épuré à 8 chiffres (ex: '65565805')
  */
 function formatBurkinaPhoneNumber(phone) {
-  if (!phone) return '';
-  const local8 = formatLocalPhoneNumber(phone);
-  return local8.length === 8 ? `226${local8}` : local8;
+  return formatLocalPhoneNumber(phone);
 }
 
 /**
  * Formate le numéro de téléphone selon les exigences de l'API Sebpay par pays
- * - BF (Burkina Faso) : force l'indicatif 226 (ex: '22670123456' - 11 chiffres)
- * - CI (Côte d'Ivoire) : force l'indicatif 225 (ex: '2250700000000' - 13 chiffres)
+ * - BF (Burkina Faso) : force strictement le format local à 8 chiffres (ex: '65565805')
+ * - CI (Côte d'Ivoire) : force l'indicatif 225
  * - Autres pays : préfixe officiel sans le '+'
  * 
  * @param {string|number} phone - Numéro de téléphone brut
  * @param {string} countryIso - Code ISO du pays (ex: 'BF', 'CI')
- * @returns {string} Numéro international sans '+'
+ * @returns {string} Numéro formaté
  */
 function formatSebpayPhoneNumber(phone, countryIso = 'BF') {
   if (!phone) return '';
   const iso = String(countryIso || 'BF').toUpperCase();
 
   if (iso === 'BF') {
-    return formatBurkinaPhoneNumber(phone);
+    return formatLocalPhoneNumber(phone);
   }
 
   let cleaned = String(phone).replace(/\D/g, '');

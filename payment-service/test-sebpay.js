@@ -76,7 +76,7 @@ const isPhoneFormatOk =
   testPhone4 === '70123456' &&
   testPhone5 === '76543210';
 
-console.log('\n=== TEST FORMATAGE NUMÉRO AVEC INDICATIF 226 (BURKINA FASO) ===');
+console.log('\n=== TEST FORMATAGE NUMÉRO LOCAL STRICT 8 CHIFFRES (BURKINA FASO) ===');
 const testBfPhone1 = formatBurkinaPhoneNumber('+22670123456');
 const testBfPhone2 = formatBurkinaPhoneNumber('22670123456');
 const testBfPhone3 = formatBurkinaPhoneNumber('00226 70 12 34 56');
@@ -90,11 +90,11 @@ console.log('  70123456          ->', testBfPhone4);
 console.log('  +226 76-54-32-10  ->', testBfPhone5);
 
 const isBfPhoneFormatOk =
-  testBfPhone1 === '22670123456' &&
-  testBfPhone2 === '22670123456' &&
-  testBfPhone3 === '22670123456' &&
-  testBfPhone4 === '22670123456' &&
-  testBfPhone5 === '22676543210';
+  testBfPhone1 === '70123456' &&
+  testBfPhone2 === '70123456' &&
+  testBfPhone3 === '70123456' &&
+  testBfPhone4 === '70123456' &&
+  testBfPhone5 === '76543210';
 
 console.log('\n=== TEST CONFORMITÉ OPÉRATEUR ORANGE BF ===');
 const { normalizeSebpayOperator } = require('./sebpay-client');
