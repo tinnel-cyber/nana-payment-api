@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { DeveloperTab } from '../dashboard/DeveloperTab';
 import { KycVolumeLimitCard } from '../dashboard/KycVolumeLimitCard';
+import { NanaDocPortalApp } from './NanaDocPortalApp';
 import { db, auth } from '../../firebase';
 import { 
   collection, 
@@ -704,7 +705,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
 
       {/* DOCUMENTATION PORTAL VIEW */}
       {showDocPortal ? (
-        <DocPortalView onClose={() => setShowDocPortal(false)} copyToClipboard={copyToClipboard} />
+        <NanaDocPortalApp onClose={() => setShowDocPortal(false)} copyToClipboard={copyToClipboard} />
       ) : selectedApp ? (
         /* MAIN MERCHANT DASHBOARD VIEW (14+ MODULES) */
         <div className="flex min-h-[calc(100vh-65px)]">
@@ -1904,135 +1905,9 @@ function TabSettings({ app, onUpgradeClick }: { app: NanaMerchantApp; onUpgradeC
   );
 }
 
-/* DOCUMENTATION PORTAL ISOLATED VIEW */
+/* DOCUMENTATION PORTAL ISOLATED VIEW (DELEGATED TO NanaDocPortalApp) */
 function DocPortalView({ onClose, copyToClipboard }: { onClose: () => void; copyToClipboard: (t?: string, l?: string) => void }) {
-  const [docTab, setDocTab] = useState('quickstart');
-
-  return (
-    <div className="max-w-6xl mx-auto px-6 py-10 space-y-8 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between border-b border-slate-200 pb-6">
-        <div>
-          <span className="text-xs font-bold text-[#1E40AF] uppercase tracking-widest">Portail Développeur</span>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Documentation API NanaSwitch Cloud</h1>
-          <p className="text-slate-500 text-xs mt-1">Intégrez rapidement l'API Zero-Trust et vérifiez vos signatures Webhooks HMAC-SHA256.</p>
-        </div>
-        <button onClick={onClose} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
-          Fermer la Doc
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="space-y-1">
-          {[
-            { id: 'quickstart', label: 'Démarrage Rapide (Zero-Trust)' },
-            { id: 'hmac', label: 'Vérification Signature HMAC' },
-            { id: 'pricing', label: 'Débit Crédits (0.02 XOF SaaS)' },
-            { id: 'woocommerce', label: 'Plugin WooCommerce (.zip)' },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setDocTab(t.id)}
-              className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition ${docTab === t.id ? 'bg-[#1E40AF] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </aside>
-
-        <main className="lg:col-span-3 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-          {docTab === 'quickstart' && (
-            <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
-              <h2 className="text-lg font-bold text-slate-900">1. Authentification Header</h2>
-              <p>Chaque requête backend doit comporter la clé secrète dans l'en-tête HTTP <code className="bg-slate-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">x-nanaswitch-skey</code>.</p>
-              <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto">
-{`const response = await fetch('${PAYMENT_API_BASE}/api/payments/initiate', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-nanaswitch-skey': 'ns_live_sk_YOUR_SECRET_KEY'
-  },
-  body: JSON.stringify({
-    amount: 10000,
-    currency: 'XOF',
-    customerPhone: '+22670000000',
-    country: 'BF'
-  })
-});`}
-              </pre>
-            </div>
-          )}
-
-          {docTab === 'hmac' && (
-            <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
-              <h2 className="text-lg font-bold text-slate-900">2. Verification Helper HMAC-SHA256 (Node.js)</h2>
-              <p>Validez les webhooks entrants pour prévenir les attaques par rejeu.</p>
-              <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto">
-{`const crypto = require('crypto');
-
-function verifyWebhookSignature({ payload, signatureHeader, secretKey }) {
-  const parts = signatureHeader.split(',');
-  const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1];
-  const signature = parts.find(p => p.startsWith('v1='))?.split('=')[1];
-
-  const expectedHash = crypto
-    .createHmac('sha256', secretKey)
-    .update(\`\${timestamp}.\${payload}\`)
-    .digest('hex');
-
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedHash));
-}`}
-              </pre>
-            </div>
-          )}
-
-          {docTab === 'pricing' && (
-            <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
-              <h2 className="text-lg font-bold text-slate-900">3. Modèle Hybride de Facturation (SaaS BYOK)</h2>
-              <p>Les requêtes d'API externes sont décomptées à 0.02 XOF par transaction avec coupe-circuit 402 automatique lorsque le solde atteint 0.</p>
-            </div>
-          )}
-
-          {docTab === 'woocommerce' && (
-            <div className="space-y-5 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900">Plugin Officiel WooCommerce — NanaSwitch Gateway</h2>
-                  <p className="text-slate-500 text-xs">Version 1.0.0 • Conforme HPOS & WordPress 5.8 à 6.7+</p>
-                </div>
-                <a 
-                  href="/downloads/nanaswitch-gateway.zip" 
-                  download="nanaswitch-gateway.zip"
-                  className="px-4 py-2.5 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-extrabold rounded-xl shadow-md shadow-blue-700/20 transition flex items-center justify-center gap-2 shrink-0"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Télécharger l'archive .zip</span>
-                </a>
-              </div>
-
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                <h4 className="font-extrabold text-slate-900 text-sm">Guide d'installation pas à pas :</h4>
-                <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
-                  <li>Téléversez l'archive <code>nanaswitch-gateway.zip</code> dans <strong>Extensions &gt; Ajouter &gt; Téléverser</strong> sur votre administration WordPress.</li>
-                  <li>Activez l'extension puis rendez-vous dans <strong>WooCommerce &gt; Réglages &gt; Paiements &gt; NanaSwitch Gateway</strong>.</li>
-                  <li>Sélectionnez votre mode (<code>AGREGATED</code> ou <code>BYOK</code>) et collez votre <strong>Public Key</strong>, <strong>Secret Key</strong> et <strong>Secret Webhook</strong>.</li>
-                </ol>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-bold text-slate-800">Endpoint Webhook REST API automatique :</p>
-                <code className="block p-3.5 bg-slate-900 text-emerald-400 rounded-xl font-mono text-xs select-all">
-                  https://votre-boutique.com/wp-json/nanaswitch/v1/webhook
-                </code>
-                <p className="text-[11px] text-slate-500">
-                  Chaque notification entrante est vérifiée cryptographiquement avec l'en-tête <code>x-nanaswitch-signature</code> (HMAC-SHA256) et une fenêtre anti-rejeu stricte de 5 minutes.
-                </p>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+  return <NanaDocPortalApp onClose={onClose} copyToClipboard={copyToClipboard} />;
 }
 
 /* DYNAMIC MULTI-STEP KYC ONBOARDING MODAL */
