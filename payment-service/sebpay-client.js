@@ -1528,12 +1528,138 @@ function getSebpayAxiosConfig(customConfig = {}) {
   };
 }
 
+/**
+ * Grille tarifaire officielle Sebpay (Frais PayIn Collections & PayOut Payouts)
+ * - Collections (PayIn) : frais déduits du montant reçu par le marchand
+ * - Payouts (PayOut) : frais ajoutés au montant et prélevés sur le wallet
+ */
+const SEBPAY_FEE_RATES = {
+  collection: {
+    BJ: 2.7, // Bénin : 2,7 %
+    BF: 4.0, // Burkina Faso : 4 %
+    CM: 3.5, // Cameroun : 3,5 %
+    CG: 4.5, // Congo : 4,5 %
+    CI: 2.5, // Côte d'Ivoire : 2,5 %
+    GA: 4.5, // Gabon : 4,5 %
+    GM: 4.0, // Gambie : 4 %
+    GH: 3.5, // Ghana : 3,5 %
+    GN: 4.5, // Guinée Conakry : 4,5 %
+    GW: 6.5, // Guinée-Bissau : 6,5 %
+    KE: 3.5, // Kenya : 3,5 %
+    ML: 4.5, // Mali : 4,5 %
+    NE: 5.5, // Niger : 5,5 %
+    NG: 3.5, // Nigéria : 3,5 %
+    UG: 4.0, // Ouganda : 4 %
+    CD: 5.5, // R.D.C : 5,5 %
+    SN: 3.0, // Sénégal : 3 %
+    TZ: 4.5, // Tanzanie : 4,5 %
+    TD: 7.0, // Tchad : 7 %
+    TG: 4.5  // Togo : 4,5 %
+  },
+  payout: {
+    BJ: 1.9, // Bénin : 1,9 %
+    BF: 2.5, // Burkina Faso : 2,5 %
+    CM: 2.5, // Cameroun : 2,5 %
+    CG: 2.5, // Congo : 2,5 %
+    CI: 2.5, // Côte d'Ivoire : 2,5 %
+    GA: 2.5, // Gabon : 2,5 %
+    GM: 4.5, // Gambie : 4,5 %
+    GH: 2.5, // Ghana : 2,5 %
+    GN: 2.5, // Guinée Conakry : 2,5 %
+    GW: 3.5, // Guinée-Bissau : 3,5 %
+    KE: 2.5, // Kenya : 2,5 %
+    ML: 2.5, // Mali : 2,5 %
+    NE: 2.5, // Niger : 2,5 %
+    NG: 2.5, // Nigéria : 2,5 %
+    UG: 5.0, // Ouganda : 5 %
+    CD: 5.0, // R.D.C : 5 %
+    SN: 2.5, // Sénégal : 2,5 %
+    TZ: 5.0, // Tanzanie : 5 %
+    TD: 3.5, // Tchad : 3,5 %
+    TG: 3.5  // Togo : 3,5 %
+  }
+};
+
+/**
+ * Calcule les frais d'une transaction via l'endpoint officiel Sebpay GET /c/calculate-fee
+ * ou via la grille locale certifiée en cas de secours.
+ * 
+ * @param {object} options
+ * @param {number} options.amount - Montant en devise locale (ex: 10000 XOF)
+ * @param {string} [options.country='BF'] - Code ISO du pays (ex: 'bf', 'ci', 'bj')
+ * @param {string} [options.transactionType='collection'] - 'collection' (PayIn) ou 'payout' (PayOut)
+ * @returns {Promise<{ fee_amount: number, fee_percentage: number, net_amount: number, total_debit: number, pricing: string, currency: string }>}
+ */
+async function calculateSebpayFee({ amount, country = 'BF', transactionType = 'collection' } = {}) {
+  const numAmount = Math.max(0, Number(amount) || 0);
+  const cleanType = String(transactionType).toLowerCase() === 'payout' ? 'payout' : 'collection';
+  const cleanCountry = String(country || 'BF').trim().toUpperCase();
+  const lowerCountry = cleanCountry.toLowerCase();
+
+  // Tentative en direct via GET /api/v1/c/calculate-fee (avec clés API pour obtenir le tarif exact du compte)
+  try {
+    const params = new URLSearchParams({
+      amount: String(numAmount),
+      transaction_type: cleanType
+    });
+    if (cleanType === 'payout') {
+      params.append('destination_country', lowerCountry);
+    } else {
+      params.append('source_country', lowerCountry);
+    }
+
+    const rawRes = await callSebpayApi(`c/calculate-fee?${params.toString()}`, {
+      method: 'GET'
+    });
+
+    let innerData = rawRes?.data;
+    if (innerData && typeof innerData === 'object' && innerData.data) {
+      innerData = innerData.data;
+    }
+    const feeData = innerData || rawRes;
+    const feeAmount = Number(feeData?.fee_amount || 0);
+    const feePercentage = Number(feeData?.fee_percentage || (numAmount > 0 ? (feeAmount / numAmount) * 100 : 0));
+
+    return {
+      success: true,
+      amount: numAmount,
+      country: cleanCountry,
+      transaction_type: cleanType,
+      fee_amount: feeAmount,
+      fee_percentage: feePercentage,
+      net_amount: cleanType === 'collection' ? Math.max(0, numAmount - feeAmount) : numAmount,
+      total_debit: cleanType === 'payout' ? numAmount + feeAmount : numAmount,
+      pricing: feeData?.pricing || 'account',
+      message: rawRes?.message || 'Frais calculés avec succès.'
+    };
+  } catch (apiErr) {
+    // Repli résilient sur la grille standard certifiée Sebpay
+    const rates = SEBPAY_FEE_RATES[cleanType] || SEBPAY_FEE_RATES.collection;
+    const ratePercent = typeof rates[cleanCountry] === 'number' ? rates[cleanCountry] : 4.0;
+    const calculatedFee = Math.round(numAmount * (ratePercent / 100));
+
+    return {
+      success: true,
+      amount: numAmount,
+      country: cleanCountry,
+      transaction_type: cleanType,
+      fee_amount: calculatedFee,
+      fee_percentage: ratePercent,
+      net_amount: cleanType === 'collection' ? Math.max(0, numAmount - calculatedFee) : numAmount,
+      total_debit: cleanType === 'payout' ? numAmount + calculatedFee : numAmount,
+      pricing: 'standard_fallback',
+      message: 'Frais calculés via la grille tarifaire standard Sebpay.'
+    };
+  }
+}
+
 module.exports = {
   SEBPAY_DEFAULT_BASE_URL,
   SUPPORTED_COUNTRIES,
   SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
   SEBPAY_COUNTRY_OPERATORS,
   SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY,
+  SEBPAY_FEE_RATES,
   BF_OPERATORS_MAP,
   formatLocalPhoneNumber,
   formatBurkinaPhoneNumber,
@@ -1541,6 +1667,7 @@ module.exports = {
   resolveCountryAndCurrency,
   normalizeSebpayOperator,
   resolveSebpayOperatorDetails,
+  calculateSebpayFee,
   getSebpayBaseUrl,
   getSebpayHeaders,
   getSebpayConfigStatus,

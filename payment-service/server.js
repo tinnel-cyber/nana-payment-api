@@ -26,6 +26,7 @@ const { FIXIE_URL, fetchViaFixie, getOutboundIp } = require('./fixie-proxy');
 const {
   SEBPAY_DEFAULT_BASE_URL,
   SEBPAY_SUPPORTED_COUNTRIES_FALLBACK,
+  SEBPAY_FEE_RATES,
   getSebpayBaseUrl,
   getSebpayHeaders,
   getSebpayConfigStatus,
@@ -33,7 +34,8 @@ const {
   createSebpayCollection,
   getSebpayCollection,
   getSebpayCountries,
-  getSebpayOperators
+  getSebpayOperators,
+  calculateSebpayFee
 } = require('./sebpay-client');
 const {
   createSaspayPayin,
@@ -1123,6 +1125,23 @@ app.get(['/api/payment/operators', '/api/payment/sebpay/operators'], async (req,
     return res.status(200).json(result);
   } catch (err) {
     console.error('[OPERATORS API ERROR]', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================================================
+// ROUTE 3g : Calcul des Frais Sebpay en temps réel (GET /api/payment/sebpay/fees)
+// ============================================================================
+app.get(['/api/payment/sebpay/fees', '/api/payment/sebpay/calculate-fee'], async (req, res) => {
+  try {
+    const amount = Number(req.query.amount || req.query.montant || 0);
+    const country = req.query.country || req.query.country_code || req.query.countryCode || req.query.source_country || 'BF';
+    const transactionType = req.query.transaction_type || req.query.type || 'collection';
+
+    const result = await calculateSebpayFee({ amount, country, transactionType });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[SEBPAY FEES API ERROR]', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
