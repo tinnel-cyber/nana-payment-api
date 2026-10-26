@@ -140,6 +140,11 @@ class NaNaSwitchManager {
   isEligibleForFailover(err) {
     if (!err) return false;
 
+    // Ne JAMAIS failover sur une erreur de validation client (OTP manquant ou numéro invalide)
+    if (err.code === 'OTP_REQUIRED' || err.code === 'INVALID_PHONE_NUMBER') {
+      return false;
+    }
+
     // Erreurs d'API ou HTTP (400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504...)
     const status = Number(err.status || err.statusCode || err.response?.status || 0);
     if (status >= 400 && status <= 599) {

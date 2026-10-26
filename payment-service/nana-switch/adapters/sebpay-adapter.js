@@ -59,7 +59,8 @@ class SebpayAdapter extends PaymentGatewayAdapter {
 
     const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
     const resolvedPhone = customerPhone || phone || '+22670000000';
-    const effectiveOtp = params.otpCode || params.otp || params.otp_code || params.authorization_code || otpCode;
+    const isLigdicash = String(operator || params.provider || '').toLowerCase().includes('ligdicash');
+    const effectiveOtp = isLigdicash ? '' : (params.otpCode || params.otp || params.otp_code || params.authorization_code || otpCode || '');
 
     const sebpayPayload = {
       tenantId: `nanasore_${cleanShopName}`,
@@ -78,9 +79,6 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       provider: operator,
       operator_code: operator,
       slug: operator,
-      otpCode: effectiveOtp,
-      otp: effectiveOtp,
-      otp_code: effectiveOtp,
       description: description.substring(0, 120),
       external_reference: externalReference,
       externalReference,
@@ -93,18 +91,28 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       }
     };
 
-    console.log(`[SEBPAY ADAPTER] Initiation paiement pour commande ${orderId} (${amount} ${currency})...`);
+    if (effectiveOtp) {
+      sebpayPayload.otpCode = effectiveOtp;
+      sebpayPayload.otp = effectiveOtp;
+      sebpayPayload.otp_code = effectiveOtp;
+    }
+
+    console.log(`[SEBPAY ADAPTER] Initiation paiement pour commande ${orderId} (${amount} ${currency}) via Sebpay...`);
     const sebpayRes = await createSebpayCollection(sebpayPayload);
 
-    // Extraction de l'URL de paiement Sebpay
+    // Extraction robuste du lien de redirection (Spécifique LigdiCash / Wave / Checkout link Sebpay)
     const paymentUrl =
-      sebpayRes.payment_url ||
+      sebpayRes.provider_link ||
       sebpayRes.checkout_url ||
-      sebpayRes.url ||
-      sebpayRes.data?.payment_url ||
+      sebpayRes.payment_url ||
+      sebpayRes.redirectUrl ||
+      sebpayRes.paymentUrl ||
+      sebpayRes.data?.provider_link ||
       sebpayRes.data?.checkout_url ||
+      sebpayRes.data?.payment_url ||
+      sebpayRes.data?.redirect_url ||
       sebpayRes.data?.url ||
-      `https://checkout.sebpay.bj/pay/${sebpayRes.transaction_id || sebpayRes.data?.transaction_id || orderId}`;
+      null;
 
     const transactionId = String(
       sebpayRes.transaction_id ||
@@ -120,7 +128,7 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       checkout_url: paymentUrl,
       redirectUrl: paymentUrl,
       provider_link: paymentUrl,
-      action: sebpayRes.action || 'redirect',
+      action: paymentUrl ? 'redirect' : (sebpayRes.action || 'pending'),
       transactionId,
       reference: externalReference,
       orderId,

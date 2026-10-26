@@ -657,12 +657,11 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
       setSResponse(res);
       playValidationBeep();
 
-      // Redirection Wave, Orange Web ou application externe si requis
+      // Redirection immédiate pour LigdiCash, Wave ou passerelle externe
       const redirectLink = res.checkout_url || res.redirectUrl || res.provider_link || (res as any).paymentUrl;
       if (redirectLink && typeof window !== 'undefined') {
-        try {
-          window.open(redirectLink, '_blank');
-        } catch {}
+        window.location.href = redirectLink;
+        return;
       }
 
       // Pas de polling automatique en boucle : écoute temps réel via Firestore onSnapshot & Webhook
@@ -1360,7 +1359,7 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
             )}
 
             {/* CHAMPS D'ACTION */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4.5">
+            <div className={`grid grid-cols-1 ${selectedOperator.needsOtp ? 'sm:grid-cols-2' : ''} gap-4.5`}>
               
               {/* Le champ Numéro : Récupère le state de l'Étape 1 MAIS reste modifiable ! */}
               <div className="space-y-1.5">
@@ -1389,29 +1388,29 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
                 </p>
               </div>
 
-              {/* Champ "Code OTP" stylisé avec texte d'aide */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm sm:text-base font-black text-slate-950 block">
-                    Code OTP {selectedOperator.needsOtp ? <span className="text-rose-600">*</span> : '(Si requis)'}
-                  </label>
-                  {selectedOperator.needsOtp && (
+              {/* Champ "Code OTP" affiché STRICTEMENT si l'opérateur en a besoin (Orange Money) */}
+              {selectedOperator.needsOtp && (
+                <div className="space-y-1.5 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm sm:text-base font-black text-slate-950 block">
+                      Code OTP <span className="text-rose-600">*</span>
+                    </label>
                     <span className="text-xs text-amber-700 font-black">
                       Généré par {selectedOperator.name}
                     </span>
-                  )}
+                  </div>
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="Code OTP à 4 ou 6 chiffres"
+                    className="w-full px-4 py-3.5 rounded-2xl bg-white border-2 border-blue-200 text-base sm:text-lg font-mono font-black tracking-widest text-center text-slate-950 transition duration-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                  />
+                  <p className="text-xs sm:text-sm text-slate-700 font-semibold pl-1">
+                    Saisissez le code secret généré par l'opérateur pour autoriser la transaction.
+                  </p>
                 </div>
-                <input
-                  type="text"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="Code OTP à 4 ou 6 chiffres"
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white border-2 border-blue-200 text-base sm:text-lg font-mono font-black tracking-widest text-center text-slate-950 transition duration-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
-                />
-                <p className="text-xs sm:text-sm text-slate-700 font-semibold pl-1">
-                  Saisissez le code secret généré par l'opérateur pour autoriser la transaction.
-                </p>
-              </div>
+              )}
 
             </div>
 

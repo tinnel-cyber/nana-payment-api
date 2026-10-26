@@ -758,6 +758,7 @@ async function createSebpayCollection(params) {
   // Normalisation universelle du code opérateur pour l'API Sebpay
   const rawOperator = operator || customPayload.operator || customPayload.provider || params.provider || params.operator_code || params.slug || '';
   const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
+  const isLigdicash = String(rawOperator || normalizedOperator || '').toLowerCase().includes('ligdicash');
 
   // 1. Validation préalable du format téléphonique (minimum 8 chiffres requis)
   const localPhoneNumber = formatLocalPhoneNumber(effectivePhone);
@@ -771,6 +772,12 @@ async function createSebpayCollection(params) {
 
   // 2. Vérification préalable dynamique des opérateurs (GET /operators?country=...)
   const operatorDetails = await resolveSebpayOperatorDetails(countryIso, rawOperator);
+
+  // Pour LigdiCash (mode Wallet / Checkout redirection) : désactivation absolue de l'OTP
+  if (isLigdicash) {
+    operatorDetails.otp_required = false;
+  }
+
   console.log(`[SEBPAY GUARD] Opérateur vérifié pour ${countryIso} : ${operatorDetails.name} [slug: "${operatorDetails.slug}", code: "${operatorDetails.code}", id: "${operatorDetails.id}", otp_required: ${operatorDetails.otp_required}]`);
 
   // Extraction polyvalente du code d'autorisation temporaire (OTP) Orange Money
@@ -786,7 +793,8 @@ async function createSebpayCollection(params) {
   ).trim();
 
   // 3. Contrôle strict de l'OTP : Si l'opérateur exige un OTP (Orange BF), refuser catégoriquement si absent
-  if (operatorDetails.otp_required) {
+  // Ne s'applique JAMAIS à LigdiCash
+  if (!isLigdicash && operatorDetails.otp_required) {
     if (!effectiveOtp || effectiveOtp.length < 4) {
       console.error(`[SEBPAY GUARD] Opérateur introuvable ou OTP manquant : L'opérateur ${operatorDetails.name} (${operatorDetails.slug}) au ${countryIso} exige obligatoirement un code OTP. Requête bloquée avant POST /collections.`);
       const otpErr = new Error(`Le code d'autorisation temporaire (OTP) est obligatoire pour valider le paiement via ${operatorDetails.name}. Veuillez composer le code USSD ${operatorDetails.ussd_code || '*144*4*6*montant#'} sur votre mobile Orange pour générer votre code OTP.`);
@@ -855,11 +863,11 @@ async function createSebpayCollection(params) {
   if (customerEmail) {
     body.customer_email = String(customerEmail).trim();
   }
-  if (effectiveOtp) {
+  if (!isLigdicash && effectiveOtp) {
     body.otp_code = effectiveOtp;
   }
 
-  console.log(`[SEBPAY INITIATE] Collection pour ${safeExternalReference} | ${amount} ${resolved.currency} | Pays: ${countryIso} | Opérateur: ${body.operator} (Slug: ${operatorSlug}) | OTP Présent: ${Boolean(effectiveOtp)}`);
+  console.log(`[SEBPAY INITIATE] Collection pour ${safeExternalReference} | ${amount} ${resolved.currency} | Pays: ${countryIso} | Opérateur: ${body.operator} (Slug: ${operatorSlug}) | OTP Présent: ${Boolean(!isLigdicash && effectiveOtp)}`);
   console.log('[SEBPAY PAYLOAD DUMP]', JSON.stringify(body, null, 2));
 
   let rawResponse;
@@ -936,8 +944,21 @@ async function createSebpayCollection(params) {
   }
   const sebpayData = innerData || rawResponse;
 
-  // Détection du lien de redirection (Spécifique Wave / Provider Link documenté)
-  const providerLink = sebpayData?.provider_link || sebpayData?.redirect_url || sebpayData?.payment_url || null;
+  // Détection exhaustive du lien de redirection (Spécifique LigdiCash / Wave / Checkout link documenté)
+  const providerLink =
+    sebpayData?.provider_link ||
+    sebpayData?.checkout_url ||
+    sebpayData?.payment_url ||
+    sebpayData?.redirect_url ||
+    rawResponse?.data?.provider_link ||
+    rawResponse?.data?.checkout_url ||
+    rawResponse?.data?.payment_url ||
+    rawResponse?.data?.redirect_url ||
+    rawResponse?.provider_link ||
+    rawResponse?.checkout_url ||
+    rawResponse?.payment_url ||
+    rawResponse?.redirect_url ||
+    null;
 
   return {
     success: rawResponse?.success !== false,
@@ -948,6 +969,8 @@ async function createSebpayCollection(params) {
     amount: Number(sebpayData?.amount || amount),
     currency: sebpayData?.currency || resolved.currency,
     provider_link: providerLink,
+    paymentUrl: providerLink,
+    checkout_url: providerLink,
     redirectUrl: providerLink,
     message: sebpayData?.message || rawResponse?.message || (providerLink ? 'Redirection vers la passerelle opérateur requise' : 'Demande de paiement initiée avec succès.'),
     idempotent_replay: Boolean(sebpayData?.idempotent_replay),

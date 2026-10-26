@@ -1,31 +1,60 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
-  <!-- Wallet LigdiCash BF (BF • LigdiCash) - Official Sebpay Vector Emblem (100% Transparent Background) -->
-  <g id="wligdicash-bf">
-    <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" fill-opacity="0.96" stroke="#e2e8f0" stroke-width="1.5"/>
+  <!-- LigdiCash Official Vector Emblem -->
+  <defs>
+    <linearGradient id="ligdiGreen-bf" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="50%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="ligdiOrangeRed-bf" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#eab308"/>
+      <stop offset="45%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="ligdiGold-bf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- White Oval Badge Background -->
+  <ellipse cx="60" cy="60" rx="54" ry="38" fill="#ffffff"/>
+
+  <!-- Top Green Arc Border -->
+  <path d="M 8 60 A 52 36 0 0 1 112 60" stroke="url(#ligdiGreen-bf)" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+  <!-- Bottom Orange/Red Arc Border -->
+  <path d="M 112 60 A 52 36 0 0 1 8 60" stroke="url(#ligdiOrangeRed-bf)" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+  <!-- Handshake Icon in Golden Orange -->
+  <g transform="translate(60, 44)">
+    <!-- Left Sleeve Cuff -->
+    <rect x="-24" y="-10" width="5.5" height="20" rx="1.5" fill="url(#ligdiGold-bf)"/>
+    <!-- Right Sleeve Cuff -->
+    <rect x="18.5" y="-10" width="5.5" height="20" rx="1.5" fill="url(#ligdiGold-bf)"/>
+
+    <!-- Handshake Silhouette Clasp -->
+    <path d="M -18.5 -4.5 L -6 -4.5 L -1.5 -1.5 L -5 4.5 L -18.5 4.5 Z" fill="url(#ligdiGold-bf)"/>
+    <path d="M 18.5 -4.5 L 6 -4.5 L 1.5 -1.5 L 5 4.5 L 18.5 4.5 Z" fill="url(#ligdiGold-bf)"/>
     
-        <g transform="translate(60, 42)">
-          <rect x="-26" y="-16" width="52" height="32" rx="8" fill="#ff6f00"/>
-          <rect x="-20" y="-10" width="40" height="20" rx="4" fill="#ffffff" fill-opacity="0.2"/>
-          <circle cx="8" cy="0" r="5" fill="#2e7d32"/>
-          <circle cx="8" cy="0" r="3" fill="#ffb300"/>
-        </g>
-      
-    <text x="60" y="75" font-family="system-ui, sans-serif" font-size="10.5" font-weight="900" fill="#ff6f00" text-anchor="middle">ligdi<tspan fill="#2e7d32">cash</tspan></text>
-    <g transform="translate(24, 85)">
-      <rect x="0" y="0" width="72" height="18" rx="9" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
-      
-    <g transform="translate(4.5, 4.5)">
-      <clipPath id="flag-bf-wligdicash-l6n3z">
-        <circle cx="4.5" cy="4.5" r="4.5"/>
-      </clipPath>
-      <g clip-path="url(#flag-bf-wligdicash-l6n3z)">
-        <circle cx="4.5" cy="4.5" r="4.5" fill="#ef4444"/><path d="M 0 4.5 A 4.5 4.5 0 0 0 9 4.5 Z" fill="#22c55e"/><circle cx="4.5" cy="4.5" r="1.3" fill="#eab308"/>
-      </g>
-    </g>
-  
-      <text x="41" y="12.5" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="800" fill="#c2410c" text-anchor="middle" letter-spacing="0.3">
-        BF • LigdiCash
-      </text>
-    </g>
+    <!-- Interlocking Hands Detail -->
+    <path d="M -5 -5 C 0 -7, 3 -7, 6 -4 L 1 -0.5 L -4 -0.5 Z" fill="url(#ligdiGold-bf)"/>
+    <path d="M -4 0 L 2 5 L -1 7.5 L -6 2.5 Z" fill="#b45309"/>
+    <path d="M -1 1.5 L 5 6.5 L 2 9 L -3 4 Z" fill="url(#ligdiGold-bf)"/>
+    <path d="M 2 3 L 8 8 L 5 10.5 L 0 5.5 Z" fill="#b45309"/>
+    <path d="M 5 4.5 L 10 9 L 8 11.5 L 3 7 Z" fill="url(#ligdiGold-bf)"/>
+
+    <!-- Outer Handshake Accent Strokes -->
+    <path d="M -14 -6.5 C -9 -7.5, -4 -6.5, 0 -3.5 C 4 -6.5, 9 -7.5, 14 -6.5" stroke="url(#ligdiGold-bf)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <path d="M -14 6.5 C -9 7.5, -4 6.5, 0 3.5 C 4 6.5, 9 7.5, 14 6.5" stroke="url(#ligdiGold-bf)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
   </g>
+
+  <!-- Wordmark "LigdiCash" -->
+  <text x="60" y="79"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    font-size="16"
+    font-weight="900"
+    fill="#15803d"
+    text-anchor="middle"
+    letter-spacing="-0.3">LigdiCash</text>
 </svg>

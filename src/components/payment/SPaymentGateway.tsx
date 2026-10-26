@@ -243,12 +243,11 @@ export const SPaymentGateway: React.FC<SPaymentGatewayProps> = ({
       setStatus('AWAITING_WEBHOOK');
       playValidationBeep();
 
-      // Si renvoie un lien de redirection externe (Wave ou Passerelle Web)
-      if (res.action === 'redirect' && (res.provider_link || res.redirectUrl)) {
-        const link = res.provider_link || res.redirectUrl;
-        if (link && typeof window !== 'undefined') {
-          window.open(link, '_blank');
-        }
+      // Si renvoie un lien de redirection externe (LigdiCash, Wave ou Passerelle Web)
+      const redirectLink = res.provider_link || res.redirectUrl || res.checkout_url || (res as any).paymentUrl;
+      if (redirectLink && typeof window !== 'undefined') {
+        window.location.href = redirectLink;
+        return;
       }
     } catch (err: any) {
       setStatus('ERROR');
