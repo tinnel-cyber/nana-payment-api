@@ -639,6 +639,155 @@
       ]
     },
     {
+      "code": "GW",
+      "name": "Guinée-Bissau",
+      "flag": "🇬🇼",
+      "dialCode": "+245",
+      "currency": "XOF",
+      "currencySymbol": "FCFA",
+      "zone": "UEMOA",
+      "defaultCity": "Bissau",
+      "operators": [
+        {
+          "id": "orange",
+          "name": "Orange Bissau",
+          "code": "ORANGE_MONEY",
+          "needsOtp": false,
+          "brandColor": "#FF7900"
+        }
+      ]
+    },
+    {
+      "code": "CF",
+      "name": "Centrafrique",
+      "flag": "🇨🇫",
+      "dialCode": "+236",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "Bangui",
+      "operators": [
+        {
+          "id": "orange",
+          "name": "Orange Centrafrique",
+          "code": "ORANGE_MONEY",
+          "needsOtp": false,
+          "brandColor": "#FF7900"
+        },
+        {
+          "id": "telecel",
+          "name": "Telecel Centrafrique",
+          "code": "TELECEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#DC2626"
+        }
+      ]
+    },
+    {
+      "code": "GQ",
+      "name": "Guinée Équatoriale",
+      "flag": "🇬🇶",
+      "dialCode": "+240",
+      "currency": "XAF",
+      "currencySymbol": "FCFA",
+      "zone": "CEMAC",
+      "defaultCity": "Malabo",
+      "operators": [
+        {
+          "id": "getesa",
+          "name": "Getesa Guinée Équatoriale",
+          "code": "GETESA_MONEY",
+          "needsOtp": false,
+          "brandColor": "#16A34A"
+        }
+      ]
+    },
+    {
+      "code": "TZ",
+      "name": "Tanzanie",
+      "flag": "🇹🇿",
+      "dialCode": "+255",
+      "currency": "TZS",
+      "currencySymbol": "TSh",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Dar es Salaam",
+      "operators": [
+        {
+          "id": "mpesa",
+          "name": "M-Pesa Vodacom Tanzanie",
+          "code": "MPESA",
+          "needsOtp": false,
+          "brandColor": "#E60000"
+        },
+        {
+          "id": "airtel",
+          "name": "Airtel Money Tanzanie",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#DC2626"
+        },
+        {
+          "id": "tigopesa",
+          "name": "Tigo Pesa Tanzanie",
+          "code": "TIGO_PESA",
+          "needsOtp": false,
+          "brandColor": "#0284C7"
+        },
+        {
+          "id": "halo",
+          "name": "Halotel Tanzanie",
+          "code": "HALOTEL",
+          "needsOtp": false,
+          "brandColor": "#EA580C"
+        }
+      ]
+    },
+    {
+      "code": "ZM",
+      "name": "Zambie",
+      "flag": "🇿🇲",
+      "dialCode": "+260",
+      "currency": "ZMW",
+      "currencySymbol": "ZK",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Lusaka",
+      "operators": [
+        {
+          "id": "airtel",
+          "name": "Airtel Money Zambie",
+          "code": "AIRTEL_MONEY",
+          "needsOtp": false,
+          "brandColor": "#DC2626"
+        },
+        {
+          "id": "mtn",
+          "name": "MTN MoMo Zambie",
+          "code": "MTN_MOMO",
+          "needsOtp": false,
+          "brandColor": "#FFCC00"
+        }
+      ]
+    },
+    {
+      "code": "GM",
+      "name": "Gambie",
+      "flag": "🇬🇲",
+      "dialCode": "+220",
+      "currency": "GMD",
+      "currencySymbol": "D",
+      "zone": "AUTRES_AFRIQUE",
+      "defaultCity": "Banjul",
+      "operators": [
+        {
+          "id": "afrimoney",
+          "name": "AfriMoney Gambie",
+          "code": "AFRIMONEY",
+          "needsOtp": false,
+          "brandColor": "#F59E0B"
+        }
+      ]
+    },
+    {
       "code": "DIASPORA",
       "name": "Diaspora & International",
       "flag": "🌍",

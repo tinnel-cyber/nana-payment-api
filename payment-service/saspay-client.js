@@ -219,6 +219,9 @@ function resolveSaspayNetwork(countryInput, rawOperator) {
   if (op.includes('djamo')) return `djamo_${cleanCountry}`;
   if (op.includes('ligdicash')) return `wligdicash_${cleanCountry}`;
   if (op.includes('zamani')) return `zamani_${cleanCountry}`;
+  if (op.includes('tigopesa') || op.includes('tigo')) return `tigopesa_${cleanCountry}`;
+  if (op.includes('halo')) return `halo_${cleanCountry}`;
+  if (op.includes('getesa')) return `getesa_${cleanCountry}`;
 
   return cInfo.networks[0] || `${op}_${cleanCountry}`;
 }
