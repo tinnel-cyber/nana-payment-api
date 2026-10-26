@@ -37,6 +37,12 @@ export interface MerchantIntegrationConfig {
   webhook_secret?: string;
 }
 
+export interface MerchantWebhookConfig {
+  url: string | null;            // URL de destination du webhook marchand (ex: "https://boutique-client.com/api/nanaswitch-webhook")
+  secret_key: string;           // Clé secrète HMAC-SHA256 de signature sortante : "ns_whsec_xxxxxxxxxxxxxxxx"
+  is_active: boolean;           // Activation de la diffusion des webhooks
+}
+
 export interface MerchantApiPricingConfig {
   cost_per_request_xof: number;  // Micro-frais de 0.02 XOF par appel/transaction
   api_credits_balance: number;   // Solde de crédits de requêtes disponibles (ex: 5000)
@@ -61,6 +67,7 @@ export interface MerchantDocument {
   status: MerchantStatus;
   nanaswitch_keys: NanaSwitchApiKeys;
   integration_config: MerchantIntegrationConfig;
+  webhook_config?: MerchantWebhookConfig;
   api_pricing_config: MerchantApiPricingConfig;
   financials: MerchantFinancials;
   created_at: any;               // Firestore Timestamp / ISO String

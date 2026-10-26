@@ -202,6 +202,14 @@ service cloud.firestore {
               request.resource.data.integration_config.custom_credentials == resource.data.integration_config.custom_credentials);
     }
 
+    function merchantWebhookSecretUnchanged() {
+      return (!('webhook_config' in request.resource.data && 'secret_key' in request.resource.data.webhook_config) &&
+              !('webhook_config' in resource.data && 'secret_key' in resource.data.webhook_config)) ||
+             ('webhook_config' in request.resource.data && 'secret_key' in request.resource.data.webhook_config &&
+              'webhook_config' in resource.data && 'secret_key' in resource.data.webhook_config &&
+              request.resource.data.webhook_config.secret_key == resource.data.webhook_config.secret_key);
+    }
+
     function merchantApiPricingUnchanged() {
       return (
         (!('api_pricing_config' in request.resource.data) && !('api_pricing_config' in resource.data)) ||
@@ -255,6 +263,7 @@ service cloud.firestore {
         (!('storeApprovalStatus' in request.resource.data) || request.resource.data.storeApprovalStatus == 'PENDING') &&
         (!('nanaswitch_keys' in request.resource.data) || !('secret_key_hash' in request.resource.data.nanaswitch_keys)) &&
         (!('integration_config' in request.resource.data) || !('custom_credentials' in request.resource.data.integration_config)) &&
+        (!('webhook_config' in request.resource.data) || !('secret_key' in request.resource.data.webhook_config)) &&
         (!('api_pricing_config' in request.resource.data) || (
           (!('api_credits_balance' in request.resource.data.api_pricing_config) || request.resource.data.api_pricing_config.api_credits_balance == 0) &&
           !('cost_per_request_xof' in request.resource.data.api_pricing_config)
@@ -271,6 +280,7 @@ service cloud.firestore {
       //   * Ne peut JAMAIS modifier status, approval, storeApprovalStatus
       //   * Ne peut JAMAIS altérer nanaswitch_keys.secret_key_hash
       //   * Ne peut JAMAIS altérer integration_config.custom_credentials
+      //   * Ne peut JAMAIS altérer webhook_config.secret_key
       //   * Ne peut JAMAIS modifier api_pricing_config.api_credits_balance ni cost_per_request_xof
       //   * Ne peut JAMAIS modifier financials.wallet_balance_xof ni pricing_tier
       allow update: if isSuperAdmin() || (
@@ -283,6 +293,7 @@ service cloud.firestore {
         ]) &&
         merchantSecretKeyHashUnchanged() &&
         merchantCustomCredentialsUnchanged() &&
+        merchantWebhookSecretUnchanged() &&
         merchantApiPricingUnchanged() &&
         merchantFinancialsUnchanged()
       );
@@ -711,6 +722,24 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && (request.auth.uid == userId || isOwner(userId) || isSuperAdmin());
       match /{allChildren=**} {
         allow read, write: if isSignedIn() && (request.auth.uid == userId || isOwner(userId) || isSuperAdmin());
+      }
+    }
+
+    // Traçabilité et historique des livraisons de webhooks sortants signés HMAC-SHA256
+    match /webhook_deliveries/{deliveryId} {
+      // 1. Lecture : autorisée uniquement pour le propriétaire du merchant ou Super Admin
+      allow read: if (isSignedIn() && resource.data.merchant_id == request.auth.uid) || 
+                     isOwner(resource.data.merchant_id) || 
+                     isSuperAdmin();
+
+      // 2. Écriture / Création : strictement réservée à isSuperAdmin() (forgé par le backend Cloud via Firebase Admin SDK)
+      allow write: if isSuperAdmin();
+
+      match /{allChildren=**} {
+        allow read: if (isSignedIn() && resource.data.merchant_id == request.auth.uid) || 
+                       isOwner(resource.data.merchant_id) || 
+                       isSuperAdmin();
+        allow write: if isSuperAdmin();
       }
     }
 

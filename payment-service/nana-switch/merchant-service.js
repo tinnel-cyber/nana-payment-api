@@ -283,6 +283,11 @@ class NanaSwitchMerchantService {
           sebpay: { public_key: '', secret_key: '' }
         }
       },
+      webhook_config: {
+        url: 'https://nanasore.com/api/payment/webhook',
+        secret_key: 'ns_whsec_nanasore_master_webhook_secret_2026',
+        is_active: true
+      },
       api_pricing_config: {
         cost_per_request_xof: 0.02,
         api_credits_balance: 5000,

@@ -65,6 +65,7 @@ const { createChatFinanceRouter } = require('./chat-finance-controller');
 const { LiveCommerceEngine, createLiveCommerceRouter } = require('./live-commerce-controller');
 const { merchantService, DEFAULT_PRICING_MATRIX } = require('./nana-switch/merchant-service');
 const { pricingEngine } = require('./nana-switch/pricingEngine');
+const webhookNotifier = require('./nana-switch/webhookNotifier');
 const {
   generateNanaSwitchKeyPair,
   requireNanaSwitchAuth,
@@ -377,7 +378,13 @@ app.post(
       if (isSaspayEvent) {
         const sasSig = req.headers['x-webhook-signature'] || req.headers['X-Webhook-Signature'];
         const sasTs = req.headers['x-webhook-timestamp'] || req.headers['X-Webhook-Timestamp'];
-        const sigCheck = verifySaspayWebhookSignature(rawBuffer, sasSig, sasTs);
+        const sasSecret = process.env.SASPAY_WEBHOOK_SECRET || process.env.SASPAY_API_KEY;
+        const sigCheck = verifySaspayWebhookSignature({
+          rawBody: rawBuffer,
+          signature: sasSig,
+          timestamp: sasTs,
+          secret: sasSecret
+        });
         if (!sigCheck.valid) {
           console.warn(`[SECURITY REJECT] Webhook SasPay sur /api/payment/webhook invalide : ${sigCheck.reason}`);
           return res.status(401).json({ error: `Signature SasPay invalide (${sigCheck.reason})` });
@@ -415,8 +422,8 @@ app.post(
 
       // Clé secrète Sebpay pour la vérification HMAC (priorité absolue à SEBPAY_SECRET_KEY comme documenté)
       const secretKey =
-        process.env.SEBPAY_SECRET_KEY ||
         process.env.SEBPAY_WEBHOOK_SECRET ||
+        process.env.SEBPAY_SECRET_KEY ||
         process.env.PAYMENT_WEBHOOK_SECRET;
 
       if (!secretKey) {
@@ -833,6 +840,26 @@ async function processWebhookTransaction(payload) {
       }).catch(switchErr => {
         console.error('[NANASWITCH ASYNC WORKFLOW ERROR]', switchErr);
       });
+
+      // 7. Notification Webhook Sortante vers le serveur du marchand (Signée HMAC-SHA256)
+      webhookNotifier.dispatchMerchantWebhook(db, {
+        merchantId: resolvedTenantId,
+        event: 'payment.success',
+        orderId: resolvedOrderId,
+        transactionId,
+        data: {
+          id: transactionId,
+          order_id: resolvedOrderId,
+          external_reference: externalRef,
+          amount,
+          currency,
+          status: 'SUCCESS',
+          operator,
+          provider: resolvedProvider,
+          customer_phone: customerPhone,
+          paid_at: new Date().toISOString()
+        }
+      }).catch(whErr => console.warn('[MERCHANT WEBHOOK DISPATCH ERROR]', whErr.message));
     } catch (dbErr) {
       console.error('[FIRESTORE UPDATE ERROR]', dbErr.message);
     }
@@ -860,6 +887,25 @@ async function processWebhookTransaction(payload) {
         isPaid: false,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+
+      // Notification Webhook Sortante d'échec vers le serveur du marchand
+      webhookNotifier.dispatchMerchantWebhook(db, {
+        merchantId: resolvedTenantId,
+        event: 'payment.failed',
+        orderId: resolvedOrderId,
+        transactionId,
+        data: {
+          id: transactionId,
+          order_id: resolvedOrderId,
+          external_reference: externalRef,
+          amount,
+          currency,
+          status: 'FAILED',
+          operator,
+          failure_reason: status,
+          failed_at: new Date().toISOString()
+        }
+      }).catch(whErr => console.warn('[MERCHANT WEBHOOK DISPATCH ERROR]', whErr.message));
     } catch (e) {
       console.warn('[INTENT FAIL UPDATE ERROR]', e.message);
     }
@@ -1723,20 +1769,22 @@ app.post(
         : Buffer.from(req.rawBody || req.body || '', 'utf8');
 
       // Vérification cryptographique stricte avec SASPAY_WEBHOOK_SECRET
-      if (process.env.SASPAY_WEBHOOK_SECRET) {
-        const sigCheck = verifySaspayWebhookSignature({
-          rawBody: rawBuffer,
-          signature,
-          timestamp,
-          secret: process.env.SASPAY_WEBHOOK_SECRET
-        });
+      const sasSecret = process.env.SASPAY_WEBHOOK_SECRET || process.env.SASPAY_API_KEY;
+      if (!sasSecret) {
+        console.error('[SASPAY WEBHOOK REJECT] Variable SASPAY_WEBHOOK_SECRET non configurée sur le serveur.');
+        return res.status(500).json({ error: 'Configuration serveur incomplète (SASPAY_WEBHOOK_SECRET manquant).' });
+      }
 
-        if (!sigCheck.valid) {
-          console.error(`[SASPAY WEBHOOK REJECT] Échec vérification cryptographique HMAC : ${sigCheck.reason}`);
-          return res.status(401).json({ error: `Signature webhook SasPay invalide (${sigCheck.reason})` });
-        }
-      } else {
-        console.warn('[SASPAY WEBHOOK WARNING] Variable SASPAY_WEBHOOK_SECRET non configurée sur Render.');
+      const sigCheck = verifySaspayWebhookSignature({
+        rawBody: rawBuffer,
+        signature,
+        timestamp,
+        secret: sasSecret
+      });
+
+      if (!sigCheck.valid) {
+        console.error(`[SASPAY WEBHOOK REJECT] Échec vérification cryptographique HMAC : ${sigCheck.reason}`);
+        return res.status(401).json({ error: `Signature webhook SasPay invalide (${sigCheck.reason})` });
       }
 
       // Règle SasPay : Réponse HTTP 2xx rapide immédiate pour accuser réception
@@ -3137,8 +3185,9 @@ app.post(['/v1/switch/decrypt', '/api/switch/decrypt'], express.json(), (req, re
  */
 app.post(['/v1/switch/keys/generate', '/api/switch/keys/generate'], express.json(), async (req, res) => {
   try {
-    const { merchantId = 'm_live_bf_001', mode = 'live', businessName } = req.body;
+    const { merchantId = 'm_live_bf_001', mode = 'live', businessName, webhookUrl, webhook_url } = req.body;
     const keyPair = await generateNanaSwitchKeyPair(mode);
+    const targetWebhookUrl = webhookUrl || webhook_url || null;
 
     if (db && merchantId) {
       const nowServer = admin.firestore.FieldValue.serverTimestamp();
@@ -3152,6 +3201,11 @@ app.post(['/v1/switch/keys/generate', '/api/switch/keys/generate'], express.json
           generated_at: nowServer,
           mode
         },
+        webhook_config: {
+          url: targetWebhookUrl,
+          secret_key: keyPair.webhookSecret,
+          is_active: true
+        },
         updated_at: nowServer
       }, { merge: true });
     }
@@ -3161,8 +3215,14 @@ app.post(['/v1/switch/keys/generate', '/api/switch/keys/generate'], express.json
       merchant_id: merchantId,
       public_key: keyPair.publicKey,
       secret_key: keyPair.secretKey,
-      message: 'Paire de clés NanaSwitch générée avec succès.',
-      warning: 'Conservez précieusement votre clé secrète (secret_key). Par mesure de sécurité Zero-Trust, seul son hash Bcrypt est conservé dans notre coffre-fort Firestore et elle ne pourra plus jamais être récupérée.'
+      webhook_secret: keyPair.webhookSecret,
+      webhook_config: {
+        url: targetWebhookUrl,
+        secret_key: keyPair.webhookSecret,
+        is_active: true
+      },
+      message: 'Paire de clés NanaSwitch et secret Webhook générés avec succès.',
+      warning: 'Conservez précieusement votre clé secrète (secret_key) et votre secret webhook (webhook_secret). Par mesure de sécurité Zero-Trust, ils ne pourront plus jamais être réaffichés.'
     });
   } catch (err) {
     console.error('[KEY GENERATION ERROR]', err.message);

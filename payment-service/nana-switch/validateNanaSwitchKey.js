@@ -13,14 +13,24 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
 /**
- * Génère une paire de clés d'API NanaSwitch sécurisées
+ * Génère une clé secrète de signature Webhook HMAC-SHA256 (32 octets aléatoires)
+ * @returns {string} Ex: "ns_whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+ */
+function generateWebhookSecret() {
+  const whsecRandom = crypto.randomBytes(32).toString('hex');
+  return `ns_whsec_${whsecRandom}`;
+}
+
+/**
+ * Génère une paire de clés d'API NanaSwitch sécurisées et un secret webhook
  * @param {'live' | 'test'} [mode='live']
- * @returns {Promise<{ publicKey: string, secretKey: string, secretKeyHash: string }>}
+ * @returns {Promise<{ publicKey: string, secretKey: string, secretKeyHash: string, webhookSecret: string }>}
  */
 async function generateNanaSwitchKeyPair(mode = 'live') {
   const envPrefix = mode === 'test' ? 'ns_test_' : 'ns_live_';
   const pkRandom = crypto.randomBytes(16).toString('hex');
   const skRandom = crypto.randomBytes(24).toString('hex');
+  const webhookSecret = generateWebhookSecret();
 
   const publicKey = `${envPrefix}pk_${pkRandom}`;
   const secretKey = `${envPrefix}sk_${skRandom}`;
@@ -29,7 +39,8 @@ async function generateNanaSwitchKeyPair(mode = 'live') {
   return {
     publicKey,
     secretKey,
-    secretKeyHash
+    secretKeyHash,
+    webhookSecret
   };
 }
 
@@ -172,6 +183,7 @@ function optionalNanaSwitchAuth(db) {
 }
 
 module.exports = {
+  generateWebhookSecret,
   generateNanaSwitchKeyPair,
   requireNanaSwitchAuth,
   optionalNanaSwitchAuth
