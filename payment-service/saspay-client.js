@@ -119,6 +119,44 @@ function formatSaspayAmount(amount) {
 }
 
 /**
+ * Formate le numéro de téléphone au format international requis par SasPay (avec '+' et indicatif pays)
+ * Exemple : '65565805', '22665565805', '+226 65 56 58 05' -> '+22665565805'
+ * 
+ * @param {string|number} phone - Numéro de téléphone brut
+ * @param {string} [countryCode='BF'] - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
+ * @returns {string} Numéro international avec '+' (ex: '+22665565805')
+ */
+function formatSaspayInternationalPhone(phone, countryCode = 'BF') {
+  if (!phone) return '';
+  const clean = String(phone).trim().replace(/\s+/g, '');
+  const iso = String(countryCode || 'BF').toUpperCase();
+  const cInfo = SASPAY_SUPPORTED_COUNTRIES[iso] || SASPAY_SUPPORTED_COUNTRIES.BF;
+  const prefix = cInfo.prefix; // ex: '+226'
+  const prefixDigits = prefix.replace('+', ''); // '226'
+
+  let digits = clean.replace(/\D/g, '');
+
+  // Supprimer l'indicatif international '00' s'il est présent (ex: 00226... -> 226...)
+  if (digits.startsWith('00')) {
+    digits = digits.substring(2);
+  }
+
+  if (digits.startsWith(prefixDigits)) {
+    return `+${digits}`;
+  }
+
+  if (iso === 'BF' && digits.length === 8) {
+    return `+226${digits}`;
+  }
+
+  if (clean.startsWith('+')) {
+    return clean.replace(/[^0-9+]/g, '');
+  }
+
+  return `${prefix}${digits}`;
+}
+
+/**
  * Génère ou valide une clé d'idempotence UUID v4
  */
 function getOrGenerateIdempotencyKey(key) {
@@ -438,7 +476,9 @@ async function createSaspayPayin(params) {
 
   // Formatage obligatoire du montant en chaîne décimale ("2500.00")
   const formattedAmount = formatSaspayAmount(amount);
-  const effectivePhone = (phone || customerPhone || '').replace(/[^0-9+]/g, '');
+  const countryIso = String(country || 'BF').trim().toUpperCase();
+  const formattedPhone = formatSaspayInternationalPhone(phone || customerPhone, countryIso);
+  const effectivePhone = formattedPhone;
 
   // Nettoyage standardisé du nom de la boutique pour qu'il soit propre dans l'external_reference
   const rawShopName = params.shopName || params.storeName || tenantId || 'boutique';
@@ -450,7 +490,6 @@ async function createSaspayPayin(params) {
     .replace(/^_|_$/g, '') || 'boutique';
 
   const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${orderId}`;
-  const countryIso = String(country || 'BF').trim().toUpperCase();
 
   const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
   const idempotencyKey = getOrGenerateIdempotencyKey(params.idempotencyKey);
@@ -572,7 +611,9 @@ async function createSaspayPayout(params) {
   } = params;
 
   const formattedAmount = formatSaspayAmount(amount);
-  const effectivePhone = (phone || beneficiaryPhone || '').replace(/[^0-9+]/g, '');
+  const countryIso = String(country || 'BF').trim().toUpperCase();
+  const formattedPhone = formatSaspayInternationalPhone(phone || beneficiaryPhone, countryIso);
+  const effectivePhone = formattedPhone;
 
   const rawShopName = params.shopName || params.storeName || tenantId || 'boutique';
   const cleanShopName = String(rawShopName)
@@ -583,7 +624,6 @@ async function createSaspayPayout(params) {
     .replace(/^_|_$/g, '') || 'boutique';
 
   const externalReference = params.externalReference || params.external_reference || `nanasore_${cleanShopName}___${payoutId}`;
-  const countryIso = String(country || 'BF').trim().toUpperCase();
 
   const resolvedNetwork = network || resolveSaspayNetwork(countryIso, operator);
   const idempotencyKey = getOrGenerateIdempotencyKey(params.idempotencyKey);
@@ -819,6 +859,7 @@ module.exports = {
   getSaspayBaseUrl,
   getSaspayApiKey,
   formatSaspayAmount,
+  formatSaspayInternationalPhone,
   getOrGenerateIdempotencyKey,
   getSaspayHeaders,
   resolveSaspayNetwork,
