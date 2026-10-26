@@ -118,6 +118,7 @@ const MarketDirectory = lazyWithRetry(() => import('./components/directory/Marke
 const StoreStudioPage = lazyWithRetry(() => import('./pages/StoreStudioPage'));
 const PublicStorefrontPage = lazyWithRetry(() => import('./pages/PublicStorefrontPage'));
 const NaNaSwitchAppPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchAppPage').then(m => ({ default: m.NaNaSwitchAppPage || m.default })));
+const NaNaSwitchDocsPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchDocsPage').then(m => ({ default: m.NaNaSwitchDocsPage || m.default })));
 const NanaSwitchApp = React.lazy(() => import('./components/nanaSwitch/NanaSwitchApp').then(m => ({ default: m.NanaSwitchApp || m.default })));
 const WameetSupraApp = React.lazy(() => import('./pages/wameet/WameetSupraApp').then(m => ({ default: m.WameetSupraApp || m.default })));
 const SallesVipDiscoveryScreen = React.lazy(() => import('./components/vip/SallesVipDiscoveryScreen').then(m => ({ default: m.SallesVipDiscoveryScreen || m.default })));
@@ -314,6 +315,8 @@ export type AppView =
   | 'international'
   | 'PAYS_COUVERTS'
   | 'pays_couverts'
+  | 'NANA_SWITCH_DOCS'
+  | 'nana_switch_docs'
   | 'NANA_SWITCH'
   | 'nana_switch'
   | 'WAMEET'
@@ -676,7 +679,32 @@ export default function App() {
       ) {
         return 'NANA_SWITCH_APP';
       }
+      // Documentation Développeur Publique Autonome (100% Hors Application Protégée)
       if (
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
+        params.get('page') === 'docs' ||
+        params.get('page') === 'documentation'
+      ) {
+        return 'NANA_SWITCH_DOCS';
+      }
+      if (
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
         pathname.startsWith('/nana-switch') ||
@@ -1115,6 +1143,15 @@ export default function App() {
       let targetHref = '/nanasore-icon.svg?v=nanasore_arrow_v3';
 
       if (
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname.startsWith('/nana-switch/') ||
         pathname === '/nanaswitch' ||
@@ -1819,8 +1856,36 @@ export default function App() {
         return;
       }
 
+      // Documentation Développeur Publique Autonome (100% Hors Application Protégée)
+      if (
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
+        params.get('page') === 'docs' ||
+        params.get('page') === 'documentation'
+      ) {
+        setCurrentView('NANA_SWITCH_DOCS');
+        setShowWelcomeShowcase(false);
+        return;
+      }
+
       // Landing NaNaSwitch Cloud (/nana-switch)
       if (
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
         pathname.startsWith('/nana-switch') ||
@@ -2009,6 +2074,15 @@ export default function App() {
         params.get('view') === 'builder' ||
         params.get('view') === 'funnel-builder' ||
         params.has('builder') ||
+        pathname === '/docs' ||
+        pathname.startsWith('/docs') ||
+        pathname === '/documentation' ||
+        pathname.startsWith('/documentation') ||
+        pathname === '/nana-switch/docs' ||
+        pathname === '/nanaswitch/docs' ||
+        pathname === '/nanaswitch-docs' ||
+        params.get('view') === 'docs' ||
+        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
         pathname.startsWith('/nana-switch') ||
@@ -5200,6 +5274,21 @@ export default function App() {
     );
   }
 
+
+  // 1b-docs. Documentation Développeur Publique Autonome (/docs, /documentation, /nana-switch/docs)
+  // 100% PUBLIC - ZÉRO AUTHENTIFICATION REQUISE - ACCÈS LIBRE
+  if (
+    currentView === 'NANA_SWITCH_DOCS' ||
+    currentView === 'nana_switch_docs'
+  ) {
+    return (
+      <ModuleErrorBoundary moduleName="Documentation Publique - NanaSwitch Cloud">
+        <React.Suspense fallback={<LoadingScreen message="Ouverture de la Documentation NanaSwitch..." />}>
+          <NaNaSwitchDocsPage />
+        </React.Suspense>
+      </ModuleErrorBoundary>
+    );
+  }
 
   // 1c. NaNaSwitch Cloud : Routeur Cloud Intelligent & SaaS d'Aiguillage d'API (/nana-switch)
   if (

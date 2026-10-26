@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation Développeur & API — NanaSwitch Cloud (NANASORE TECHNOLOGIES)</title>
+  <meta name="description" content="Portail de documentation public officiel de NanaSwitch Cloud : Architecture Hybride B2B, Clés Zero-Trust, Webhooks HMAC-SHA256, SDKs Node.js, PHP, Python, et Plugin WooCommerce.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP STICKY HEADER (PUBLIC - 100% SANS AUTHENTIFICATION) -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="#hub" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1E40AF] to-[#2563EB] flex items-center justify-center text-white shadow-md shadow-blue-700/20 font-black text-xl transition group-hover:scale-105">
+          N
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-slate-900 tracking-tight text-lg leading-none">NanaSwitch</span>
+            <span class="bg-blue-50 text-[#1E40AF] text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border border-blue-200">
+              DOCS
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">NANASORE TECHNOLOGIES</p>
+        </div>
+      </a>
+
+      <!-- Search Input -->
+      <div class="relative hidden md:block w-72">
+        <input 
+          id="globalSearchInput"
+          type="text" 
+          placeholder="Rechercher (HMAC, BYOK, WooCommerce...)" 
+          oninput="handleSearch(this.value)"
+          class="w-full pl-9 pr-3 py-1.5 bg-slate-100 hover:bg-slate-200/70 focus:bg-white text-xs rounded-xl border border-transparent focus:border-blue-500 focus:outline-none transition"
+        >
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+      </div>
+
+      <!-- Actions (Public Only) -->
+      <div class="flex items-center gap-3">
+        <!-- Direct WooCommerce Plugin Download -->
+        <a 
+          href="./downloads/nanaswitch-gateway.zip" 
+          download="nanaswitch-gateway.zip"
+          class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition border border-blue-200/60"
+        >
+          <span>📦 Plugin WooCommerce (.zip)</span>
+        </a>
+
+        <!-- Bouton obligatoire : Se connecter / S'inscrire vers la Console Cloud -->
+        <a 
+          href="/nana-switch" 
+          class="px-4 py-2 bg-gradient-to-r from-[#1E40AF] to-[#2563EB] hover:from-[#1E3A8A] hover:to-[#1D4ED8] text-white rounded-xl text-xs font-black shadow-md shadow-blue-700/25 transition flex items-center gap-1.5 active:scale-95"
+        >
+          <span>Se connecter / S'inscrire</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+
+    <!-- HERO BANNER -->
+    <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1E40AF] via-[#1E3A8A] to-slate-900 text-white p-8 md:p-12 shadow-xl shadow-blue-950/10">
+      <div class="relative z-10 max-w-3xl space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold tracking-wide">
+          <span>✨ Documentation Publique & Guides d'Architecture • Accès Libre</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+          Portail Développeur & Documentation NanaSwitch Cloud
+        </h1>
+        <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+          Intégrez la passerelle de paiement intelligente NanaSwitch dans vos applications et boutiques en ligne.
+          Accédez librement aux spécifications Zero-Trust, aux webhooks HMAC anti-rejeu et à notre Assistant IA d'intégration.
+        </p>
+
+        <!-- Quick Metrics -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3">
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+            <span class="block text-2xl font-black text-white">8 Sections</span>
+            <span class="text-[11px] text-blue-200 font-semibold">Guides Complets</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+            <span class="block text-2xl font-black text-emerald-400">Zero-Trust</span>
+            <span class="text-[11px] text-blue-200 font-semibold">Sécurité Serveur</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+            <span class="block text-2xl font-black text-amber-300">300s</span>
+            <span class="text-[11px] text-blue-200 font-semibold">Anti-Rejeu HMAC</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+            <span class="block text-2xl font-black text-purple-300">0.02 XOF</span>
+            <span class="text-[11px] text-blue-200 font-semibold">SaaS BYOK / req</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION CARDS (8 SECTIONS GROUPÉES À L'ACCUEIL DU PORTAIL) -->
+    <section id="hub" class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Les 8 Modules de Documentation</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Explorez les sections ci-dessous ou cliquez sur un module pour afficher les détails et le code source.</p>
+        </div>
+        <span class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+          8 / 8 Disponibles
+        </span>
+      </div>
+
+      <!-- Quick Grid -->
+      <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <!-- CARD 1: SKILL IA -->
+        <a href="#section-skill" class="module-card group bg-white rounded-3xl p-6 border border-blue-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="ia skill prompt system stripe assistant saspay zero-trust">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🤖</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white">PROMPT 1 • ACTIF</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Skill IA d'Intégration Autonome</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">system:nanaswitch_integration_skill</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Assistant IA spécialisé pour guider les ingénieurs pas à pas dans l'intégration Zero-Trust, BYOK et HMAC.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir le Prompt IA &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 2: CLÉS ZERO-TRUST -->
+        <a href="#section-keys" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="clés keys zero-trust ns_live_pk ns_live_sk auth headers bcrypt">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🔑</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">PROMPT 2</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Clés & Authentification Zero-Trust</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">ns_live_pk_* & ns_live_sk_*</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Sécurisation des clés publiques et secrètes, hash bcrypt dans Firestore et isolation des requêtes API serveur.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir la Sécurité &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 3: ROUTAGE DYNAMIQUE -->
+        <a href="#section-routing" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="routage dynamique post /v1/switch/route orange moov wave failover sebpay saspay">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">⚡</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-600 text-white">PROMPT 3</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Routage Mobile Money UEMOA</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">POST /v1/switch/route</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Endpoint unique pour Orange Money, Moov, Wave, SasPay et Sebpay avec repli automatique (Failover).</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir l'API Route &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 4: SIGNATURES HMAC -->
+        <a href="#section-hmac" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="webhooks hmac sha256 signatures ns_whsec anti-rejeu timingsafeequal">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🛡️</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white">PROMPT 4</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Signatures Webhook HMAC-SHA256</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">x-nanaswitch-signature</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Validation cryptographique anti-rejeu stricte avec secret ns_whsec_... et tolérance 300s.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir les Webhooks &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 5: MODÈLE HYBRIDE B2B -->
+        <a href="#section-hybrid" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="mode hybride agrege byok credits 0.02 xof 1.5% marge saas billing">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">💳</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white">PROMPT 5</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Modèle Hybride B2B</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">Agrégé vs SaaS BYOK</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Mode Simplifié (+1.5% marge) ou Mode Routeur SaaS (0.02 XOF/requête débité de votre solde de crédits).</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir les Tarifs &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 6: PLAFONDS KYC -->
+        <a href="#section-kyc" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="kyc plafonds 1000000 5000000 particulier entreprise 403 forbidden rccm ifu">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">⚖️</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white">PROMPT 6</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Plafonds Risque & KYC</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">1M (Particulier) vs 5M (Entreprise)</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Contrôles stricts de conformité mensuelle avec rejet automatique HTTP 403 Forbidden sur dépassement.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Voir les Règles KYC &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 7: PLUGIN WOOCOMMERCE -->
+        <a href="#section-woocommerce" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="plugin woocommerce wordpress nanaswitch-gateway.zip hpos zip extension">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🛍️</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-600 text-white">PROMPT 7</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Plugin WooCommerce (.zip)</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">nanaswitch-gateway.zip v1.0.0</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Plugin WordPress prêt à installer, compatible HPOS, supportant AGREGATED et BYOK avec webhook automatique.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Télécharger l'Archive &rarr;</span>
+          </div>
+        </a>
+
+        <!-- CARD 8: CODES D'ERREUR -->
+        <a href="#section-errors" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="erreurs codes http 400 401 402 403 500 depannage troubleshooting">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🔍</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-700 text-white">PROMPT 8</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Codes d'Erreur & Dépannage</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">400, 401, 402, 403, 500</p>
+            </div>
+            <p class="text-xs text-slate-600 line-clamp-3">Matrice de diagnostic technique, causes fréquentes et solutions préconisées par l'architecte.</p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span>Consulter la Matrice &rarr;</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 1: PROMPT 1 (SKILL IA) ==================== -->
+    <section id="section-skill" class="bg-white rounded-3xl border border-blue-200 p-8 shadow-sm space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase">SECTION 1 • PROMPT 1</span>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Skill IA d'Intégration Autonome (system:nanaswitch_integration_skill)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Prompt Système complet pour doter ChatGPT, Claude, Cursor ou Antigravity de l'expertise NanaSwitch Cloud.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copySystemPrompt()" class="px-4 py-2 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <span>📋 Copier le Prompt Système</span>
+          </button>
+          <a href="./downloads/nanaswitch-integration-skill.md" download class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition">
+            <span>📥 Télécharger SKILL.md</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 text-slate-100 p-6 rounded-2xl space-y-4">
+        <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+          <span>Identifiant : system:nanaswitch_integration_skill</span>
+          <span>Version : 1.0.0</span>
+        </div>
+        <pre class="text-xs text-slate-300 font-mono overflow-x-auto max-h-96 leading-relaxed select-all" id="promptContent">---
+name: nanaswitch_integration_skill
+description: Autonomous AI Integration Assistant for NanaSwitch Cloud Payment Gateway. Guides engineers and merchants step-by-step through Zero-Trust credentials (ns_live_pk_*, ns_live_sk_*), hybrid routing (AGREGATED vs BYOK), HMAC-SHA256 webhooks, KYC volume limits, and multi-language implementation across Node.js, PHP, Python, and WooCommerce.
+---
+
+# 🤖 NanaSwitch Autonomous Integration AI Skill (system:nanaswitch_integration_skill)
+
+Bienvenue dans le Skill officiel de l'Assistant IA Spécialisé NanaSwitch Cloud (Entité : NANASORE TECHNOLOGIES). Ce guide opérationnel et ce prompt système fournissent toutes les instructions techniques, règles de gouvernance et modèles de code pour assister les développeurs et intégrateurs dans l'implémentation de la passerelle de paiement intelligente NanaSwitch.
+
+## 🎯 Rôle et Mission de l'Assistant :
+1. Accompagner les développeurs pas à pas dans l'intégration Zero-Trust.
+2. Interdire l'exposition de la clé secrète (ns_live_sk_*) côté frontend.
+3. Exiger la validation HMAC-SHA256 anti-rejeu (fenêtre 300s).
+4. Rappeler les plafonds mensuels KYC (1 000 000 XOF Particulier vs 5 000 000 XOF Entreprise).
+5. Expliquer la différence entre Mode Agrégé (+1.5% marge) et Mode BYOK (0.02 XOF/req).</pre>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 2: CLÉS ZERO-TRUST ==================== -->
+    <section id="section-keys" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black uppercase">SECTION 2 • PROMPT 2</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Matrice des Clés d'Authentification Zero-Trust</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Règles absolues de sécurité pour les développeurs et serveurs.</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-500 text-[11px]">
+              <th class="py-2.5 font-bold">Identifiant</th>
+              <th class="py-2.5 font-bold">Format</th>
+              <th class="py-2.5 font-bold">Exposition</th>
+              <th class="py-2.5 font-bold">Règle de Sécurité</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="py-3 font-bold text-slate-900">Public Key</td>
+              <td class="py-3 font-mono text-blue-600 font-bold">ns_live_pk_[32 hex]</td>
+              <td class="py-3 text-slate-600">Frontend / Plugins</td>
+              <td class="py-3 text-emerald-600 font-semibold">Identifiant Marchand public</td>
+            </tr>
+            <tr>
+              <td class="py-3 font-bold text-slate-900">Secret Key</td>
+              <td class="py-3 font-mono text-rose-600 font-bold">ns_live_sk_[32 hex]</td>
+              <td class="py-3 text-rose-600 font-bold">Serveur Uniquement</td>
+              <td class="py-3 text-slate-600">Stocké uniquement haché (bcrypt) dans Firestore</td>
+            </tr>
+            <tr>
+              <td class="py-3 font-bold text-slate-900">Webhook Secret</td>
+              <td class="py-3 font-mono text-purple-600 font-bold">ns_whsec_[64 hex]</td>
+              <td class="py-3 text-slate-600">Serveur Marchand</td>
+              <td class="py-3 text-slate-600">Validation de l'en-tête x-nanaswitch-signature</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 3: ROUTAGE DYNAMIQUE ==================== -->
+    <section id="section-routing" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black uppercase">SECTION 3 • PROMPT 3</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Routage Dynamique & API Gateway Mobile Money</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Spécification de l'endpoint unifié POST /v1/switch/route</p>
+      </div>
+
+      <pre class="bg-slate-900 text-slate-100 p-6 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+// Requête HTTP d'initiation d'un paiement universel
+const response = await fetch('https://nana-payment-api.onrender.com/v1/switch/route', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ns_live_sk_YOUR_SECRET_KEY',
+    'x-nanaswitch-skey': 'ns_live_sk_YOUR_SECRET_KEY'
+  },
+  body: JSON.stringify({
+    amount: 15000,
+    currency: 'XOF',
+    country: 'BF',
+    orderId: 'CMD_2026_9841',
+    customer: {
+      name: 'Ousmane Konkobo',
+      phone: '+22670123456'
+    },
+    returnUrl: 'https://maboutique.com/checkout/success',
+    callbackUrl: 'https://maboutique.com/api/webhook'
+  })
+});
+
+const data = await response.json();
+console.log('URL de paiement :', data.checkout_url);</pre>
+    </section>
+
+    <!-- ==================== SECTION 4: WEBHOOKS HMAC ==================== -->
+    <section id="section-hmac" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-[10px] font-black uppercase">SECTION 4 • PROMPT 4</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Signatures Webhook & Anti-Rejeu HMAC-SHA256</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Vérification cryptographique en Node.js et PHP avec fenêtre stricte de 300 secondes.</p>
+      </div>
+
+      <pre class="bg-slate-900 text-slate-100 p-6 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+const crypto = require('crypto');
+
+function verifyNanaSwitchWebhook(rawBody, signatureHeader, secretKey) {
+  const parts = Object.fromEntries(signatureHeader.split(',').map(p => p.split('=')));
+  const timestamp = parseInt(parts.t, 10);
+  const signature = parts.v1;
+
+  // 1. Fenêtre anti-rejeu 5 minutes
+  if (Math.abs(Date.now() / 1000 - timestamp) > 300) {
+    throw new Error('Timestamp expiré');
+  }
+
+  // 2. Calcul du HMAC sur "${timestamp}.${rawBody}"
+  const expected = crypto
+    .createHmac('sha256', secretKey)
+    .update(`${timestamp}.${rawBody}`)
+    .digest('hex');
+
+  // 3. Comparaison sécurisée timingSafeEqual
+  return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(expected, 'utf8'));
+}</pre>
+    </section>
+
+    <!-- ==================== SECTION 5: MODÈLE HYBRIDE B2B ==================== -->
+    <section id="section-hybrid" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-black uppercase">SECTION 5 • PROMPT 5</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Modèle Hybride B2B : Agrégé vs SaaS BYOK</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Deux modes de fonctionnement adaptés à chaque profil d'entreprise.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div class="p-5 rounded-2xl border border-blue-200 bg-blue-50/50 space-y-2">
+          <span class="font-black text-blue-900 text-sm">Mode Simplifié (AGREGATED)</span>
+          <p class="text-slate-700 leading-relaxed">Encaissement automatique via le compte maître régulé NanaSwitch. Aucune passerelle requise. Marge retenue : +1.5% de frais de switch à la source.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-purple-200 bg-purple-50/50 space-y-2">
+          <span class="font-black text-purple-900 text-sm">Mode Développeur SaaS (BYOK)</span>
+          <p class="text-slate-700 leading-relaxed">Injection de vos propres clés SasPay ou Sebpay. 0% de commission de switch. Facturation à l'usage SaaS : 0,02 XOF par requête débité de votre solde de crédits API.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 6: PLAFONDS KYC ==================== -->
+    <section id="section-kyc" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-full text-[10px] font-black uppercase">SECTION 6 • PROMPT 6</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Plafonds Risque & Profils KYC</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Restrictions de volume mensuel appliquées en temps réel.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
+          <span class="font-black text-slate-900 text-sm">Profil Particulier / Indépendant</span>
+          <p class="text-2xl font-black text-blue-600">1 000 000 XOF <span class="text-xs text-slate-500 font-normal">/ mois</span></p>
+          <p class="text-slate-500 text-[11px]">Pièces exigées : CNIB Recto/Verso + Selfie visage.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
+          <span class="font-black text-slate-900 text-sm">Profil Entreprise Enregistrée</span>
+          <p class="text-2xl font-black text-emerald-600">5 000 000 XOF <span class="text-xs text-slate-500 font-normal">/ mois</span></p>
+          <p class="text-slate-500 text-[11px]">Pièces exigées : RCCM + IFU + CNIB & Selfie du gérant.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 7: PLUGIN WOOCOMMERCE ==================== -->
+    <section id="section-woocommerce" class="bg-white rounded-3xl border border-teal-200 p-8 shadow-sm space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span class="px-2.5 py-1 bg-teal-100 text-teal-800 rounded-full text-[10px] font-black uppercase">SECTION 7 • PROMPT 7</span>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Plugin Officiel WooCommerce — NanaSwitch Gateway</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Version 1.0.0 • Conforme HPOS & WordPress 5.8 à 6.7+</p>
+        </div>
+        <a href="./downloads/nanaswitch-gateway.zip" download="nanaswitch-gateway.zip" class="px-5 py-3 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2">
+          <span>📦 Télécharger nanaswitch-gateway.zip</span>
+        </a>
+      </div>
+
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs text-slate-700">
+        <h4 class="font-extrabold text-slate-900">Guide d'installation rapide :</h4>
+        <ol class="list-decimal list-inside space-y-1">
+          <li>Dans WordPress, rendez-vous dans <strong>Extensions &gt; Ajouter &gt; Téléverser</strong>.</li>
+          <li>Sélectionnez l'archive <code>nanaswitch-gateway.zip</code> et cliquez sur Installer.</li>
+          <li>Activez l'extension puis ouvrez <strong>WooCommerce &gt; Réglages &gt; Paiements &gt; NanaSwitch Gateway</strong>.</li>
+          <li>Renseignez votre Public Key, Secret Key et Secret Webhook générés sur la console.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 8: MATRICE DES ERREURS ==================== -->
+    <section id="section-errors" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <span class="px-2.5 py-1 bg-slate-200 text-slate-800 rounded-full text-[10px] font-black uppercase">SECTION 8 • PROMPT 8</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Codes d'Erreur HTTP & Matrice de Dépannage</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Guide de résolution pas à pas pour les intégrateurs.</p>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+          <div class="flex justify-between font-bold">
+            <span class="font-mono text-slate-900">400 Bad Request</span>
+            <span class="text-slate-500">Paramètres manquants ou payload JSON invalide</span>
+          </div>
+          <p class="text-blue-700 font-semibold">👉 Vérifiez les champs amount, currency (XOF), customer.phone et orderId.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+          <div class="flex justify-between font-bold">
+            <span class="font-mono text-slate-900">401 Unauthorized</span>
+            <span class="text-slate-500">Clé secrète ns_live_sk_* invalide ou absente</span>
+          </div>
+          <p class="text-blue-700 font-semibold">👉 Vérifiez le header Authorization: Bearer ns_live_sk_... sans espaces superflus.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+          <div class="flex justify-between font-bold">
+            <span class="font-mono text-slate-900">402 Payment Required</span>
+            <span class="text-slate-500">Solde de crédits API SaaS épuisé en mode BYOK</span>
+          </div>
+          <p class="text-blue-700 font-semibold">👉 Rechargez votre portefeuille de crédits API depuis l'espace Développeur.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+          <div class="flex justify-between font-bold">
+            <span class="font-mono text-slate-900">403 Forbidden</span>
+            <span class="text-slate-500">Plafond mensuel KYC atteint (1M ou 5M XOF)</span>
+          </div>
+          <p class="text-blue-700 font-semibold">👉 Soumettez les pièces RCCM/IFU pour passer en compte Entreprise.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-10 text-center text-xs text-slate-500 space-y-2 mt-12">
+    <p class="font-bold text-slate-800">NanaSwitch Cloud — Passerelle Intelligente Mobile Money UEMOA</p>
+    <p>Une technologie opérée par <strong>NANASORE TECHNOLOGIES</strong> • Tous droits réservés.</p>
+    <div class="pt-2">
+      <a href="/nana-switch" class="text-blue-600 font-bold hover:underline">Accéder à la Console Cloud NanaSwitch &rarr;</a>
+    </div>
+  </footer>
+
+  <script>
+    function copySystemPrompt() {
+      const text = document.getElementById('promptContent').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ Prompt Système copié dans le presse-papiers !");
+      });
+    }
+
+    function handleSearch(query) {
+      const q = query.toLowerCase().trim();
+      const cards = document.querySelectorAll('.module-card');
+      cards.forEach(card => {
+        const searchData = card.getAttribute('data-search') || '';
+        const title = card.innerText.toLowerCase();
+        if (!q || searchData.includes(q) || title.includes(q)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

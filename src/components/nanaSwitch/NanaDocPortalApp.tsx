@@ -3,13 +3,14 @@ import {
   Bot, BookOpen, Key, Cpu, ShieldCheck, Layers, Lock, ShoppingCart, 
   AlertCircle, Download, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
   Search, Sparkles, Send, Terminal, CheckCircle2, RefreshCw, FileCode,
-  ShieldAlert, Radio, HelpCircle, FileText, ChevronRight
+  ShieldAlert, Radio, HelpCircle, FileText, ChevronRight, LogIn
 } from 'lucide-react';
 
 interface NanaDocPortalAppProps {
-  onClose: () => void;
-  copyToClipboard: (text?: string, label?: string) => void;
+  onClose?: () => void;
+  copyToClipboard?: (text?: string, label?: string) => void;
   initialPrompt?: string;
+  isPublicPortal?: boolean;
 }
 
 // Complete raw text of Prompt 1 (system:nanaswitch_integration_skill)
@@ -258,7 +259,12 @@ Dès que le cumul des transactions réussies du mois atteint ce montant, toute n
   }
 ];
 
-export function NanaDocPortalApp({ onClose, copyToClipboard, initialPrompt = 'hub' }: NanaDocPortalAppProps) {
+export function NanaDocPortalApp({ 
+  onClose, 
+  copyToClipboard, 
+  initialPrompt = 'hub',
+  isPublicPortal = true 
+}: NanaDocPortalAppProps) {
   const [activeView, setActiveView] = useState<string>(initialPrompt);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTabPrompt1, setActiveTabPrompt1] = useState<'simulator' | 'code' | 'specs'>('simulator');
@@ -381,7 +387,9 @@ export function NanaDocPortalApp({ onClose, copyToClipboard, initialPrompt = 'hu
   const handleCopyFullSkill = () => {
     navigator.clipboard.writeText(SYSTEM_PROMPT_CONTENT);
     setCopiedPrompt(true);
-    copyToClipboard(SYSTEM_PROMPT_CONTENT, "Prompt Système IA copié !");
+    if (copyToClipboard) {
+      copyToClipboard(SYSTEM_PROMPT_CONTENT, "Prompt Système IA copié !");
+    }
     setTimeout(() => setCopiedPrompt(false), 2500);
   };
 
@@ -476,16 +484,27 @@ Concernant votre demande "${textToSend}" :
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition border border-blue-200/60"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Plugin WooCommerce</span>
+              <span>Plugin WooCommerce (.zip)</span>
             </a>
 
-            <button
-              onClick={onClose}
-              className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+            {/* Bouton Public Requis : Se connecter / S'inscrire vers la Console Cloud */}
+            <a
+              href="/nana-switch"
+              className="px-4 py-2 bg-gradient-to-r from-[#1E40AF] to-[#2563EB] hover:from-[#1E3A8A] hover:to-[#1D4ED8] text-white rounded-xl text-xs font-black shadow-md shadow-blue-700/25 transition flex items-center gap-1.5 active:scale-95"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Fermer la Doc</span>
-            </button>
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Se connecter / S'inscrire</span>
+            </a>
+
+            {!isPublicPortal && onClose && (
+              <button
+                onClick={onClose}
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Retour</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

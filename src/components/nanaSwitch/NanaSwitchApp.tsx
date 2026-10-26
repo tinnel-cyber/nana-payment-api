@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { DeveloperTab } from '../dashboard/DeveloperTab';
 import { KycVolumeLimitCard } from '../dashboard/KycVolumeLimitCard';
-import { NanaDocPortalApp } from './NanaDocPortalApp';
 import { db, auth } from '../../firebase';
 import { 
   collection, 
@@ -270,7 +269,6 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [showDocPortal, setShowDocPortal] = useState(false);
   const [copiedKey, setCopiedKey] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -593,7 +591,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
           {/* Logo et Slug Label */}
           <div 
             className="flex items-center gap-2.5 cursor-pointer group" 
-            onClick={() => { setSelectedApp(null); setShowDocPortal(false); }}
+            onClick={() => { setSelectedApp(null); }}
           >
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1E40AF] to-[#2563EB] flex items-center justify-center text-white shadow-lg shadow-blue-600/20 font-black text-xl transition group-hover:scale-105">
               N
@@ -610,7 +608,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
           </div>
 
           {/* Active Application & Activity Domain Header */}
-          {selectedApp && !showDocPortal && (
+          {selectedApp && (
             <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200">
               <div className="flex items-center gap-2">
                 <button 
@@ -651,18 +649,18 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
             </button>
           )}
 
-          {/* Doc Portal Button */}
-          <button 
-            onClick={() => { setShowDocPortal(!showDocPortal); setSelectedApp(null); }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
-              showDocPortal 
-                ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
+          {/* Doc Publique Externe Link (100% Hors Application Protégée) */}
+          <a 
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+            title="Consulter la Documentation Développeur Publique (Accès Libre)"
           >
-            <BookOpen className="w-4 h-4 text-blue-500" />
-            <span>Documentation API</span>
-          </button>
+            <BookOpen className="w-4 h-4 text-blue-600" />
+            <span>Documentation Publique</span>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+          </a>
 
           {/* Bouton de Commutation Inter-Applications : Vers la Console Cloud BYOK */}
           <button 
@@ -703,10 +701,8 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
         </div>
       </header>
 
-      {/* DOCUMENTATION PORTAL VIEW */}
-      {showDocPortal ? (
-        <NanaDocPortalApp onClose={() => setShowDocPortal(false)} copyToClipboard={copyToClipboard} />
-      ) : selectedApp ? (
+      {/* MAIN MERCHANT DASHBOARD VIEW (14+ MODULES) */}
+      {selectedApp ? (
         /* MAIN MERCHANT DASHBOARD VIEW (14+ MODULES) */
         <div className="flex min-h-[calc(100vh-65px)]">
           
@@ -852,13 +848,16 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
                   <Plus className="w-5 h-5" />
                   <span>Créer une nouvelle application</span>
                 </button>
-                <button 
-                  onClick={() => setShowDocPortal(true)}
+                <a 
+                  href="/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-3 rounded-2xl text-sm transition flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4 text-slate-500" />
-                  <span>Consulter la Documentation API</span>
-                </button>
+                  <span>Consulter la Documentation Publique</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
               </div>
             </div>
           </div>
@@ -1905,10 +1904,6 @@ function TabSettings({ app, onUpgradeClick }: { app: NanaMerchantApp; onUpgradeC
   );
 }
 
-/* DOCUMENTATION PORTAL ISOLATED VIEW (DELEGATED TO NanaDocPortalApp) */
-function DocPortalView({ onClose, copyToClipboard }: { onClose: () => void; copyToClipboard: (t?: string, l?: string) => void }) {
-  return <NanaDocPortalApp onClose={onClose} copyToClipboard={copyToClipboard} />;
-}
 
 /* DYNAMIC MULTI-STEP KYC ONBOARDING MODAL */
 function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: { 
