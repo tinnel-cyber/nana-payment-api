@@ -216,12 +216,11 @@ function formatBurkinaPhoneNumber(phone) {
 
 /**
  * Formate le numéro de téléphone selon les exigences de l'API Sebpay par pays
- * TOUJOURS inclure l'indicatif national sans le '+' (ex: '22665565805' pour le BF, '2250712345678' pour la CI, etc.)
- * Ne JAMAIS envoyer un numéro local à 8 chiffres non indicaté sous peine de rejet 400 PAYMENT_DECLINED par l'opérateur.
+ * TOUJOURS inclure le '+' et l'indicatif national (ex: '+22665565805' pour le BF, '+2250712345678' pour la CI, etc.)
  * 
  * @param {string|number} phone - Numéro de téléphone brut
  * @param {string} countryIso - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
- * @returns {string} Numéro formaté avec indicatif national sans '+'
+ * @returns {string} Numéro formaté au format international avec '+' (ex: '+22665565805')
  */
 function formatSebpayPhoneNumber(phone, countryIso = 'BF') {
   if (!phone) return '';
@@ -238,11 +237,11 @@ function formatSebpayPhoneNumber(phone, countryIso = 'BF') {
 
   // Si le numéro commence déjà par l'indicatif officiel du pays (ex: 22665565805)
   if (cleaned.startsWith(prefixDigits)) {
-    return cleaned;
+    return `+${cleaned}`;
   }
 
-  // Si le numéro a été saisi en format local (ex: 65565805), ajouter impérativement l'indicatif officiel du pays
-  return `${prefixDigits}${cleaned}`;
+  // Si le numéro a été saisi en format local (ex: 65565805), ajouter impérativement l'indicatif officiel avec le '+'
+  return `+${prefixDigits}${cleaned}`;
 }
 
 /**
