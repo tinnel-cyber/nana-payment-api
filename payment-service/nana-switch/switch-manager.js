@@ -105,10 +105,10 @@ class NaNaSwitchManager {
 
   /**
    * Récupère un adaptateur par son identifiant
-   * @param {string} gatewayId
+   * @param {string} [gatewayId]
    */
-  getAdapter(gatewayId = 'sebpay') {
-    const cleanId = String(gatewayId || 'sebpay').toLowerCase().trim();
+  getAdapter(gatewayId = null) {
+    const cleanId = String(gatewayId || this.getPrimaryGateway()).toLowerCase().trim();
     const adapter = this.adapters.get(cleanId);
     if (!adapter) {
       throw new Error(`[NANASWITCH] Passerelle de paiement non reconnue : "${gatewayId}". Passerelles disponibles : ${Array.from(this.adapters.keys()).join(', ')}`);
@@ -311,12 +311,12 @@ class NaNaSwitchManager {
 
   /**
    * Alias de rétro-compatibilité : appelle initiatePaymentWithFailover
-   * @param {string} gatewayId
+   * @param {string} [gatewayId]
    * @param {object} params
    * @param {object} [options]
    */
-  async initiatePayment(gatewayId = 'sebpay', params = {}, options = {}) {
-    return await this.initiatePaymentWithFailover(gatewayId, params, options);
+  async initiatePayment(gatewayId = null, params = {}, options = {}) {
+    return await this.initiatePaymentWithFailover(gatewayId || this.getPrimaryGateway(), params, options);
   }
 
   /**
@@ -331,7 +331,7 @@ class NaNaSwitchManager {
     try {
       const orderId = originalParams.orderId || initResult.orderId;
       const externalReference = originalParams.externalReference || initResult.reference || `${originalParams.storeId || 'nanasore'}___${orderId}`;
-      const chosenGateway = initResult.gateway || 'sebpay';
+      const chosenGateway = initResult.gateway || this.getPrimaryGateway();
 
       const nowServer = new Date().toISOString();
 
@@ -343,7 +343,7 @@ class NaNaSwitchManager {
         tenantId: originalParams.storeId || originalParams.tenantId || 'nanasore_central_hub',
         amount: Number(originalParams.amount || initResult.amount || 0),
         currency: (originalParams.currency || initResult.currency || 'XOF').toUpperCase(),
-        gateway: chosenGateway, // "sebpay" ou "saspay"
+        gateway: chosenGateway, // "saspay" par défaut ou "sebpay"
         provider: chosenGateway.toUpperCase(),
         failedOver: Boolean(initResult.failedOver),
         originalGateway: initResult.originalGateway || null,
@@ -377,11 +377,11 @@ class NaNaSwitchManager {
 
   /**
    * 2. Traite un Webhook entrant avec vérification cryptographique selon la passerelle :
-   * @param {string} gatewayId
+   * @param {string} [gatewayId]
    * @param {object} req - Requête Express (headers, body brut, query)
    */
-  async verifyWebhook(gatewayId = 'sebpay', req) {
-    const adapter = this.getAdapter(gatewayId);
+  async verifyWebhook(gatewayId = null, req) {
+    const adapter = this.getAdapter(gatewayId || this.getPrimaryGateway());
     return await adapter.verifyWebhook(req);
   }
 
@@ -395,7 +395,7 @@ class NaNaSwitchManager {
       storeId,
       totalAmount,
       transactionId,
-      gateway = 'sebpay',
+      gateway = this.getPrimaryGateway(),
       customerPhone,
       customerEmail,
       customerName,

@@ -24,7 +24,12 @@ services:
         sync: false
       - key: PAYMENT_WEBHOOK_SECRET
         value: konkobo_telecom_webhook_secret_key_2026
-      # SasPay Gateway (Secours & Multi-Pays)
+      # Routage NaNaSwitch (SasPay Prioritaire 100% / Sebpay Secours)
+      - key: PRIMARY_GATEWAY
+        value: saspay
+      - key: FALLBACK_GATEWAY
+        value: sebpay
+      # SasPay Gateway (Passerelle Principale)
       - key: SASPAY_API_KEY
         sync: false
       - key: SASPAY_WEBHOOK_SECRET

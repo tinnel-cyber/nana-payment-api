@@ -154,6 +154,104 @@ switchManager.registerAdapter(new MockSuccessSaspayAdapter());
       process.exit(1);
     }
 
+    // 5. TEST ROUTAGE 100% PAR DÉFAUT VERS SASPAY (SANS PARAMÈTRE DE GATEWAY)
+    console.log('--- 5. Test Routage 100% par Défaut vers SasPay (gateway = null) ---');
+    const defaultCallResult = await switchManager.initiatePaymentWithFailover(null, {
+      orderId: 'CHK-TEST-DEFAULT-003',
+      storeId: 'nanasore_boutique',
+      amount: 750,
+      currency: 'XOF',
+      phone: '+22665565805',
+      customerName: 'Client Sans Paramètre Gateway',
+      country: 'BF',
+      operator: 'orange'
+    });
+
+    console.log({
+      success: defaultCallResult.success,
+      gateway: defaultCallResult.gateway,
+      failedOver: defaultCallResult.failedOver,
+      transactionId: defaultCallResult.transactionId
+    });
+
+    if (defaultCallResult.success === true && defaultCallResult.gateway === 'saspay' && defaultCallResult.failedOver === false) {
+      console.log('✅ Test 5 Validé : 100% des requêtes sans passerelle explicite routent bien vers SasPay par défaut !\n');
+    } else {
+      console.error('❌ Échec Test 5');
+      process.exit(1);
+    }
+
+    // 6. TEST FAILOVER INVERSÉ : SASPAY ÉCHOUE -> REPLI VERS SEBPAY
+    console.log('--- 6. Test Failover Inversé (SasPay Échoue -> Sebpay Prend le Relais) ---');
+    class MockFailingSaspayAdapter extends PaymentGatewayAdapter {
+      constructor() {
+        super('saspay', 'Mock SasPay Défaillant');
+      }
+      async initiatePayment(params) {
+        console.log('  [MOCK SASPAY] Simulation erreur API 500...');
+        const err = new Error('Saspay API Temporary Unavailable (500)');
+        err.status = 500;
+        throw err;
+      }
+    }
+    class MockWorkingSebpayAdapter extends PaymentGatewayAdapter {
+      constructor() {
+        super('sebpay', 'Mock Sebpay Opérationnel de Secours');
+      }
+      async initiatePayment(params) {
+        console.log('  [MOCK SEBPAY] Initiation réussie sur passerelle de secours...');
+        return {
+          success: true,
+          paymentUrl: 'https://checkout.sebpay.bj/pay/seb_mock_999',
+          checkout_url: 'https://checkout.sebpay.bj/pay/seb_mock_999',
+          redirectUrl: 'https://checkout.sebpay.bj/pay/seb_mock_999',
+          provider_link: 'https://checkout.sebpay.bj/pay/seb_mock_999',
+          action: 'redirect',
+          transactionId: 'seb_mock_999',
+          reference: params.externalReference,
+          orderId: params.orderId,
+          storeId: params.storeId,
+          amount: params.amount,
+          currency: 'XOF'
+        };
+      }
+    }
+
+    switchManager.registerAdapter(new MockFailingSaspayAdapter());
+    switchManager.registerAdapter(new MockWorkingSebpayAdapter());
+
+    const fallbackToSebpayResult = await switchManager.initiatePaymentWithFailover('saspay', {
+      orderId: 'CHK-TEST-FAILOVER-SAS-TO-SEB',
+      storeId: 'nanasore_boutique',
+      amount: 1500,
+      currency: 'XOF',
+      phone: '+22665565805',
+      customerName: 'Client Failover Sas to Seb',
+      country: 'BF',
+      operator: 'orange'
+    });
+
+    console.log({
+      success: fallbackToSebpayResult.success,
+      gateway: fallbackToSebpayResult.gateway,
+      failedOver: fallbackToSebpayResult.failedOver,
+      originalGateway: fallbackToSebpayResult.originalGateway,
+      failoverReason: fallbackToSebpayResult.failoverReason,
+      transactionId: fallbackToSebpayResult.transactionId
+    });
+
+    if (
+      fallbackToSebpayResult.success === true &&
+      fallbackToSebpayResult.gateway === 'sebpay' &&
+      fallbackToSebpayResult.failedOver === true &&
+      fallbackToSebpayResult.originalGateway === 'saspay'
+    ) {
+      console.log('✅ Test 6 Validé : En cas d\'échec de SasPay, Sebpay prend immédiatement le relais en secours !\n');
+    } else {
+      console.error('❌ Échec Test 6');
+      process.exit(1);
+    }
+
     console.log('================================================================');
     console.log('🎉 TOUS LES TESTS DU ROUTEUR ET FAILOVER NANASWITCH SONT 100% VALIDÉS !');
     console.log('================================================================');
