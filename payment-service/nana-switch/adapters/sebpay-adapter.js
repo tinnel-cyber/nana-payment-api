@@ -91,6 +91,7 @@ class SebpayAdapter extends PaymentGatewayAdapter {
       customerName,
       country: country || countryCode || 'BF',
       failover: Boolean(params.failover),
+      customCredentials: params.customCredentials,
       metadata: {
         orderId,
         storeId,

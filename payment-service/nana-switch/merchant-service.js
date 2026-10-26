@@ -170,10 +170,15 @@ class NanaSwitchMerchantService {
       return {
         amount,
         fee: fallbackFee,
+        total_fee: fallbackFee,
         netAmount: amount - fallbackFee,
+        net_amount: amount - fallbackFee,
         chargedRate: 0.060,
+        rate_applied: 6.0,
         marginRate: 0.015,
-        minFee: 12
+        platform_margin: Math.round(amount * 0.015),
+        minFee: 12,
+        min_fee: 12
       };
     }
 
@@ -183,10 +188,15 @@ class NanaSwitchMerchantService {
     return {
       amount,
       fee,
+      total_fee: fee,
       netAmount: amount - fee,
+      net_amount: amount - fee,
       chargedRate: operatorConfig.total_charged_rate,
+      rate_applied: Number((operatorConfig.total_charged_rate * 100).toFixed(2)),
       marginRate: operatorConfig.nanaswitch_margin,
-      minFee: operatorConfig.min_fee_xof
+      platform_margin: Math.round(amount * operatorConfig.nanaswitch_margin),
+      minFee: operatorConfig.min_fee_xof,
+      min_fee: operatorConfig.min_fee_xof
     };
   }
 

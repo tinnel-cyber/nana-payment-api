@@ -171,12 +171,22 @@ function getOrGenerateIdempotencyKey(key) {
  * Construit les en-têtes HTTP officiels SasPay (avec Authorization nettoyé)
  */
 function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
-  const cleanKey = (process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '').replace(/\s+/g, '').trim();
+  const cleanKey = (
+    customHeaders.apiKey ||
+    customHeaders.authorization ||
+    process.env.SASPAY_API_KEY ||
+    process.env.SASPAY_SECRET_KEY ||
+    ''
+  ).replace(/^Bearer\s+/i, '').replace(/\s+/g, '').trim();
+
+  const clean = { ...customHeaders };
+  delete clean.apiKey;
+
   const headers = {
     'Authorization': `Bearer ${cleanKey}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    ...customHeaders
+    ...clean
   };
 
   if (idempotencyKey) {
@@ -257,7 +267,7 @@ async function callSaspayApi(endpoint, options = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const targetUrl = `${baseUrl}${cleanEndpoint}`;
 
-  const apiKey = getSaspayApiKey();
+  const apiKey = headers.apiKey || headers.authorization || getSaspayApiKey();
   if (!apiKey) {
     throw new Error('[SASPAY CONFIG ERROR] Clé API SasPay manquante. Définissez SASPAY_API_KEY ou SASPAY_SECRET_KEY.');
   }
@@ -562,10 +572,16 @@ async function createSaspayPayin(params) {
     };
   }
 
+  const customHeaders = params.customHeaders || {};
+  if (params.customCredentials?.saspay?.api_key) {
+    customHeaders.apiKey = params.customCredentials.saspay.api_key;
+  }
+
   // APPEL DIRECT EN CLAIR SANS PROXY FIXIE
   const rawResponse = await callSaspayApi(endpoint, {
     method: 'POST',
     body: payload,
+    headers: customHeaders,
     isPayout: false,
     idempotencyKey
   });

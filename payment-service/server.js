@@ -64,6 +64,12 @@ const { analyzeChatIntent, DEFAULT_MOCK_INVENTORY } = require('./ai-checkout');
 const { createChatFinanceRouter } = require('./chat-finance-controller');
 const { LiveCommerceEngine, createLiveCommerceRouter } = require('./live-commerce-controller');
 const { merchantService, DEFAULT_PRICING_MATRIX } = require('./nana-switch/merchant-service');
+const { pricingEngine } = require('./nana-switch/pricingEngine');
+const {
+  generateNanaSwitchKeyPair,
+  requireNanaSwitchAuth,
+  optionalNanaSwitchAuth
+} = require('./nana-switch/validateNanaSwitchKey');
 
 const app = express();
 const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'konkobo_telecom_webhook_secret_key_2026';
@@ -252,7 +258,11 @@ app.use(cors({
     'x-fedapay-signature',
     'x-cinetpay-signature',
     'x-signature-sha256',
-    'x-api-key'
+    'x-api-key',
+    'x-nanaswitch-skey',
+    'x-nanaswitch-key',
+    'x-merchant-id',
+    'x-public-key'
   ]
 }));
 
@@ -1901,21 +1911,14 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
     }
 
     // 1. Authentification & Résolution du Marchand (B2B Hybride : Agrégé vs Développeurs BYOK)
-    const apiKeyHeader = req.headers['x-api-key'] || req.headers['x-nanaswitch-key'] || req.headers['authorization'] || '';
+    const apiKeyHeader = req.headers['x-nanaswitch-skey'] || req.headers['x-nanaswitch-key'] || req.headers['x-api-key'] || req.headers['authorization'] || '';
     const merchantIdParam = req.body.merchantId || req.body.merchant_id || storeId;
     const merchant = await merchantService.resolveMerchant(db, apiKeyHeader, merchantIdParam);
 
     // 2. Coupe-circuit immédiat si solde de crédits API épuisé (0.02 XOF / 1 crédit par appel)
-    const creditsBalance = merchant?.api_pricing_config?.api_credits_balance ?? 5000;
-    const autoBlock = merchant?.api_pricing_config?.auto_block_on_zero ?? true;
-    if (creditsBalance <= 0 && autoBlock) {
-      return res.status(402).json({
-        success: false,
-        errorCode: '402_INSUFFICIENT_CLOUD_CREDITS',
-        message: 'Coupe-circuit activé : Solde de crédits API épuisé (0 crédit restant). Veuillez recharger votre portefeuille sur NanaSwitch Cloud.',
-        remainingCredits: 0,
-        merchantId: merchant.merchant_id
-      });
+    const creditCheck = await pricingEngine.verifyAndCheckApiCredits(db, merchant);
+    if (!creditCheck.allowed) {
+      return res.status(402).json(creditCheck.errorResponse);
     }
 
     // 3. Formatage de la référence externe standardisée : ${merchant_id}___${order_id}
@@ -3127,6 +3130,50 @@ app.post(['/v1/switch/decrypt', '/api/switch/decrypt'], express.json(), (req, re
  * - Étape C : Exécution & Auto-Failover 0ms
  * - Étape D : Décompte de Crédit & Traçabilité Firestore
  */
+/**
+ * POST /v1/switch/keys/generate & POST /api/switch/keys/generate
+ * Génération cryptographique sécurisée d'une paire de clés NanaSwitch (Public Key + Secret Key)
+ * Stocke le hash Bcrypt de la clé secrète dans Firestore et renvoie la clé secrète brute UNE SEULE FOIS.
+ */
+app.post(['/v1/switch/keys/generate', '/api/switch/keys/generate'], express.json(), async (req, res) => {
+  try {
+    const { merchantId = 'm_live_bf_001', mode = 'live', businessName } = req.body;
+    const keyPair = await generateNanaSwitchKeyPair(mode);
+
+    if (db && merchantId) {
+      const nowServer = admin.firestore.FieldValue.serverTimestamp();
+      await db.collection('merchants').doc(merchantId).set({
+        merchant_id: merchantId,
+        business_name: businessName || 'NANASORE TECHNOLOGIES',
+        status: 'ACTIVE',
+        nanaswitch_keys: {
+          public_key: keyPair.publicKey,
+          secret_key_hash: keyPair.secretKeyHash,
+          generated_at: nowServer,
+          mode
+        },
+        updated_at: nowServer
+      }, { merge: true });
+    }
+
+    return res.status(201).json({
+      success: true,
+      merchant_id: merchantId,
+      public_key: keyPair.publicKey,
+      secret_key: keyPair.secretKey,
+      message: 'Paire de clés NanaSwitch générée avec succès.',
+      warning: 'Conservez précieusement votre clé secrète (secret_key). Par mesure de sécurité Zero-Trust, seul son hash Bcrypt est conservé dans notre coffre-fort Firestore et elle ne pourra plus jamais être récupérée.'
+    });
+  } catch (err) {
+    console.error('[KEY GENERATION ERROR]', err.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Échec de la génération des clés NanaSwitch',
+      details: err.message
+    });
+  }
+});
+
 app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, res) => {
   const startTs = Date.now();
   const txId = `sw_${Math.floor(100000 + Math.random() * 900000)}`;
@@ -3153,7 +3200,9 @@ app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, 
 
   const countryUpper = String(country).toUpperCase();
   const ref = reference || `REF-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  const tenantId = req.body.tenantId || (apiKey ? apiKey.slice(13, 23) : 'merchant-demo');
+  const tenantIdParam = req.body.tenantId || (apiKey ? apiKey.slice(13, 23) : 'merchant-demo');
+  const merchant = await merchantService.resolveMerchant(db, apiKey, tenantIdParam);
+  const tenantId = merchant?.merchant_id || tenantIdParam;
   const isLive = apiKey ? apiKey.startsWith('nana_sw_live_') : true;
 
   console.log(`[NANASWITCH ROUTE] Tx: ${txId} | Tenant: ${tenantId} | Pays: ${countryUpper} | Montant: ${amount} ${currency}`);
@@ -3161,24 +3210,14 @@ app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, 
   // --------------------------------------------------------------------------
   // ÉTAPE A : VÉRIFICATION SÉCURITÉ & COUPE-CIRCUIT CRÉDITS (402)
   // --------------------------------------------------------------------------
-  let credits = 250;
-  if (db && tenantId) {
-    try {
-      const walletDoc = await db.collection('switch_wallets').doc(tenantId).get();
-      if (walletDoc.exists) {
-        credits = typeof walletDoc.data().credits === 'number' ? walletDoc.data().credits : 250;
-      }
-    } catch (wErr) {
-      console.warn('[NANASWITCH ROUTE] Lecture wallet :', wErr.message);
-    }
-  }
-
-  // Coupe-circuit immédiat si crédits à 0
-  if (credits <= 0) {
+  const creditCheck = await pricingEngine.verifyAndCheckApiCredits(db, merchant);
+  let credits = creditCheck.remainingCredits;
+  if (!creditCheck.allowed) {
     const blockedLatency = Date.now() - startTs;
     if (db) {
       db.collection('switch_logs').add({
         txId,
+        merchantId: tenantId,
         tenantId,
         country: countryUpper,
         amount,
@@ -3192,13 +3231,7 @@ app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, 
       }).catch(() => {});
     }
 
-    return res.status(402).json({
-      success: false,
-      errorCode: '402_INSUFFICIENT_CLOUD_CREDITS',
-      transactionId: txId,
-      message: 'Coupe-circuit activé : Solde de crédits Cloud épuisé (0 crédit restant). Veuillez recharger votre portefeuille dans NaNaSwitch Cloud (/nana-switch/billing).',
-      remainingCredits: 0
-    });
+    return res.status(402).json(creditCheck.errorResponse);
   }
 
   // --------------------------------------------------------------------------

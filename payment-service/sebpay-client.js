@@ -524,15 +524,19 @@ function getSebpayBaseUrl() {
  * Injecte obligatoirement X-Public-Key, X-Secret-Key et Content-Type
  */
 function getSebpayHeaders(customHeaders = {}) {
-  const publicKey = process.env.SEBPAY_PUBLIC_KEY || '';
-  const secretKey = process.env.SEBPAY_SECRET_KEY || '';
+  const publicKey = customHeaders['X-Public-Key'] || customHeaders.publicKey || process.env.SEBPAY_PUBLIC_KEY || '';
+  const secretKey = customHeaders['X-Secret-Key'] || customHeaders.secretKey || process.env.SEBPAY_SECRET_KEY || '';
+
+  const clean = { ...customHeaders };
+  delete clean.publicKey;
+  delete clean.secretKey;
 
   return {
     'X-Public-Key': publicKey,
     'X-Secret-Key': secretKey,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    ...customHeaders
+    ...clean
   };
 }
 
@@ -591,8 +595,8 @@ async function callSebpayApi(endpoint, options = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const targetUrl = `${baseUrl}${cleanEndpoint}`;
 
-  const publicKey = process.env.SEBPAY_PUBLIC_KEY;
-  const secretKey = process.env.SEBPAY_SECRET_KEY;
+  const publicKey = headers['X-Public-Key'] || headers.publicKey || process.env.SEBPAY_PUBLIC_KEY;
+  const secretKey = headers['X-Secret-Key'] || headers.secretKey || process.env.SEBPAY_SECRET_KEY;
 
   if (!publicKey || !secretKey) {
     throw new Error('[SEBPAY AUTH ERROR] Clés d\'authentification manquantes. Définissez SEBPAY_PUBLIC_KEY et SEBPAY_SECRET_KEY sur Render.');
@@ -1072,11 +1076,18 @@ async function createSebpayCheckoutSession(params = {}) {
   console.log(`[SEBPAY CHECKOUT SESSION] Création Hosted Session pour ${safeExternalReference} (${amount} ${body.currency}) | Tél: ${formattedPhone || 'N/A'}`);
   console.log('[SEBPAY CHECKOUT PAYLOAD]', JSON.stringify(body, null, 2));
 
+  const customHeaders = params.customHeaders || {};
+  if (params.customCredentials?.sebpay) {
+    if (params.customCredentials.sebpay.public_key) customHeaders.publicKey = params.customCredentials.sebpay.public_key;
+    if (params.customCredentials.sebpay.secret_key) customHeaders.secretKey = params.customCredentials.sebpay.secret_key;
+  }
+
   let rawResponse;
   try {
     rawResponse = await callSebpayApi('checkout/sessions', {
       method: 'POST',
-      body
+      body,
+      headers: customHeaders
     });
   } catch (err) {
     console.error('[SEBPAY CHECKOUT SESSION ERROR]', err.message, err.data || '');

@@ -82,6 +82,7 @@ class SaspayAdapter extends PaymentGatewayAdapter {
       description: description.substring(0, 120),
       returnUrl: returnUrl || 'https://pos-app-1759a.web.app/orders',
       callbackUrl: callbackUrl || process.env.PAYMENT_CALLBACK_URL || 'https://nana-payment-api.onrender.com/webhook/saspay',
+      customCredentials: params.customCredentials,
       customPayload: {
         metadata: {
           storeId,
