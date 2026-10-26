@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
+  Camera, Mail, User,
   LayoutDashboard, Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, Link2, 
   ShoppingCart, Users, BarChart3, Building2, UserCheck, ShieldCheck, 
   Key, Radio, History, AlertTriangle, Percent, HelpCircle, Settings, 
@@ -272,21 +273,32 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
   const [copiedKey, setCopiedKey] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // KYC Form State
+  // KYC Form State (Particulier vs Entreprise)
   const [kycForm, setKycForm] = useState({
     type: 'entreprise' as 'entreprise' | 'particulier',
     appName: '',
-    sector: 'E-commerce',
+    sector: 'E-commerce & Vente en ligne',
     website: '',
     description: '',
+    // Champs spécifiques Particulier
     fullName: '',
     cnibNumber: '',
-    ifuPersonal: '',
+    cnibRectoName: '',
+    cnibVersoName: '',
+    faceSelfieName: '',
     phone: '',
+    // Champs spécifiques Entreprise
     companyName: '',
-    rccm: '',
-    ifuCompany: '',
+    companyEmail: '',
     managerName: '',
+    managerCnibNumber: '',
+    managerCnibRectoName: '',
+    managerCnibVersoName: '',
+    managerSelfieName: '',
+    rccm: '',
+    rccmFileName: '',
+    ifuCompany: '',
+    ifuFileName: '',
     bankRib: '',
     contractSigned: false
   });
@@ -417,15 +429,37 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newId = `app_nana_${Date.now().toString().slice(-4)}`;
+    const appDisplayName = kycForm.appName || (kycForm.type === 'entreprise' ? kycForm.companyName : kycForm.fullName) || 'Nouvelle Application';
+    const sectorChosen = kycForm.sector || 'E-commerce & Vente en ligne';
+
     const newApp: NanaMerchantApp = {
       id: newId,
-      name: kycForm.appName || 'Nouvelle Application',
-      sector: kycForm.sector,
+      name: appDisplayName,
+      sector: sectorChosen,
       type: kycForm.type,
       status: 'PENDING_KYC',
       createdAt: new Date().toISOString().split('T')[0],
       balances: { XOF: 0, USD: 0, XAF: 0, GNF: 0, GHS: 0 },
-      kyc: { ...kycForm }
+      monthly_usage: {
+        month: new Date().toISOString().slice(0, 7),
+        volume_xof: 0,
+        transaction_count: 0
+      },
+      kyc_limits: {
+        tier: kycForm.type === 'entreprise' ? 'ENTERPRISE' : 'INDIVIDUAL',
+        max_monthly_volume_xof: kycForm.type === 'entreprise' ? 5000000 : 1000000,
+        description: kycForm.type === 'entreprise' ? 'Compte Entreprise Enregistrée' : 'Compte Particulier / Indépendant'
+      },
+      kyc: { 
+        ...kycForm,
+        companyName: kycForm.type === 'entreprise' ? kycForm.companyName : undefined,
+        rccm: kycForm.type === 'entreprise' ? kycForm.rccm : undefined,
+        ifuCompany: kycForm.type === 'entreprise' ? kycForm.ifuCompany : undefined,
+        managerName: kycForm.type === 'entreprise' ? kycForm.managerName : undefined,
+        companyEmail: kycForm.type === 'entreprise' ? kycForm.companyEmail : undefined,
+        fullName: kycForm.fullName || kycForm.managerName,
+        sector: sectorChosen
+      }
     };
 
     setApps([newApp, ...apps]);
@@ -437,16 +471,23 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
       try {
         await setDoc(doc(db, 'merchants', newId), {
           merchant_id: newId,
-          business_name: kycForm.type === 'entreprise' ? (kycForm.companyName || kycForm.appName) : (kycForm.fullName || kycForm.appName),
-          rccm: kycForm.rccm || null,
-          ifu: kycForm.type === 'entreprise' ? kycForm.ifuCompany : kycForm.ifuPersonal,
+          business_name: kycForm.type === 'entreprise' ? (kycForm.companyName || appDisplayName) : (kycForm.fullName || appDisplayName),
+          // Règle stricte : AUCUN IFU ni RCCM pour Particulier
+          rccm: kycForm.type === 'entreprise' ? (kycForm.rccm || null) : null,
+          ifu: kycForm.type === 'entreprise' ? (kycForm.ifuCompany || null) : null,
+          company_email: kycForm.type === 'entreprise' ? (kycForm.companyEmail || null) : null,
+          manager_name: kycForm.type === 'entreprise' ? (kycForm.managerName || null) : null,
           account_type: 'EXTERNAL_BYOK',
           type: kycForm.type,
-          sector: kycForm.sector,
+          sector: sectorChosen,
           status: 'PENDING_VERIFICATION',
           storeApprovalStatus: 'PENDING',
           created_at: new Date().toISOString(),
-          kyc_payload: kycForm
+          kyc_payload: {
+            ...kycForm,
+            // Nettoyage : aucun champ entreprise polluant pour les particuliers
+            ...(kycForm.type === 'particulier' ? { rccm: null, ifuCompany: null, companyName: null, companyEmail: null } : {})
+          }
         }, { merge: true });
       } catch (fbErr) {
         console.warn('[NANASWITCH FIRESTORE SAVE]', (fbErr as Error).message);
@@ -567,18 +608,30 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
             </div>
           </div>
 
-          {/* Active Application Switcher Pill */}
+          {/* Active Application & Activity Domain Header */}
           {selectedApp && !showDocPortal && (
-            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-slate-200">
-              <span className="text-xs text-slate-400 font-medium">Application active :</span>
-              <button 
-                onClick={() => setSelectedApp(null)} 
-                className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 transition"
-              >
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{selectedApp.name}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </button>
+            <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setSelectedApp(null)} 
+                  className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 transition shadow-xs"
+                  title="Changer d'application"
+                >
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="font-extrabold text-slate-900">{selectedApp.name}</span>
+                  <span className="font-mono text-[10px] text-slate-400 font-semibold px-1.5 py-0.5 bg-white rounded border border-slate-200">
+                    {selectedApp.id}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                </button>
+                
+                {/* Domaine d'activité Badge à côté du numéro de compte */}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-blue-50 text-[#1E40AF] border border-blue-200/90 shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1E40AF]" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500/80">Domaine :</span>
+                  <span>{selectedApp.sector || selectedApp.kyc?.sector || 'E-commerce & Vente en ligne'}</span>
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -660,6 +713,28 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
                 <ArrowLeft className="w-4 h-4" />
                 <span>Toutes les applications</span>
               </button>
+
+              {/* Sidebar Header: Account Identifier & Activity Domain */}
+              <div className="mx-1 p-3.5 bg-gradient-to-br from-slate-50 to-blue-50/50 rounded-2xl border border-slate-200/90 shadow-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">N° Compte</span>
+                  <span className="font-mono text-[10px] font-extrabold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                    {selectedApp.id}
+                  </span>
+                </div>
+                <h3 className="text-xs font-black text-slate-900 truncate tracking-tight">{selectedApp.name}</h3>
+                <div className="pt-1 flex flex-col gap-0.5">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Domaine d'activité :</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-[#1E40AF] text-white truncate shadow-xs">
+                      {selectedApp.sector || selectedApp.kyc?.sector || 'E-commerce & Vente en ligne'}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-500">
+                      • {selectedApp.type === 'entreprise' ? 'Entreprise' : 'Particulier'}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               <div className="px-3">
                 <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Navigation Marchand</h4>
@@ -948,11 +1023,23 @@ function TabDashboard({ app, copyToClipboard, setActiveTab, onUpgradeClick }: { 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       
-      {/* Top Banner Header */}
+      {/* Top Banner Header with Domain & Account */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Tableau de bord</h1>
-          <p className="text-xs text-slate-500 font-medium mt-1">Vue d'ensemble de {app.name} — transactions et solde en temps réel.</p>
+          <div className="flex flex-wrap items-center gap-2.5 mb-1">
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{app.name}</h1>
+            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+              {app.id}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-[#1E40AF] border border-blue-200 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1E40AF]" />
+              <span className="text-[10px] uppercase font-bold text-blue-500/80">Domaine :</span>
+              <span>{app.sector || app.kyc?.sector || 'E-commerce & Vente en ligne'}</span>
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 font-medium">
+            Tableau de bord marchand en temps réel • Profil : <strong className="text-slate-800 font-bold">{app.type === 'entreprise' ? 'Compte Entreprise' : 'Compte Particulier'}</strong>.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setActiveTab('payouts')} className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-sm flex items-center gap-2">
@@ -1910,6 +1997,14 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
 }) {
   const isParticulier = kycForm.type === 'particulier';
 
+  // Helper pour simuler la sélection d'un fichier et mettre à jour le nom
+  const handleFileChange = (field: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setKycForm({ ...kycForm, [field]: file.name });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
@@ -1919,6 +2014,11 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Nouveau Dossier d'Intégration</span>
             <h2 className="text-xl font-bold mt-0.5">Formulaire d'Onboarding & KYC</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isParticulier 
+                ? 'Profil Particulier : Nom complet, Domaine d\'activité, CNIB Recto/Verso, Selfie visage.' 
+                : 'Profil Entreprise : Gérant, Email pro, Domaine d\'activité, CNIB Recto/Verso, Selfie, RCCM, IFU.'}
+            </p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-full transition">
             <XCircle className="w-6 h-6" />
@@ -1928,22 +2028,24 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
         {/* Modal Form Content */}
         <form onSubmit={handleKycSubmit} className="p-6 space-y-6 text-xs">
           
-          {/* STEP 1: Account Type Selection */}
+          {/* STEP 1: Type Selection (Entreprise vs Particulier) */}
           <div className="space-y-3">
-            <label className="font-bold text-slate-900 block">1. Type de Compte Partenaire</label>
+            <label className="font-bold text-slate-900 block text-sm">1. Type de Compte Partenaire</label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => setKycForm({ ...kycForm, type: 'entreprise' })}
                 className={`p-4 rounded-2xl border text-left transition ${
                   kycForm.type === 'entreprise' 
-                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20' 
+                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20 shadow-sm' 
                     : 'border-slate-200 hover:border-slate-300 text-slate-600'
                 }`}
               >
                 <Building2 className="w-6 h-6 text-[#1E40AF] mb-2" />
-                <p className="font-bold text-sm">Entreprise / Société</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Pour SARL, SA, EURL enregistrées avec RCCM et IFU.</p>
+                <p className="font-bold text-sm">Compte Entreprise</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  SARL, SA, EURL avec RCCM, IFU d'entreprise et représentant légal (Plafond 5M XOF/mois).
+                </p>
               </button>
 
               <button
@@ -1951,169 +2053,391 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
                 onClick={() => setKycForm({ ...kycForm, type: 'particulier' })}
                 className={`p-4 rounded-2xl border text-left transition ${
                   kycForm.type === 'particulier' 
-                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20' 
+                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20 shadow-sm' 
                     : 'border-slate-200 hover:border-slate-300 text-slate-600'
                 }`}
               >
                 <UserCheck className="w-6 h-6 text-[#1E40AF] mb-2" />
-                <p className="font-bold text-sm">Particulier / Freelance</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Pour auto-entrepreneurs avec CNIB & IFU personnel.</p>
+                <p className="font-bold text-sm">Compte Particulier</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Indépendant, freelance ou créateur. CNIB Recto/Verso et Selfie visage (Plafond 1M XOF/mois).
+                </p>
               </button>
             </div>
           </div>
 
-          {/* STEP 2: General Application Info */}
-          <div className="space-y-4 border-t border-slate-100 pt-4">
-            <h3 className="font-bold text-slate-900 text-sm">2. Informations sur l'Application</h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* ============================================================== */}
+          {/* CONDITIONNEL : FORMULAIRE PARTICULIER                          */}
+          {/* ============================================================== */}
+          {isParticulier ? (
+            <div className="space-y-5 border-t border-slate-100 pt-5 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <User className="w-4 h-4 text-[#1E40AF]" />
+                <span>Informations & Pièces KYC du Particulier</span>
+              </div>
+
+              {/* 1. Nom complet */}
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Nom de l'application / Boutique</label>
+                <label className="font-semibold text-slate-700 block mb-1">
+                  Nom complet du titulaire <span className="text-rose-500">*</span>
+                </label>
                 <input 
-                  type="text"
-                  required
-                  placeholder="Ex: NanaApp E-commerce"
-                  value={kycForm.appName}
-                  onChange={e => setKycForm({ ...kycForm, appName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600 font-bold"
+                  type="text" 
+                  required 
+                  placeholder="Ex: Rasmané Konkobo"
+                  value={kycForm.fullName}
+                  onChange={e => setKycForm({ ...kycForm, fullName: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
+              {/* 2. Domaine d'activité */}
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Secteur d'activité</label>
+                <label className="font-semibold text-slate-700 block mb-1">
+                  Domaine d'activité <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={kycForm.sector}
                   onChange={e => setKycForm({ ...kycForm, sector: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600 font-semibold"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-600"
                 >
-                  <option value="E-commerce">E-commerce & Vente en ligne</option>
-                  <option value="SaaS & App Mobile">SaaS & Application Mobile</option>
-                  <option value="Éducation & Formation">Éducation & Formation</option>
-                  <option value="Service & Consulting">Services aux Entreprises</option>
+                  <option value="E-commerce & Vente en ligne">E-commerce & Vente en ligne</option>
+                  <option value="Prestations de Services & Freelance">Prestations de Services & Freelance</option>
+                  <option value="Création de Contenu & Médias">Création de Contenu & Influence</option>
+                  <option value="Artisanat, Mode & Création">Artisanat, Mode & Création</option>
+                  <option value="Restauration & Métiers de Bouche">Restauration & Métiers de Bouche</option>
+                  <option value="Éducation, Coaching & Formation">Éducation, Coaching & Formation</option>
+                  <option value="Technologies & Développement Web/Mobile">Technologies & Développement Web/Mobile</option>
+                  <option value="Commerce Général & Distribution">Commerce Général & Distribution</option>
                 </select>
+                <p className="text-[10px] text-slate-400 mt-1">Sera affiché à côté du numéro de compte sur votre tableau de bord.</p>
               </div>
-            </div>
-          </div>
 
-          {/* STEP 3: DYNAMIC DEDICATED KYC DOCUMENTS */}
-          <div className="space-y-4 border-t border-slate-100 pt-4">
-            <h3 className="font-bold text-slate-900 text-sm">
-              3. Pièces Justificatives KYC ({isParticulier ? 'Particulier' : 'Entreprise'})
-            </h3>
-
-            {isParticulier ? (
-              /* PARTICULIER DEDICATED FIELDS */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 3. CNIB / Passeport (Numéro + Recto & Verso) */}
+              <div className="space-y-3 pt-2">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Nom complet du titulaire</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: Rasmané Konkobo"
-                    value={kycForm.fullName}
-                    onChange={e => setKycForm({ ...kycForm, fullName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Numéro CNIB / Passeport</label>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Numéro CNIB / Passeport <span className="text-rose-500">*</span>
+                  </label>
                   <input 
                     type="text" 
                     required 
                     placeholder="Ex: B12940291"
                     value={kycForm.cnibNumber}
                     onChange={e => setKycForm({ ...kycForm, cnibNumber: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Numéro IFU Personnel</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: 00098471201P"
-                    value={kycForm.ifuPersonal}
-                    onChange={e => setKycForm({ ...kycForm, ifuPersonal: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* CNIB Recto */}
+                  <div className="p-3.5 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-1.5 hover:border-blue-400 transition">
+                    <FileText className="w-5 h-5 text-blue-600 mx-auto" />
+                    <p className="font-bold text-slate-800 text-xs">CNIB / Passeport (Recto) <span className="text-rose-500">*</span></p>
+                    <label className="inline-block px-3 py-1 bg-white border border-slate-300 rounded-lg font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                      {kycForm.cnibRectoName ? 'Remplacer' : 'Sélectionner le Recto'}
+                      <input 
+                        type="file" 
+                        accept="image/*,.pdf" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('cnibRectoName', e)} 
+                      />
+                    </label>
+                    {kycForm.cnibRectoName && (
+                      <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{kycForm.cnibRectoName}</span>
+                      </p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Téléphone de réception</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="+226 70 00 00 00"
-                    value={kycForm.phone}
-                    onChange={e => setKycForm({ ...kycForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200"
-                  />
+                  {/* CNIB Verso */}
+                  <div className="p-3.5 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-1.5 hover:border-blue-400 transition">
+                    <FileText className="w-5 h-5 text-blue-600 mx-auto" />
+                    <p className="font-bold text-slate-800 text-xs">CNIB / Passeport (Verso) <span className="text-rose-500">*</span></p>
+                    <label className="inline-block px-3 py-1 bg-white border border-slate-300 rounded-lg font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                      {kycForm.cnibVersoName ? 'Remplacer' : 'Sélectionner le Verso'}
+                      <input 
+                        type="file" 
+                        accept="image/*,.pdf" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('cnibVersoName', e)} 
+                      />
+                    </label>
+                    {kycForm.cnibVersoName && (
+                      <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{kycForm.cnibVersoName}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            ) : (
-              /* ENTREPRISE DEDICATED FIELDS */
+
+              {/* 4. Photo / Selfie de capture du visage */}
+              <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-2 hover:border-blue-400 transition">
+                <Camera className="w-6 h-6 text-[#1E40AF] mx-auto" />
+                <div>
+                  <p className="font-bold text-slate-800 text-xs">Photo / Selfie de capture du visage <span className="text-rose-500">*</span></p>
+                  <p className="text-[10px] text-slate-400">Selfie net face caméra, sans lunettes sombres ni couvre-chef.</p>
+                </div>
+                <label className="inline-block px-4 py-1.5 bg-white border border-slate-300 rounded-xl font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                  {kycForm.faceSelfieName ? 'Changer la photo' : 'Téléverser le selfie'}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="user"
+                    className="hidden" 
+                    onChange={(e) => handleFileChange('faceSelfieName', e)} 
+                  />
+                </label>
+                {kycForm.faceSelfieName && (
+                  <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{kycForm.faceSelfieName} validé</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Téléphone de contact */}
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Téléphone de contact</label>
+                <input 
+                  type="text" 
+                  placeholder="+226 70 00 00 00"
+                  value={kycForm.phone}
+                  onChange={e => setKycForm({ ...kycForm, phone: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+                />
+              </div>
+
+              {/* RAPPEL EXCLUSION : STRICTEMENT AUCUN CHAMP IFU / RCCM POUR PARTICULIER */}
+            </div>
+          ) : (
+            /* ============================================================== */
+            /* CONDITIONNEL : FORMULAIRE ENTREPRISE                           */
+            /* ============================================================== */
+            <div className="space-y-5 border-t border-slate-100 pt-5 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <Building2 className="w-4 h-4 text-[#1E40AF]" />
+                <span>Informations & Pièces Officielles de l'Entreprise</span>
+              </div>
+
+              {/* 1. Nom complet du gérant & 2. Email professionnel */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Raison Sociale de la Société</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: NANASORE TECHNOLOGIES SARL"
-                    value={kycForm.companyName}
-                    onChange={e => setKycForm({ ...kycForm, companyName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Numéro RCCM</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: BF-OUA-01-2026-B12-09431"
-                    value={kycForm.rccm}
-                    onChange={e => setKycForm({ ...kycForm, rccm: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Numéro IFU Entreprise</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: 001928473610L"
-                    value={kycForm.ifuCompany}
-                    onChange={e => setKycForm({ ...kycForm, ifuCompany: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Nom du Gérant / Représentant</label>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Nom complet du gérant <span className="text-rose-500">*</span>
+                  </label>
                   <input 
                     type="text" 
                     required 
                     placeholder="Ex: Ousmane Konkobo"
                     value={kycForm.managerName}
                     onChange={e => setKycForm({ ...kycForm, managerName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Email professionnel <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="email" 
+                      required 
+                      placeholder="contact@nanasore.com"
+                      value={kycForm.companyEmail}
+                      onChange={e => setKycForm({ ...kycForm, companyEmail: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Document Upload Zone */}
-            <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-1">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto" />
-              <p className="font-bold text-slate-700">Téléverser les justificatifs (CNIB, RCCM, IFU)</p>
-              <p className="text-[10px] text-slate-400">Formats acceptés: PDF, PNG, JPG (max 10MB)</p>
+              {/* Raison Sociale & 3. Domaine d'activité */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Raison Sociale de la Société <span className="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Ex: NANASORE TECHNOLOGIES SARL"
+                    value={kycForm.companyName}
+                    onChange={e => setKycForm({ ...kycForm, companyName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Domaine d'activité <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={kycForm.sector}
+                    onChange={e => setKycForm({ ...kycForm, sector: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-600"
+                  >
+                    <option value="E-commerce & Vente en ligne">E-commerce & Vente en ligne</option>
+                    <option value="Prestations de Services & Freelance">Prestations de Services & Freelance</option>
+                    <option value="SaaS & Applications Mobiles">SaaS & Applications Mobiles</option>
+                    <option value="Éducation & Formation">Éducation & Formation</option>
+                    <option value="Commerce Général & Distribution">Commerce Général & Distribution</option>
+                    <option value="Technologies & Solutions Financières">Fintech & Technologies</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 4. RCCM & 5. IFU Entreprise */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    RCCM (Registre de Commerce) <span className="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Ex: BF-OUA-01-2026-B12-09431"
+                    value={kycForm.rccm}
+                    onChange={e => setKycForm({ ...kycForm, rccm: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                  <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                    <label className="text-blue-600 font-bold hover:underline cursor-pointer">
+                      + Joindre attestation RCCM
+                      <input 
+                        type="file" 
+                        accept=".pdf,image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('rccmFileName', e)} 
+                      />
+                    </label>
+                    {kycForm.rccmFileName && (
+                      <span className="text-emerald-600 font-bold truncate max-w-[120px]">✓ {kycForm.rccmFileName}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    IFU (Identifiant Fiscal de l'entreprise) <span className="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Ex: 001928473610L"
+                    value={kycForm.ifuCompany}
+                    onChange={e => setKycForm({ ...kycForm, ifuCompany: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                  <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                    <label className="text-blue-600 font-bold hover:underline cursor-pointer">
+                      + Joindre attestation IFU
+                      <input 
+                        type="file" 
+                        accept=".pdf,image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('ifuFileName', e)} 
+                      />
+                    </label>
+                    {kycForm.ifuFileName && (
+                      <span className="text-emerald-600 font-bold truncate max-w-[120px]">✓ {kycForm.ifuFileName}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. CNIB du gérant (Recto & Verso) */}
+              <div className="space-y-3 pt-2">
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">
+                    Numéro CNIB / Passeport du gérant <span className="text-rose-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Ex: B10928374"
+                    value={kycForm.managerCnibNumber}
+                    onChange={e => setKycForm({ ...kycForm, managerCnibNumber: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-1.5 hover:border-blue-400 transition">
+                    <FileText className="w-5 h-5 text-blue-600 mx-auto" />
+                    <p className="font-bold text-slate-800 text-xs">CNIB Gérant (Recto) <span className="text-rose-500">*</span></p>
+                    <label className="inline-block px-3 py-1 bg-white border border-slate-300 rounded-lg font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                      {kycForm.managerCnibRectoName ? 'Remplacer' : 'Sélectionner le Recto'}
+                      <input 
+                        type="file" 
+                        accept="image/*,.pdf" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('managerCnibRectoName', e)} 
+                      />
+                    </label>
+                    {kycForm.managerCnibRectoName && (
+                      <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{kycForm.managerCnibRectoName}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="p-3.5 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-1.5 hover:border-blue-400 transition">
+                    <FileText className="w-5 h-5 text-blue-600 mx-auto" />
+                    <p className="font-bold text-slate-800 text-xs">CNIB Gérant (Verso) <span className="text-rose-500">*</span></p>
+                    <label className="inline-block px-3 py-1 bg-white border border-slate-300 rounded-lg font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                      {kycForm.managerCnibVersoName ? 'Remplacer' : 'Sélectionner le Verso'}
+                      <input 
+                        type="file" 
+                        accept="image/*,.pdf" 
+                        className="hidden" 
+                        onChange={(e) => handleFileChange('managerCnibVersoName', e)} 
+                      />
+                    </label>
+                    {kycForm.managerCnibVersoName && (
+                      <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{kycForm.managerCnibVersoName}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Photo / Selfie de capture du gérant */}
+              <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center space-y-2 hover:border-blue-400 transition">
+                <Camera className="w-6 h-6 text-[#1E40AF] mx-auto" />
+                <div>
+                  <p className="font-bold text-slate-800 text-xs">Photo / Selfie de capture du gérant <span className="text-rose-500">*</span></p>
+                  <p className="text-[10px] text-slate-400">Photo portrait nette du gérant mandataire de l'entreprise.</p>
+                </div>
+                <label className="inline-block px-4 py-1.5 bg-white border border-slate-300 rounded-xl font-bold text-[11px] text-slate-700 hover:bg-slate-100 cursor-pointer shadow-xs">
+                  {kycForm.managerSelfieName ? 'Changer la photo' : 'Téléverser le selfie du gérant'}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="user"
+                    className="hidden" 
+                    onChange={(e) => handleFileChange('managerSelfieName', e)} 
+                  />
+                </label>
+                {kycForm.managerSelfieName && (
+                  <p className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{kycForm.managerSelfieName} validé</span>
+                  </p>
+                )}
+              </div>
+
             </div>
-          </div>
+          )}
 
-          {/* STEP 4: Contract Agreement */}
+          {/* STEP 4: Engagement & Contrat Partenaire */}
           <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-200 flex items-start gap-3">
             <input 
               type="checkbox" 
@@ -2124,7 +2448,7 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
               className="mt-1 w-4 h-4 text-[#1E40AF] rounded"
             />
             <label htmlFor="contract" className="text-[11px] text-blue-900 leading-tight">
-              J'accepte les termes du <strong>Contrat Partenaire NanaSwitch Cloud</strong> et certifie l'exactitude des informations fournies pour vérification par le Super Admin.
+              Je certifie l'exactitude des pièces et informations fournies pour mon compte <strong>{isParticulier ? 'Particulier (Plafond 1M XOF)' : 'Entreprise (Plafond 5M XOF)'}</strong> et j'accepte les termes du Contrat Partenaire NanaSwitch Cloud.
             </label>
           </div>
 
@@ -2135,12 +2459,11 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
             </button>
             <button type="submit" className="px-6 py-2.5 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-bold rounded-xl shadow-lg shadow-blue-700/25 transition flex items-center gap-2">
               <FileCheck className="w-4 h-4" />
-              <span>Soumettre pour validation</span>
+              <span>Soumettre pour validation Super Admin</span>
             </button>
           </div>
 
         </form>
-
       </div>
     </div>
   );
