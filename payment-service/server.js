@@ -489,6 +489,8 @@ async function processWebhookTransaction(payload) {
   ).toUpperCase();
 
   const amount = Number(txData.amount || payload.amount || txData.price || 0);
+  const chargedAmount = Number(txData.charged || payload.charged || txData.amount || amount);
+  const netAmount = Number(txData.net_amount || payload.net_amount || txData.amount || amount);
   const currency = txData.currency || payload.currency || 'XOF';
   const customerPhone = String(txData.customer_phone || txData.client_phone || txData.phone || payload.customer_phone || '').trim();
   const operator = txData.operator || payload.operator || txData.network || payload.network || 'MOBILE_MONEY';
@@ -562,6 +564,8 @@ async function processWebhookTransaction(payload) {
           orderId: resolvedOrderId,
           tenantId: resolvedTenantId,
           amount,
+          charged: chargedAmount,
+          net_amount: netAmount,
           currency,
           operator,
           status: 'COMPLETED',
@@ -577,6 +581,8 @@ async function processWebhookTransaction(payload) {
         isPaid: true,
         paid: true,
         amountPaid: amount,
+        charged: chargedAmount,
+        net_amount: netAmount,
         currency,
         transactionId: transactionId || resolvedOrderId,
         externalReference: externalRef,
@@ -1405,7 +1411,15 @@ app.post(
       setImmediate(async () => {
         try {
           const payload = JSON.parse(rawBuffer.toString('utf8'));
-          console.log(`[SASPAY WEBHOOK VALIDATED] Événement: ${eventName || payload.event}`);
+          const event = eventName || payload.event;
+          console.log(`[SASPAY WEBHOOK VALIDATED] Événement: ${event || 'inconnu'}`);
+
+          // Traitement spécifique de l'événement de test déclenché depuis le dashboard SasPay
+          if (event === 'webhook.test') {
+            console.log('[SASPAY WEBHOOK TEST] Événement webhook.test validé avec succès par NaNaSwitch.');
+            return;
+          }
+
           await processWebhookTransaction(payload);
         } catch (procErr) {
           console.error('[SASPAY WEBHOOK PROCESSING ERROR]', procErr.message);

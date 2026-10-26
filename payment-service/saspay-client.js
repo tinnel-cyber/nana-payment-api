@@ -859,6 +859,112 @@ function getSaspayAxiosConfig(options = {}) {
   };
 }
 
+/**
+ * 8. Réessayer un paiement échoué — POST /payments/{payment_id}/retry/
+ * Spécification : Proposer le retry sur FAILED sans créer de nouvelle transaction.
+ * Idempotency-Key obligatoire.
+ */
+async function retrySaspayPayment(paymentId, idempotencyKey = null) {
+  if (!paymentId) throw new Error('paymentId requis pour réessayer le paiement');
+  const idempKey = getOrGenerateIdempotencyKey(idempotencyKey);
+  const rawResponse = await callSaspayApi(`payments/${paymentId}/retry/`, {
+    method: 'POST',
+    idempotencyKey: idempKey,
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 9. Confirmer l'OTP post-push — POST /payments/{payment_id}/confirm-otp/
+ * Spécification : Pour les réseaux qui demandent une confirmation OTP après le push STK/USSD.
+ */
+async function confirmSaspayOtp(paymentId, otpCode) {
+  if (!paymentId) throw new Error('paymentId requis pour la confirmation OTP');
+  if (!otpCode) throw new Error('otpCode requis pour la confirmation OTP');
+  const rawResponse = await callSaspayApi(`payments/${paymentId}/confirm-otp/`, {
+    method: 'POST',
+    body: { otp: String(otpCode).trim() },
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 10. Statut d'une session de checkout hébergée — GET /checkout-sessions/{id}/status/
+ */
+async function getSaspayCheckoutStatus(sessionId) {
+  if (!sessionId) throw new Error('sessionId requis');
+  const rawResponse = await callSaspayApi(`checkout-sessions/${sessionId}/status/`, {
+    method: 'GET',
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 11. Annuler une session de checkout hébergée — POST /checkout-sessions/{id}/cancel/
+ */
+async function cancelSaspayCheckoutSession(sessionId) {
+  if (!sessionId) throw new Error('sessionId requis');
+  const rawResponse = await callSaspayApi(`checkout-sessions/${sessionId}/cancel/`, {
+    method: 'POST',
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 12. Référentiel des pays supportés par SasPay — GET /countries/ (Public)
+ */
+async function getSaspayCountries() {
+  const rawResponse = await callSaspayApi('countries/', {
+    method: 'GET',
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 13. Tarification & Exigences OTP par réseau — GET /pricing/my-rates/ (Authentifié)
+ * Permet de vérifier otp_required par réseau avant soumission.
+ */
+async function getSaspayMyRates() {
+  const rawResponse = await callSaspayApi('pricing/my-rates/', {
+    method: 'GET',
+    isPayout: false
+  });
+  return rawResponse?.data || rawResponse;
+}
+
+/**
+ * 14. Transfert entre Wallets marchands — POST /wallet-transfers/
+ * Idempotency-Key obligatoire en pratique.
+ */
+async function transferSaspayWallet(params) {
+  const {
+    amount,
+    currency = 'XOF',
+    recipientWalletId,
+    description,
+    idempotencyKey
+  } = params;
+  const formattedAmount = formatSaspayAmount(amount);
+  const idempKey = getOrGenerateIdempotencyKey(idempotencyKey);
+  const rawResponse = await callSaspayApi('wallet-transfers/', {
+    method: 'POST',
+    body: {
+      amount: formattedAmount,
+      currency: currency.toUpperCase(),
+      recipient_wallet: recipientWalletId,
+      description: description || 'Transfert de wallet'
+    },
+    idempotencyKey: idempKey,
+    isPayout: true
+  });
+  return rawResponse?.data || rawResponse;
+}
+
 module.exports = {
   SASPAY_DEFAULT_BASE_URL,
   SASPAY_SUPPORTED_COUNTRIES,
@@ -876,5 +982,12 @@ module.exports = {
   verifySaspayPayout,
   verifySaspayWebhookSignature,
   getSaspayConfigStatus,
-  getSaspayAxiosConfig
+  getSaspayAxiosConfig,
+  retrySaspayPayment,
+  confirmSaspayOtp,
+  getSaspayCheckoutStatus,
+  cancelSaspayCheckoutSession,
+  getSaspayCountries,
+  getSaspayMyRates,
+  transferSaspayWallet
 };
