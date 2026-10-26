@@ -103,7 +103,8 @@ function getSaspayBaseUrl() {
  * Supporte SASPAY_API_KEY et SASPAY_SECRET_KEY
  */
 function getSaspayApiKey() {
-  return process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '';
+  const rawKey = process.env.SASPAY_API_KEY || process.env.SASPAY_SECRET_KEY || '';
+  return String(rawKey).trim().replace(/[\r\n\t]/g, '');
 }
 
 /**
@@ -120,7 +121,8 @@ function formatSaspayAmount(amount) {
 
 /**
  * Formate le numéro de téléphone au format international requis par SasPay (avec '+' et indicatif pays)
- * Exemple : '65565805', '22665565805', '+226 65 56 58 05' -> '+22665565805'
+ * Supporte toutes longueurs (8, 9, 10, 11 chiffres ou plus) sans aucune troncature
+ * Exemple : '65565805', '22665565805', '+229 01 23 45 67 89' -> '+2290123456789'
  * 
  * @param {string|number} phone - Numéro de téléphone brut
  * @param {string} [countryCode='BF'] - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
@@ -141,18 +143,17 @@ function formatSaspayInternationalPhone(phone, countryCode = 'BF') {
     digits = digits.substring(2);
   }
 
+  // Si le numéro commence déjà par l'indicatif pays (ex: 226..., 225..., 229...)
   if (digits.startsWith(prefixDigits)) {
     return `+${digits}`;
   }
 
-  if (iso === 'BF' && digits.length === 8) {
-    return `+226${digits}`;
-  }
-
+  // Si le numéro commence déjà par '+' (indicatif international quelconque)
   if (clean.startsWith('+')) {
-    return clean.replace(/[^0-9+]/g, '');
+    return `+${digits}`;
   }
 
+  // Numéro local saisi sans indicatif (8, 9, 10, 11+ chiffres) : préfixe officiel sans tronquer
   return `${prefix}${digits}`;
 }
 
@@ -167,7 +168,7 @@ function getOrGenerateIdempotencyKey(key) {
 }
 
 /**
- * Construit les en-têtes HTTP officiels SasPay
+ * Construit les en-têtes HTTP officiels SasPay (avec Authorization nettoyé)
  */
 function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
   const apiKey = getSaspayApiKey();
@@ -179,7 +180,7 @@ function getSaspayHeaders(customHeaders = {}, idempotencyKey = null) {
   };
 
   if (idempotencyKey) {
-    headers['Idempotency-Key'] = String(idempotencyKey);
+    headers['Idempotency-Key'] = String(idempotencyKey).trim().replace(/[\r\n\t]/g, '');
   }
 
   return headers;

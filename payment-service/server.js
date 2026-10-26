@@ -1095,10 +1095,10 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
             });
           }
 
-          // Si l'intention indique SasPay, interroger SasPay avec son vrai transactionId
-          const activeGateway = (iData?.gateway || primaryGateway).toLowerCase();
+          // Si l'intention indique SasPay, interroger exclusivement SasPay avec son vrai transactionId
+          const activeGateway = (iData?.gateway || (iData?.provider ? iData.provider.toLowerCase() : null) || primaryGateway).toLowerCase();
           if (activeGateway === 'saspay') {
-            const sasTxId = iData.transactionId || externalRef;
+            const sasTxId = iData.transactionId || iData.id || externalRef;
             const sasVerify = await verifySaspayPayment(sasTxId).catch(() => null);
             if (sasVerify) {
               return res.json({
@@ -1113,6 +1113,25 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
                 message: sasVerify.isPaid ? 'Paiement validé par SasPay' : 'En attente de validation'
               });
             }
+          } else if (activeGateway === 'sebpay') {
+            const sebTxId = iData.transactionId || iData.provider_reference || iData.transaction_id || iData.txId;
+            const isInvalidSebRef = !sebTxId || String(sebTxId).startsWith('CHK-') || String(sebTxId).includes('___');
+            if (!isInvalidSebRef) {
+              const sebData = await getSebpayCollection(sebTxId).catch(() => null);
+              if (sebData) {
+                return res.json({
+                  success: sebData.isPaid,
+                  isPaid: sebData.isPaid,
+                  status: sebData.isPaid ? 'PAID' : (sebData.status || 'PENDING'),
+                  orderId,
+                  transaction_id: sebTxId,
+                  amount: sebData.amount || iData.amount,
+                  currency: sebData.currency || iData.currency || 'XOF',
+                  gateway: 'sebpay',
+                  message: sebData.isPaid ? 'Paiement validé par Sebpay' : 'En attente de validation'
+                });
+              }
+            }
           }
         }
       } catch (fbErr) {
@@ -1120,12 +1139,13 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
       }
     }
 
-    // 2. Vérification dynamique selon la passerelle prioritaire configurée
+    // 2. Vérification STRICTEMENT ciblée sur la passerelle qui a exécuté la transaction (intent.gateway)
     let verifyResult = null;
-    const gatewayToCheck = (iData?.gateway || primaryGateway).toLowerCase();
+    const executedGateway = (iData?.gateway || (iData?.provider ? iData.provider.toLowerCase() : null) || primaryGateway).toLowerCase();
 
-    if (gatewayToCheck === 'saspay') {
-      const sasTxId = iData?.transactionId || externalRef;
+    if (executedGateway === 'saspay') {
+      // INTERROGATION EXCLUSIVE SASPAY (Aucun appel Sebpay)
+      const sasTxId = iData?.transactionId || iData?.id || externalRef;
       try {
         const sasVerify = await verifySaspayPayment(sasTxId);
         verifyResult = {
@@ -1138,50 +1158,55 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
           transactionId: sasTxId
         };
       } catch (sasErr) {
-        // En cas d'échec sur SasPay, tenter Sebpay uniquement si failover
-        try {
-          verifyResult = await getSebpayCollection(externalRef);
-        } catch {
-          // Transaction encore en cours chez l'opérateur : renvoyer PENDING propre
-          return res.json({
-            success: false,
-            isPaid: false,
-            status: 'PENDING',
-            orderId,
-            externalRef,
-            gateway: 'saspay',
-            message: 'Transaction en cours de traitement sur votre téléphone.'
-          });
-        }
+        return res.json({
+          success: false,
+          isPaid: false,
+          status: 'PENDING',
+          orderId,
+          externalRef,
+          gateway: 'saspay',
+          message: 'Transaction en cours de traitement sur votre téléphone.'
+        });
       }
     } else {
-      // Sebpay est prioritaire
+      // INTERROGATION EXCLUSIVE SEBPAY
+      // Utiliser impérativement le transaction_id numérique officiel Sebpay (ex: 26102609322822189215) et NON la référence CHK-...
+      const sebpayTxId = iData?.transactionId || iData?.provider_reference || iData?.transaction_id || iData?.txId;
+      const isInternalOrderRef = !sebpayTxId || String(sebpayTxId).startsWith('CHK-') || String(sebpayTxId).includes('___');
+
+      if (isInternalOrderRef) {
+        return res.json({
+          success: false,
+          isPaid: false,
+          status: 'PENDING',
+          orderId,
+          externalRef,
+          gateway: 'sebpay',
+          message: 'Transaction en cours d\'autorisation auprès de l\'opérateur.'
+        });
+      }
+
       try {
-        verifyResult = await getSebpayCollection(externalRef);
+        const sebData = await getSebpayCollection(sebpayTxId);
+        verifyResult = {
+          success: sebData.isPaid,
+          isPaid: sebData.isPaid,
+          status: sebData.isPaid ? 'PAID' : (sebData.status || 'PENDING'),
+          amount: sebData.amount || iData?.amount,
+          currency: sebData.currency || iData?.currency || 'XOF',
+          gateway: 'sebpay',
+          transactionId: sebpayTxId
+        };
       } catch (sebErr) {
-        try {
-          const sasTxId = iData?.transactionId || externalRef;
-          const sasVerify = await verifySaspayPayment(sasTxId);
-          verifyResult = {
-            success: sasVerify.isPaid,
-            isPaid: sasVerify.isPaid,
-            status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
-            amount: sasVerify.amount,
-            currency: sasVerify.currency,
-            gateway: 'saspay',
-            transactionId: sasTxId
-          };
-        } catch {
-          return res.json({
-            success: false,
-            isPaid: false,
-            status: 'PENDING',
-            orderId,
-            externalRef,
-            gateway: primaryGateway,
-            message: 'Transaction en cours de traitement sur votre téléphone.'
-          });
-        }
+        return res.json({
+          success: false,
+          isPaid: false,
+          status: 'PENDING',
+          orderId,
+          externalRef,
+          gateway: 'sebpay',
+          message: 'En attente de validation opérateur.'
+        });
       }
     }
 

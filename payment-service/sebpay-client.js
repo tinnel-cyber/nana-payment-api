@@ -193,14 +193,11 @@ function formatLocalPhoneNumber(phone) {
   // 1. Supprime tous les caractères non numériques (+, espaces, tirets)
   let cleaned = String(phone).replace(/\D/g, '');
   
-  // 2. Si le numéro commence par l'indicatif 226, on retire l'indicatif
-  if (cleaned.startsWith('226') && cleaned.length === 11) {
+  // 2. Si le numéro commence par un indicatif régional ou international (ex: 226, 225, 229)
+  if (cleaned.startsWith('226') && cleaned.length >= 11) {
     cleaned = cleaned.substring(3);
-  }
-  
-  // 3. On extrait les 8 derniers chiffres au cas où il y a d'autres préfixes (ex: 00226)
-  if (cleaned.length > 8) {
-    cleaned = cleaned.slice(-8);
+  } else if ((cleaned.startsWith('225') || cleaned.startsWith('229')) && cleaned.length >= 12) {
+    cleaned = cleaned.substring(3);
   }
   
   return cleaned;
@@ -762,11 +759,11 @@ async function createSebpayCollection(params) {
   const rawOperator = operator || customPayload.operator || customPayload.provider || params.provider || params.operator_code || params.slug || '';
   const normalizedOperator = normalizeSebpayOperator(countryIso, rawOperator) || SEBPAY_DEFAULT_OPERATOR_BY_COUNTRY[countryIso] || 'orange';
 
-  // 1. Validation préalable du format téléphonique local (Burkina Faso = 8 chiffres obligatoires)
+  // 1. Validation préalable du format téléphonique (minimum 8 chiffres requis)
   const localPhoneNumber = formatLocalPhoneNumber(effectivePhone);
-  if (countryIso === 'BF' && localPhoneNumber.length !== 8) {
-    console.error(`[SEBPAY GUARD] Opérateur ou numéro invalide : Numéro local pour le Burkina Faso "${effectivePhone}" (nettoyé: "${localPhoneNumber}") non conforme (8 chiffres requis).`);
-    const phoneErr = new Error(`Le numéro de téléphone "${effectivePhone}" est invalide pour le Burkina Faso. 8 chiffres locaux sont requis (ex: 70123456).`);
+  if (localPhoneNumber.length < 8) {
+    console.error(`[SEBPAY GUARD] Opérateur ou numéro invalide : Numéro local "${effectivePhone}" (nettoyé: "${localPhoneNumber}") incomplet (minimum 8 chiffres requis).`);
+    const phoneErr = new Error(`Le numéro de téléphone "${effectivePhone}" est invalide (minimum 8 chiffres requis).`);
     phoneErr.code = 'INVALID_PHONE_NUMBER';
     phoneErr.status = 400;
     throw phoneErr;
@@ -975,6 +972,23 @@ async function getSebpayCollection(idOrReference) {
   }
 
   const cleanRef = String(idOrReference).trim();
+
+  // Guard : Sebpay /collections/{id} n'accepte QUE son propre transaction_id officiel (ex: "26102609322822189215").
+  // Ne JAMAIS appeler l'API Sebpay avec une référence de commande (CHK-...) ou composite (___) pour éviter les boucles 404.
+  if (cleanRef.startsWith('CHK-') || cleanRef.includes('___')) {
+    console.warn(`[SEBPAY GUARD] Référence de commande interne détectée "${cleanRef}". Seul un transaction_id numérique officiel Sebpay est vérifiable.`);
+    return {
+      success: false,
+      isPaid: false,
+      status: 'pending',
+      transaction_id: null,
+      external_reference: cleanRef,
+      amount: 0,
+      currency: 'XOF',
+      message: 'En attente de transaction_id Sebpay officiel.'
+    };
+  }
+
   console.log(`[SEBPAY GET COLLECTION] Vérification de ${cleanRef}...`);
 
   const rawResponse = await callSebpayApi(`collections/${encodeURIComponent(cleanRef)}`, {

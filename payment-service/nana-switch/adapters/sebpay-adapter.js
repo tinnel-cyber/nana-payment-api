@@ -240,7 +240,23 @@ class SebpayAdapter extends PaymentGatewayAdapter {
    */
   async checkPaymentStatus(transactionId, externalRef) {
     try {
-      const refToQuery = externalRef || transactionId;
+      // Privilégier systématiquement le transactionId officiel numérique Sebpay (ex: 26102609322822189215)
+      // Ne JAMAIS interroger Sebpay avec une référence interne de commande (CHK-...)
+      let refToQuery = transactionId;
+      if (!refToQuery || String(refToQuery).startsWith('CHK-') || String(refToQuery).includes('___')) {
+        refToQuery = (!externalRef?.startsWith('CHK-') && !externalRef?.includes('___')) ? externalRef : null;
+      }
+
+      if (!refToQuery) {
+        return {
+          status: 'PENDING',
+          isPaid: false,
+          amount: 0,
+          currency: 'XOF',
+          message: 'En attente de transactionId officiel opérateur'
+        };
+      }
+
       const res = await getSebpayCollection(refToQuery);
       const data = res.data || res;
       const status = String(data.status || 'PENDING').toUpperCase();
@@ -254,7 +270,7 @@ class SebpayAdapter extends PaymentGatewayAdapter {
     } catch (err) {
       console.warn(`[SEBPAY CHECK ERROR] Erreur vérification ${transactionId} :`, err.message);
       return {
-        status: 'UNKNOWN',
+        status: 'PENDING',
         isPaid: false,
         amount: 0,
         errorMessage: err.message
