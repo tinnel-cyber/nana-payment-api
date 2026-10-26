@@ -649,7 +649,7 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
 
       if (!res.success && (res.error || res.message)) {
         setIsProcessingPayment(false);
-        setPaymentError(res.error || res.message || 'Erreur lors de l\'initiation Sebpay direct.');
+        setPaymentError(res.error || res.message || 'Erreur lors de l\'initiation du paiement direct.');
         playCancelSound();
         return;
       }
@@ -785,7 +785,7 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
             </h2>
             <p className="text-xs text-slate-700 font-semibold flex items-center gap-1.5 pt-0.5">
               <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Chiffrement bancaire TLS 256-bit • Passerelle Sebpay Sécurisée</span>
+              <span>Chiffrement bancaire TLS 256-bit • Passerelle de paiement sécurisée</span>
             </p>
           </div>
         </div>

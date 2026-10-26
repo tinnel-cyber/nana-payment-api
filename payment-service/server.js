@@ -1016,6 +1016,7 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
           operator: operator || resolvedGateway.toUpperCase(),
           provider: resolvedGateway.toUpperCase(),
           gateway: resolvedGateway,
+          transactionId: sebpayResult.transactionId || sebpayResult.id || null,
           failedOver: Boolean(sebpayResult.failedOver),
           originalGateway: sebpayResult.originalGateway || null,
           failoverReason: sebpayResult.failoverReason || null,
@@ -1030,7 +1031,7 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
           updatedAt: nowServer
         };
 
-        await db.collection('payment_intents').doc(orderId).set(intentData);
+        await db.collection('payment_intents').doc(orderId).set(intentData, { merge: true });
         await db.collection('payment_intents').doc(externalReference).set(intentData, { merge: true });
       } catch (fbErr) {
         console.warn('[FIRESTORE INTENT] Enregistrement intention :', fbErr.message);
@@ -1068,11 +1069,17 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
     const orderId = parts.length > 1 ? parts[1] : externalRef;
 
     // 1. Vérification prioritaire dans Firestore (Webhook temps réel)
+    const primaryGateway = switchManager.getPrimaryGateway();
+    let iData = null;
+
     if (db) {
       try {
-        const intentDoc = await db.collection('payment_intents').doc(orderId).get();
+        let intentDoc = await db.collection('payment_intents').doc(orderId).get();
+        if (!intentDoc.exists && externalRef !== orderId) {
+          intentDoc = await db.collection('payment_intents').doc(externalRef).get();
+        }
         if (intentDoc.exists) {
-          const iData = intentDoc.data();
+          iData = intentDoc.data();
           const isPaid = iData?.isPaid === true || iData?.paid === true || ['PAID', 'COMPLETED', 'SUCCESS'].includes(String(iData?.status || '').toUpperCase());
           if (isPaid) {
             return res.json({
@@ -1080,16 +1087,17 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
               isPaid: true,
               status: 'PAID',
               orderId,
-              transaction_id: iData.transactionId,
+              transaction_id: iData.transactionId || externalRef,
               amount: iData.amountPaid || iData.amount,
-              currency: iData.currency,
-              gateway: iData.gateway || 'saspay',
+              currency: iData.currency || 'XOF',
+              gateway: iData.gateway || primaryGateway,
               message: 'Paiement confirmé avec succès.'
             });
           }
 
-          // Si l'intention indique SasPay, vérifier auprès de l'API SasPay
-          if (iData?.gateway === 'saspay' || (!iData?.gateway && switchManager.getPrimaryGateway() === 'saspay')) {
+          // Si l'intention indique SasPay, interroger SasPay avec son vrai transactionId
+          const activeGateway = (iData?.gateway || primaryGateway).toLowerCase();
+          if (activeGateway === 'saspay') {
             const sasTxId = iData.transactionId || externalRef;
             const sasVerify = await verifySaspayPayment(sasTxId).catch(() => null);
             if (sasVerify) {
@@ -1100,7 +1108,7 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
                 orderId,
                 transaction_id: sasTxId,
                 amount: sasVerify.amount || iData.amount,
-                currency: sasVerify.currency || iData.currency,
+                currency: sasVerify.currency || iData.currency || 'XOF',
                 gateway: 'saspay',
                 message: sasVerify.isPaid ? 'Paiement validé par SasPay' : 'En attente de validation'
               });
@@ -1112,24 +1120,68 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
       }
     }
 
-    // 2. Si la transaction provient de Sebpay ou si non trouvée
-    let verifyResult;
-    try {
-      verifyResult = await getSebpayCollection(externalRef);
-    } catch (sebErr) {
-      // Si Sebpay renvoie 404, tenter la vérification via SasPay
-      const sasVerify = await verifySaspayPayment(externalRef).catch(() => null);
-      if (sasVerify) {
+    // 2. Vérification dynamique selon la passerelle prioritaire configurée
+    let verifyResult = null;
+    const gatewayToCheck = (iData?.gateway || primaryGateway).toLowerCase();
+
+    if (gatewayToCheck === 'saspay') {
+      const sasTxId = iData?.transactionId || externalRef;
+      try {
+        const sasVerify = await verifySaspayPayment(sasTxId);
         verifyResult = {
           success: sasVerify.isPaid,
           isPaid: sasVerify.isPaid,
           status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
-          amount: sasVerify.amount,
-          currency: sasVerify.currency,
-          gateway: 'saspay'
+          amount: sasVerify.amount || iData?.amount,
+          currency: sasVerify.currency || iData?.currency || 'XOF',
+          gateway: 'saspay',
+          transactionId: sasTxId
         };
-      } else {
-        throw sebErr;
+      } catch (sasErr) {
+        // En cas d'échec sur SasPay, tenter Sebpay uniquement si failover
+        try {
+          verifyResult = await getSebpayCollection(externalRef);
+        } catch {
+          // Transaction encore en cours chez l'opérateur : renvoyer PENDING propre
+          return res.json({
+            success: false,
+            isPaid: false,
+            status: 'PENDING',
+            orderId,
+            externalRef,
+            gateway: 'saspay',
+            message: 'Transaction en cours de traitement sur votre téléphone.'
+          });
+        }
+      }
+    } else {
+      // Sebpay est prioritaire
+      try {
+        verifyResult = await getSebpayCollection(externalRef);
+      } catch (sebErr) {
+        try {
+          const sasTxId = iData?.transactionId || externalRef;
+          const sasVerify = await verifySaspayPayment(sasTxId);
+          verifyResult = {
+            success: sasVerify.isPaid,
+            isPaid: sasVerify.isPaid,
+            status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
+            amount: sasVerify.amount,
+            currency: sasVerify.currency,
+            gateway: 'saspay',
+            transactionId: sasTxId
+          };
+        } catch {
+          return res.json({
+            success: false,
+            isPaid: false,
+            status: 'PENDING',
+            orderId,
+            externalRef,
+            gateway: primaryGateway,
+            message: 'Transaction en cours de traitement sur votre téléphone.'
+          });
+        }
       }
     }
 

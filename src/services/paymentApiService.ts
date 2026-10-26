@@ -362,8 +362,9 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
       country: resolvedCountry,
       countryCode: resolvedCountry,
       customerPhone: params.phone || params.customerPhone,
-      operator: params.operator || 'SEBPAY',
-      provider: 'SEBPAY',
+      operator: params.operator || 'MOBILE_MONEY',
+      provider: params.provider || params.gateway || 'SASPAY',
+      gateway: params.gateway || 'saspay',
       status: 'PENDING',
       isPaid: false,
       isTest: false,
@@ -379,7 +380,7 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
     console.warn('[FIRESTORE INTENT INIT]', err.message);
   }
 
-  // 2. Appel direct vers le micro-service Render (Passerelle Sebpay Live)
+  // 2. Appel direct vers le micro-service Render (Passerelle SasPay / NaNaSwitch Live)
   try {
     const payloadWithCallback: SCollectionRequest = {
       callback_url: 'https://nana-payment-api.onrender.com/api/payment/webhook',
@@ -405,11 +406,27 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
     const data = await res.json().catch(() => ({}));
 
     if (res.ok && data && data.success !== false) {
+      // Met à jour l'intention avec le vrai transactionId et la passerelle résolue
+      try {
+        const { doc, setDoc } = await import('firebase/firestore');
+        const { db } = await import('../firebase');
+        const updateData: any = {
+          gateway: data.gateway || 'saspay',
+          provider: (data.gateway || 'saspay').toUpperCase(),
+          transactionId: data.transactionId || data.id || null,
+          redirectUrl: data.checkout_url || data.redirectUrl || data.paymentUrl || null,
+          updatedAt: Date.now()
+        };
+        await setDoc(doc(db, 'payment_intents', orderId), updateData, { merge: true });
+        if (externalReference && externalReference !== orderId) {
+          await setDoc(doc(db, 'payment_intents', externalReference), updateData, { merge: true });
+        }
+      } catch {}
       return data;
     }
 
-    const errorMsg = data?.error || data?.message || `Erreur serveur Sebpay HTTP ${res.status}`;
-    console.error('[SEBPAY PRODUCTION API ERROR]', errorMsg, data);
+    const errorMsg = data?.error || data?.message || `Erreur serveur HTTP ${res.status}`;
+    console.error('[PAYMENT API ERROR]', errorMsg, data);
 
     return {
       success: false,
@@ -421,8 +438,8 @@ export async function initiateSPayment(params: SCollectionRequest): Promise<SCol
       message: errorMsg
     };
   } catch (err: any) {
-    const errorMsg = err?.message || 'Impossible de joindre la passerelle de paiement Sebpay.';
-    console.error('[SEBPAY NETWORK ERROR]', errorMsg);
+    const errorMsg = err?.message || 'Impossible de joindre la passerelle de paiement.';
+    console.error('[PAYMENT NETWORK ERROR]', errorMsg);
     return {
       success: false,
       orderId,
