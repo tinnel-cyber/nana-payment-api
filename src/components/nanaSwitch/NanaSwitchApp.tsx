@@ -21,6 +21,7 @@ import {
   ChevronDown, PhoneCall, Code2, Globe2, Server
 } from 'lucide-react';
 import { DeveloperTab } from '../dashboard/DeveloperTab';
+import { KycVolumeLimitCard } from '../dashboard/KycVolumeLimitCard';
 import { db, auth } from '../../firebase';
 import { 
   collection, 
@@ -124,6 +125,18 @@ export interface NanaMerchantApp {
   custom_credentials?: MerchantCustomCredentials;
   api_credits_balance?: number;
   api_pricing_config?: MerchantApiPricingConfig;
+  monthly_usage?: {
+    month: string;
+    volume_xof: number;
+    transaction_count?: number;
+    last_updated?: string;
+  };
+  kyc_limits?: {
+    tier: 'INDIVIDUAL' | 'ENTERPRISE';
+    max_monthly_volume_xof: number;
+    description: string;
+  };
+  custom_monthly_limit_xof?: number;
 }
 
 export interface TransactionItem {
@@ -184,6 +197,16 @@ const INITIAL_APPS: NanaMerchantApp[] = [
       ifu: '001928473610L',
       manager: 'Ousmane Konkobo',
       bankRib: 'BF061 01001 012345678901 22'
+    },
+    monthly_usage: {
+      month: '2026-10',
+      volume_xof: 3850000,
+      transaction_count: 42
+    },
+    kyc_limits: {
+      tier: 'ENTERPRISE',
+      max_monthly_volume_xof: 5000000,
+      description: 'Compte Entreprise Enregistrée'
     }
   },
   {
@@ -199,6 +222,16 @@ const INITIAL_APPS: NanaMerchantApp[] = [
       cnib: 'B12940291',
       ifu: '00098471201P',
       residence: 'Koudougou, Secteur 3'
+    },
+    monthly_usage: {
+      month: '2026-10',
+      volume_xof: 850000,
+      transaction_count: 19
+    },
+    kyc_limits: {
+      tier: 'INDIVIDUAL',
+      max_monthly_volume_xof: 1000000,
+      description: 'Compte Particulier / Indépendant'
     }
   }
 ];
@@ -326,6 +359,17 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
                 api_credits_balance: 5000,
                 low_balance_threshold: 500
               },
+              monthly_usage: data.monthly_usage || {
+                month: '2026-10',
+                volume_xof: data.type === 'particulier' ? 850000 : 3850000,
+                transaction_count: 24
+              },
+              kyc_limits: {
+                tier: data.type === 'particulier' ? 'INDIVIDUAL' : 'ENTERPRISE',
+                max_monthly_volume_xof: data.custom_monthly_limit_xof || (data.type === 'particulier' ? 1000000 : 5000000),
+                description: data.type === 'particulier' ? 'Compte Particulier / Indépendant' : 'Compte Entreprise Enregistrée'
+              },
+              custom_monthly_limit_xof: data.custom_monthly_limit_xof,
               kyc: {
                 companyName: data.business_name,
                 rccm: data.rccm,
@@ -681,7 +725,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
 
           {/* DASHBOARD CONTENT AREA */}
           <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto">
-            {activeTab === 'dashboard' && <TabDashboard app={selectedApp} copyToClipboard={copyToClipboard} setActiveTab={setActiveTab} />}
+            {activeTab === 'dashboard' && <TabDashboard app={selectedApp} copyToClipboard={copyToClipboard} setActiveTab={setActiveTab} onUpgradeClick={() => setIsKycModalOpen(true)} />}
             {activeTab === 'wallet' && <TabWallet app={selectedApp} showToast={showToast} />}
             {activeTab === 'transactions' && <TabTransactions />}
             {activeTab === 'links' && <TabPaymentLinks showToast={showToast} />}
@@ -695,7 +739,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
             {activeTab === 'disputes' && <TabDisputes />}
             {activeTab === 'pricing' && <TabPricing />}
             {activeTab === 'support' && <TabSupport showToast={showToast} />}
-            {activeTab === 'settings' && <TabSettings app={selectedApp} />}
+            {activeTab === 'settings' && <TabSettings app={selectedApp} onUpgradeClick={() => setIsKycModalOpen(true)} />}
           </main>
         </div>
       ) : (
@@ -900,7 +944,7 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
 // ==========================================
 
 /* 1. TAB: OVERVIEW DASHBOARD */
-function TabDashboard({ app, copyToClipboard, setActiveTab }: { app: NanaMerchantApp; copyToClipboard: (t?: string, l?: string) => void; setActiveTab: (t: string) => void }) {
+function TabDashboard({ app, copyToClipboard, setActiveTab, onUpgradeClick }: { app: NanaMerchantApp; copyToClipboard: (t?: string, l?: string) => void; setActiveTab: (t: string) => void; onUpgradeClick?: () => void }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       
@@ -948,6 +992,9 @@ function TabDashboard({ app, copyToClipboard, setActiveTab }: { app: NanaMerchan
           ))}
         </div>
       </div>
+
+      {/* KYC MONTHLY VOLUME LIMIT PROGRESS CARD */}
+      <KycVolumeLimitCard app={app} onUpgradeClick={onUpgradeClick} />
 
       {/* RECENT TRANSACTIONS & QUICK STATS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1726,13 +1773,16 @@ function TabSupport({ showToast }: { showToast: (m: string) => void }) {
 }
 
 /* 15. TAB: SETTINGS & KYC INFO */
-function TabSettings({ app }: { app: NanaMerchantApp }) {
+function TabSettings({ app, onUpgradeClick }: { app: NanaMerchantApp; onUpgradeClick?: () => void }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
         <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Paramètres du Compte & KYC</h1>
-        <p className="text-xs text-slate-500 font-medium mt-1">Fiche d'identité d'entreprise validée sous le contrat partenaire.</p>
+        <p className="text-xs text-slate-500 font-medium mt-1">Fiche d'identité d'entreprise et plafonds de transactions mensuels.</p>
       </div>
+
+      {/* KYC MONTHLY VOLUME LIMIT & UPGRADE INCENTIVE */}
+      <KycVolumeLimitCard app={app} onUpgradeClick={onUpgradeClick} />
 
       <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-4">
         <h3 className="font-bold text-slate-900 text-base">Informations Légales Consignées</h3>

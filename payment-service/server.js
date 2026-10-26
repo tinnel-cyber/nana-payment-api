@@ -65,6 +65,15 @@ const { createChatFinanceRouter } = require('./chat-finance-controller');
 const { LiveCommerceEngine, createLiveCommerceRouter } = require('./live-commerce-controller');
 const { merchantService, DEFAULT_PRICING_MATRIX } = require('./nana-switch/merchant-service');
 const { pricingEngine } = require('./nana-switch/pricingEngine');
+const {
+  KYC_LIMITS,
+  resolveMerchantKycTier,
+  getMerchantMonthlyLimit,
+  getMerchantMonthlyVolume,
+  checkTransactionLimit,
+  recordTransactionVolume,
+  checkTransactionLimitMiddleware
+} = require('./middleware/checkTransactionLimit');
 const webhookNotifier = require('./nana-switch/webhookNotifier');
 const {
   generateNanaSwitchKeyPair,
@@ -1963,6 +1972,12 @@ app.post(['/api/payments/initiate', '/api/switch/initiate', '/api/payment/switch
     const merchantIdParam = req.body.merchantId || req.body.merchant_id || storeId;
     const merchant = await merchantService.resolveMerchant(db, apiKeyHeader, merchantIdParam);
 
+    // 1.b. Contrôle strict du risque & des plafonds mensuels KYC (Particulier: 1M XOF vs Entreprise: 5M XOF)
+    const kycLimitCheck = await checkTransactionLimit(db, merchant, amount);
+    if (!kycLimitCheck.allowed) {
+      return res.status(403).json(kycLimitCheck.errorResponse);
+    }
+
     // 2. Coupe-circuit immédiat si solde de crédits API épuisé (0.02 XOF / 1 crédit par appel)
     const creditCheck = await pricingEngine.verifyAndCheckApiCredits(db, merchant);
     if (!creditCheck.allowed) {
@@ -3333,6 +3348,39 @@ app.post(['/v1/switch/merchant/credits/recharge', '/api/switch/merchant/credits/
   }
 });
 
+/**
+ * GET /v1/switch/merchant/kyc-limits & GET /api/switch/merchant/kyc-limits
+ * Consultation de la consommation mensuelle et des plafonds KYC (Particulier: 1M XOF vs Entreprise: 5M XOF)
+ */
+app.get(['/v1/switch/merchant/kyc-limits', '/api/switch/merchant/kyc-limits'], async (req, res) => {
+  try {
+    const merchantId = req.query.merchantId || req.query.merchant_id || 'm_live_bf_001';
+    const merchant = await merchantService.resolveMerchant(db, '', merchantId);
+    const tier = resolveMerchantKycTier(merchant);
+    const maxLimit = getMerchantMonthlyLimit(merchant);
+    const currentVolume = await getMerchantMonthlyVolume(db, merchant);
+    const percentage = Math.min(100, Number(((currentVolume / maxLimit) * 100).toFixed(1)));
+
+    return res.json({
+      success: true,
+      merchantId,
+      tier,
+      description: KYC_LIMITS[tier]?.description || '',
+      current_monthly_volume_xof: currentVolume,
+      max_monthly_volume_xof: maxLimit,
+      remaining_volume_xof: Math.max(0, maxLimit - currentVolume),
+      consumption_percentage: percentage,
+      status_text: `Volume mensuel actuel : ${currentVolume.toLocaleString('fr-FR')} / ${maxLimit.toLocaleString('fr-FR')} XOF`,
+      upgrade_available: tier === 'INDIVIDUAL',
+      upgrade_incentive: tier === 'INDIVIDUAL' && percentage >= 80
+        ? 'Attention, vous approchez du plafond de 1 000 000 XOF. Passez au compte Entreprise (RCCM & IFU) pour bénéficier de 5 000 000 XOF/mois.'
+        : null
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, res) => {
   const startTs = Date.now();
   const txId = `sw_${Math.floor(100000 + Math.random() * 900000)}`;
@@ -3367,7 +3415,15 @@ app.post(['/v1/switch/route', '/api/switch/route'], express.json(), async (req, 
   console.log(`[NANASWITCH ROUTE] Tx: ${txId} | Tenant: ${tenantId} | Pays: ${countryUpper} | Montant: ${amount} ${currency}`);
 
   // --------------------------------------------------------------------------
-  // ÉTAPE A : VÉRIFICATION SÉCURITÉ & COUPE-CIRCUIT CRÉDITS (402)
+  // ÉTAPE A : VÉRIFICATION RISQUE & PLAFOND MENSUEL KYC (403)
+  // --------------------------------------------------------------------------
+  const kycLimitCheck = await checkTransactionLimit(db, merchant, amount);
+  if (!kycLimitCheck.allowed) {
+    return res.status(403).json(kycLimitCheck.errorResponse);
+  }
+
+  // --------------------------------------------------------------------------
+  // ÉTAPE B : VÉRIFICATION SÉCURITÉ & COUPE-CIRCUIT CRÉDITS (402)
   // --------------------------------------------------------------------------
   const creditCheck = await pricingEngine.verifyAndCheckApiCredits(db, merchant);
   let credits = creditCheck.remainingCredits;
