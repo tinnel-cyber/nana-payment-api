@@ -665,38 +665,8 @@ export const UltimateCheckout: React.FC<UltimateCheckoutProps> = ({
         } catch {}
       }
 
-      // Polling de confirmation sécurisé en tâche de fond (5 secondes)
-      const pollTimer = setInterval(async () => {
-        try {
-          const verify = await verifySPayment(orderId);
-          if (verify.success || verify.isPaid) {
-            clearInterval(pollTimer);
-            setIsProcessingPayment(false);
-            const successDetails: PaymentSuccessDetails = {
-              transactionId: verify.data?.transaction_id || orderId,
-              orderId,
-              amount: finalTotal,
-              currency,
-              customerName: customerName.trim(),
-              phoneNumber: rawPhone,
-              deliveryAddress: `${city.trim()}, ${deliveryAddress.trim()}`,
-              customerEmail: customerEmail.trim() || undefined,
-              paymentMethod: 'MOBILE_MONEY',
-              country: selectedCountry,
-              operator: selectedOperator,
-              timestamp: Date.now(),
-              status: 'PAID'
-            };
-            setCompletedDetails(successDetails);
-            setCurrentStep('STEP_3');
-            playCashChime();
-            if (onSuccess) onSuccess(successDetails);
-          }
-        } catch {}
-      }, 3500);
-
-      // Timeout garde-fou à 40s
-      setTimeout(() => clearInterval(pollTimer), 40000);
+      // Pas de polling automatique en boucle : écoute temps réel via Firestore onSnapshot & Webhook
+      // Le client est automatiquement redirigé dès réception du Webhook opérateur.
 
     } catch (err: any) {
       setIsProcessingPayment(false);

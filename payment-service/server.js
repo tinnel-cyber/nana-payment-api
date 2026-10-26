@@ -1056,7 +1056,43 @@ app.post(['/api/payment/sebpay/collections', '/api/payment/sebpay/initiate'], as
 });
 
 // ============================================================================
-// ROUTE 3d : Vérification Secours Sebpay (GET /collections/{external_reference})
+// PROTECTION ANTI-SPAM FIXIE : Rate Limiting & Backoff Exponentiel (Max 3 essais)
+// ============================================================================
+// Empêche impérativement la saturation du quota Fixie / Render.
+// Backoff : Essai 1 -> immédiat | Essai 2 -> min 5s | Essai 3 -> min 15s | Au-delà -> BLOCAGE (Webhook uniquement).
+const fixieThrottleMap = new Map();
+
+function getFixieThrottleStatus(refKey) {
+  const now = Date.now();
+  const entry = fixieThrottleMap.get(refKey) || { attempts: 0, lastAttemptTime: 0 };
+  
+  if (entry.attempts >= 3) {
+    return { allowed: false, reason: 'MAX_ATTEMPTS_REACHED', attempts: entry.attempts };
+  }
+
+  const requiredDelays = [0, 5000, 15000]; // 0s, 5s, 15s
+  const requiredDelay = requiredDelays[entry.attempts] || 30000;
+  const elapsed = now - entry.lastAttemptTime;
+
+  if (entry.lastAttemptTime > 0 && elapsed < requiredDelay) {
+    return { allowed: false, reason: 'BACKOFF_THROTTLED', waitMs: requiredDelay - elapsed, attempts: entry.attempts };
+  }
+
+  return { allowed: true, attempts: entry.attempts };
+}
+
+function recordFixieAttempt(refKey) {
+  const entry = fixieThrottleMap.get(refKey) || { attempts: 0, lastAttemptTime: 0 };
+  entry.attempts += 1;
+  entry.lastAttemptTime = Date.now();
+  fixieThrottleMap.set(refKey, entry);
+
+  // Nettoyage automatique du cache mémoire après 30 minutes
+  setTimeout(() => fixieThrottleMap.delete(refKey), 30 * 60 * 1000).unref?.();
+}
+
+// ============================================================================
+// ROUTE 3d : Vérification Secours (GET /collections/{external_reference})
 // ============================================================================
 app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/verify/:externalRef'], async (req, res) => {
   try {
@@ -1067,11 +1103,10 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
 
     const parts = externalRef.split('___');
     const orderId = parts.length > 1 ? parts[1] : externalRef;
-
-    // 1. Vérification prioritaire dans Firestore (Webhook temps réel)
     const primaryGateway = switchManager.getPrimaryGateway();
-    let iData = null;
 
+    // 1. VÉRIFICATION PRIORITAIRE DANS FIRESTORE (0% appel réseau, 0% Fixie)
+    let iData = null;
     if (db) {
       try {
         let intentDoc = await db.collection('payment_intents').doc(orderId).get();
@@ -1094,69 +1129,47 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
               message: 'Paiement confirmé avec succès.'
             });
           }
-
-          // Si l'intention indique SasPay, interroger exclusivement SasPay avec son vrai transactionId
-          const activeGateway = (iData?.gateway || (iData?.provider ? iData.provider.toLowerCase() : null) || primaryGateway).toLowerCase();
-          if (activeGateway === 'saspay') {
-            const sasTxId = iData.transactionId || iData.id || externalRef;
-            const sasVerify = await verifySaspayPayment(sasTxId).catch(() => null);
-            if (sasVerify) {
-              return res.json({
-                success: sasVerify.isPaid,
-                isPaid: sasVerify.isPaid,
-                status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
-                orderId,
-                transaction_id: sasTxId,
-                amount: sasVerify.amount || iData.amount,
-                currency: sasVerify.currency || iData.currency || 'XOF',
-                gateway: 'saspay',
-                message: sasVerify.isPaid ? 'Paiement validé par SasPay' : 'En attente de validation'
-              });
-            }
-          } else if (activeGateway === 'sebpay') {
-            const sebTxId = iData.transactionId || iData.provider_reference || iData.transaction_id || iData.txId;
-            const isInvalidSebRef = !sebTxId || String(sebTxId).startsWith('CHK-') || String(sebTxId).includes('___');
-            if (!isInvalidSebRef) {
-              const sebData = await getSebpayCollection(sebTxId).catch(() => null);
-              if (sebData) {
-                return res.json({
-                  success: sebData.isPaid,
-                  isPaid: sebData.isPaid,
-                  status: sebData.isPaid ? 'PAID' : (sebData.status || 'PENDING'),
-                  orderId,
-                  transaction_id: sebTxId,
-                  amount: sebData.amount || iData.amount,
-                  currency: sebData.currency || iData.currency || 'XOF',
-                  gateway: 'sebpay',
-                  message: sebData.isPaid ? 'Paiement validé par Sebpay' : 'En attente de validation'
-                });
-              }
-            }
-          }
         }
       } catch (fbErr) {
         console.warn('[INTENT FIRESTORE VERIFY NOTICE]', fbErr.message);
       }
     }
 
-    // 2. Vérification STRICTEMENT ciblée sur la passerelle qui a exécuté la transaction (intent.gateway)
-    let verifyResult = null;
+    // 2. DÉTERMINATION STRICTE DE LA PASSERELLE EXÉCUTÉE (intent.gateway)
     const executedGateway = (iData?.gateway || (iData?.provider ? iData.provider.toLowerCase() : null) || primaryGateway).toLowerCase();
 
+    // 3. FLUX SASPAY : APPEL DIRECT SANS PROXY FIXIE
     if (executedGateway === 'saspay') {
-      // INTERROGATION EXCLUSIVE SASPAY (Aucun appel Sebpay)
       const sasTxId = iData?.transactionId || iData?.id || externalRef;
       try {
         const sasVerify = await verifySaspayPayment(sasTxId);
-        verifyResult = {
+        if (sasVerify.isPaid && db) {
+          const nowServer = admin.firestore.FieldValue.serverTimestamp();
+          const updatePayload = {
+            status: 'COMPLETED',
+            paymentStatus: 'PAID',
+            isPaid: true,
+            paid: true,
+            validatedAt: nowServer,
+            updatedAt: nowServer
+          };
+          await db.collection('payment_intents').doc(orderId).set(updatePayload, { merge: true });
+          if (externalRef !== orderId) {
+            await db.collection('payment_intents').doc(externalRef).set(updatePayload, { merge: true });
+          }
+        }
+
+        return res.json({
           success: sasVerify.isPaid,
           isPaid: sasVerify.isPaid,
           status: sasVerify.isPaid ? 'PAID' : (sasVerify.status || 'PENDING'),
+          orderId,
+          transaction_id: sasTxId,
           amount: sasVerify.amount || iData?.amount,
           currency: sasVerify.currency || iData?.currency || 'XOF',
           gateway: 'saspay',
-          transactionId: sasTxId
-        };
+          message: sasVerify.isPaid ? 'Paiement validé par SasPay' : 'En attente de validation opérateur.'
+        });
       } catch (sasErr) {
         return res.json({
           success: false,
@@ -1168,50 +1181,47 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
           message: 'Transaction en cours de traitement sur votre téléphone.'
         });
       }
-    } else {
-      // INTERROGATION EXCLUSIVE SEBPAY
-      // Utiliser impérativement le transaction_id numérique officiel Sebpay (ex: 26102609322822189215) et NON la référence CHK-...
-      const sebpayTxId = iData?.transactionId || iData?.provider_reference || iData?.transaction_id || iData?.txId;
-      const isInternalOrderRef = !sebpayTxId || String(sebpayTxId).startsWith('CHK-') || String(sebpayTxId).includes('___');
-
-      if (isInternalOrderRef) {
-        return res.json({
-          success: false,
-          isPaid: false,
-          status: 'PENDING',
-          orderId,
-          externalRef,
-          gateway: 'sebpay',
-          message: 'Transaction en cours d\'autorisation auprès de l\'opérateur.'
-        });
-      }
-
-      try {
-        const sebData = await getSebpayCollection(sebpayTxId);
-        verifyResult = {
-          success: sebData.isPaid,
-          isPaid: sebData.isPaid,
-          status: sebData.isPaid ? 'PAID' : (sebData.status || 'PENDING'),
-          amount: sebData.amount || iData?.amount,
-          currency: sebData.currency || iData?.currency || 'XOF',
-          gateway: 'sebpay',
-          transactionId: sebpayTxId
-        };
-      } catch (sebErr) {
-        return res.json({
-          success: false,
-          isPaid: false,
-          status: 'PENDING',
-          orderId,
-          externalRef,
-          gateway: 'sebpay',
-          message: 'En attente de validation opérateur.'
-        });
-      }
     }
 
-    if (verifyResult.isPaid && db) {
-      try {
+    // 4. FLUX SEBPAY : PROTÉGÉ STRICTEMENT PAR LE COUPE-CIRCUIT ANTI-SPAM FIXIE
+    const sebpayTxId = iData?.transactionId || iData?.provider_reference || iData?.transaction_id || iData?.txId;
+    const isInternalOrderRef = !sebpayTxId || String(sebpayTxId).startsWith('CHK-') || String(sebpayTxId).includes('___');
+
+    // Si nous n'avons pas d'ID numérique officiel Sebpay, ne pas interroger Sebpay pour éviter le 404
+    if (isInternalOrderRef) {
+      return res.json({
+        success: false,
+        isPaid: false,
+        status: 'PENDING',
+        orderId,
+        externalRef,
+        gateway: 'sebpay',
+        message: 'Transaction en cours d\'autorisation auprès de l\'opérateur.'
+      });
+    }
+
+    // Vérification de la politique anti-spam Fixie (Backoff + max 3 requêtes)
+    const throttleStatus = getFixieThrottleStatus(orderId);
+    if (!throttleStatus.allowed) {
+      console.log(`[FIXIE GUARD] Requête de vérification pour #${orderId} bridée (Raison: ${throttleStatus.reason}, Essais: ${throttleStatus.attempts}/3). Préservation du tunnel Fixie active.`);
+      return res.json({
+        success: false,
+        isPaid: false,
+        status: 'PENDING',
+        orderId,
+        externalRef,
+        gateway: 'sebpay',
+        message: 'Transaction en cours de validation (écoute Webhook active).'
+      });
+    }
+
+    // Enregistrement de l'essai autorisé vers Sebpay via Fixie
+    recordFixieAttempt(orderId);
+    console.log(`[FIXIE GUARD] Appel Sebpay autorisé pour #${orderId} (Essai ${throttleStatus.attempts + 1}/3 via Fixie)...`);
+
+    try {
+      const sebData = await getSebpayCollection(sebpayTxId);
+      if (sebData.isPaid && db) {
         const nowServer = admin.firestore.FieldValue.serverTimestamp();
         const updatePayload = {
           status: 'COMPLETED',
@@ -1221,22 +1231,34 @@ app.get(['/api/payment/sebpay/collections/:externalRef', '/api/payment/sebpay/ve
           validatedAt: nowServer,
           updatedAt: nowServer
         };
-
         await db.collection('payment_intents').doc(orderId).set(updatePayload, { merge: true });
-        await db.collection('payment_intents').doc(externalRef).set(updatePayload, { merge: true });
-        await db.collection('transactions').doc(externalRef).set({
-          id: externalRef,
-          status: 'completed',
-          amount: verifyResult.amount,
-          provider: (verifyResult.gateway || 'SEBPAY').toUpperCase(),
-          completedAt: nowServer
-        }, { merge: true });
-      } catch (dbErr) {
-        console.warn('[FIRESTORE UPDATE FROM VERIFY]', dbErr.message);
+        if (externalRef !== orderId) {
+          await db.collection('payment_intents').doc(externalRef).set(updatePayload, { merge: true });
+        }
       }
-    }
 
-    return res.json(verifyResult);
+      return res.json({
+        success: sebData.isPaid,
+        isPaid: sebData.isPaid,
+        status: sebData.isPaid ? 'PAID' : (sebData.status || 'PENDING'),
+        orderId,
+        transaction_id: sebpayTxId,
+        amount: sebData.amount || iData?.amount,
+        currency: sebData.currency || iData?.currency || 'XOF',
+        gateway: 'sebpay',
+        message: sebData.isPaid ? 'Paiement validé par Sebpay' : 'En attente de validation opérateur.'
+      });
+    } catch (sebErr) {
+      return res.json({
+        success: false,
+        isPaid: false,
+        status: 'PENDING',
+        orderId,
+        externalRef,
+        gateway: 'sebpay',
+        message: 'En attente de validation opérateur.'
+      });
+    }
   } catch (err) {
     console.error('[UNIVERSAL VERIFY ERROR]', err);
     return res.status(200).json({
