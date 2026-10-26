@@ -211,37 +211,38 @@ function formatLocalPhoneNumber(phone) {
  * @returns {string} Numéro épuré à 8 chiffres (ex: '65565805')
  */
 function formatBurkinaPhoneNumber(phone) {
-  return formatLocalPhoneNumber(phone);
+  return formatSebpayPhoneNumber(phone, 'BF');
 }
 
 /**
  * Formate le numéro de téléphone selon les exigences de l'API Sebpay par pays
- * - BF (Burkina Faso) : force strictement le format local à 8 chiffres (ex: '65565805')
- * - CI (Côte d'Ivoire) : force l'indicatif 225
- * - Autres pays : préfixe officiel sans le '+'
+ * TOUJOURS inclure l'indicatif national sans le '+' (ex: '22665565805' pour le BF, '2250712345678' pour la CI, etc.)
+ * Ne JAMAIS envoyer un numéro local à 8 chiffres non indicaté sous peine de rejet 400 PAYMENT_DECLINED par l'opérateur.
  * 
  * @param {string|number} phone - Numéro de téléphone brut
- * @param {string} countryIso - Code ISO du pays (ex: 'BF', 'CI')
- * @returns {string} Numéro formaté
+ * @param {string} countryIso - Code ISO du pays (ex: 'BF', 'CI', 'BJ')
+ * @returns {string} Numéro formaté avec indicatif national sans '+'
  */
 function formatSebpayPhoneNumber(phone, countryIso = 'BF') {
   if (!phone) return '';
   const iso = String(countryIso || 'BF').toUpperCase();
-
-  if (iso === 'BF') {
-    return formatLocalPhoneNumber(phone);
-  }
-
   let cleaned = String(phone).replace(/\D/g, '');
-  const countryInfo = SUPPORTED_COUNTRIES[iso];
-  if (countryInfo && countryInfo.prefix) {
-    const pfx = countryInfo.prefix.replace('+', '');
-    if (!cleaned.startsWith(pfx)) {
-      return `${pfx}${cleaned}`;
-    }
+
+  const countryInfo = SUPPORTED_COUNTRIES[iso] || SUPPORTED_COUNTRIES.BF;
+  const prefixDigits = countryInfo?.prefix ? countryInfo.prefix.replace('+', '') : '226';
+
+  // Si le numéro commence par 00, enlever 00
+  if (cleaned.startsWith('00')) {
+    cleaned = cleaned.substring(2);
   }
 
-  return cleaned;
+  // Si le numéro commence déjà par l'indicatif officiel du pays (ex: 22665565805)
+  if (cleaned.startsWith(prefixDigits)) {
+    return cleaned;
+  }
+
+  // Si le numéro a été saisi en format local (ex: 65565805), ajouter impérativement l'indicatif officiel du pays
+  return `${prefixDigits}${cleaned}`;
 }
 
 /**
