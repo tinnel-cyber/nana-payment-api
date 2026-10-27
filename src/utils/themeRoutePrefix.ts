@@ -245,12 +245,18 @@ export function extractPublicStoreRouteParams(pathname: string): PublicStoreRout
     // 4. Raccourci direct https://nsore.shop/:storeSlug
     const SYSTEM_ROUTES = [
       'login', 'register', 'signup', 'partenaire', 'partenaires', 'affiliate', 
-      'affiliation', 'ai-studio', 'generateur', 'generator', 'nana-generateur', 
+      'affiliation', 'ai-studio', 'aistudio', 'generateur', 'generator', 'nana-generateur', 
       'builder', 'funnel-builder', 'pays-couverts', 'international', 'countries', 
       'coverage', 'catalog', 'courses', 'course', 'webinar', 'live', 'crm', 
-      'crm-dashboard', 'docusign', 'devis', 'tarifs', 'admin', 'superadmin', 
+      'crm-dashboard', 'docusign', 'devis', 'tarifs', 'admin', 'superadmin', 'saas-admin',
       'dashboard', 'studio', 'store-studio', 'nana-studio', 'f', 't', 'c', 'p', 's',
-      'nana-switch', 'nanaswitch', 'salles-vip', 'salle-vip', 'vip', 'salles',
+      'nana-switch', 'nanaswitch', 'nana-switch-app', 'nanaswitch-app',
+      'nana-switch-apppage', 'nanaswitch-apppage', 'nanaswitch-docs',
+      'app', 'apps', 'docs', 'documentation', 'hub-builder', 'pos',
+      'market', 'market-directory', 'directory', 'annuaire',
+      'certificat', 'certificate', 'diplome', 'checkout', 'payment', 'checkout-return',
+      'instructor', 'classroom', 'auth', 'teacher-dashboard',
+      'salles-vip', 'salle-vip', 'vip', 'salles',
       'wameet', 'communaute', 'community', 'reseau', 'wameet-room',
       'deconnexion', 'logout', 'mentions-legales', 'cgu', 'privacy'
     ];

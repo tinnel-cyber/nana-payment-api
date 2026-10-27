@@ -1852,6 +1852,7 @@ export default function App() {
       ) {
         setCurrentView('NANA_SWITCH_APP');
         setShowWelcomeShowcase(false);
+        setPublicBoutiqueParams({ isBoutique: false, targetStoreId: null, targetProductId: null });
         return;
       }
 
@@ -1871,6 +1872,7 @@ export default function App() {
       ) {
         setCurrentView('NANA_SWITCH_DOCS');
         setShowWelcomeShowcase(false);
+        setPublicBoutiqueParams({ isBoutique: false, targetStoreId: null, targetProductId: null });
         return;
       }
 
@@ -1883,6 +1885,7 @@ export default function App() {
       ) {
         setCurrentView('NANA_SWITCH_APP');
         setShowWelcomeShowcase(false);
+        setPublicBoutiqueParams({ isBoutique: false, targetStoreId: null, targetProductId: null });
         return;
       }
       // Landing NaNaSwitch Cloud (/nana-switch) — route stricte, pas de startsWith
@@ -1897,6 +1900,8 @@ export default function App() {
       ) {
         setCurrentView('NANA_SWITCH');
         setShowWelcomeShowcase(false);
+        setPublicBoutiqueParams({ isBoutique: false, targetStoreId: null, targetProductId: null });
+        return;
       }
 
       // Espace Caissier & Terminal POS (/pos/connect, /pos/terminal, /pos)
@@ -5203,7 +5208,16 @@ export default function App() {
   }
 
   // 0.1 Vue Publique Client : Vitrine Boutique & Fiche Produit Partagée (/s/[slug], /shop/[id], ?store=id, etc.)
-  if (publicBoutiqueParams.isBoutique && (!currentUser || publicBoutiqueParams.isBoutique)) {
+  if (
+    publicBoutiqueParams.isBoutique &&
+    currentView !== 'NANA_SWITCH_APP' &&
+    currentView !== 'nana_switch_app' &&
+    currentView !== 'NANA_SWITCH' &&
+    currentView !== 'nana_switch' &&
+    currentView !== 'NANA_SWITCH_DOCS' &&
+    currentView !== 'nana_switch_docs' &&
+    (!currentUser || publicBoutiqueParams.isBoutique)
+  ) {
     return (
       <React.Suspense fallback={<StorefrontNeutralLoader label="Chargement de la vitrine officielle..." />}>
         <PublicStorefrontPage
