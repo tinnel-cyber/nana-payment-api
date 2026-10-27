@@ -271,6 +271,7 @@ export function NanaDocPortalApp({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTabPrompt1, setActiveTabPrompt1] = useState<'simulator' | 'code' | 'specs'>('simulator');
   const [activeSdkLang, setActiveSdkLang] = useState<'node' | 'python'>('node');
+  const [activePhpMobileTab, setActivePhpMobileTab] = useState<'php' | 'curl' | 'mobile'>('php');
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   
   // Interactive Chat State for Prompt 1
@@ -342,14 +343,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt6',
-      badge: 'PROMPT 6',
+      badge: 'PROMPT 6 • PHP & MOBILE',
       badgeColor: 'bg-rose-600 text-white',
-      icon: Lock,
+      icon: FileCode,
       iconColor: 'text-rose-600',
-      title: "Plafonds Risque & Profils KYC (1M vs 5M XOF)",
-      subtitle: "Limites Mensuelles & HTTP 403",
-      description: "Contrôles de conformité stricts : Particulier (1 000 000 XOF/mois) vs Entreprise (5 000 000 XOF/mois), calcul du volume cumulé et code 403 Forbidden.",
-      tags: ['Particulier 1M', 'Entreprise 5M', 'Rejet 403', 'Audit Mensuel']
+      title: "Console Multi-Langages — PHP & cURL / Mobile",
+      subtitle: "docs/sdks/php-curl • PHP Natif, cURL & Mobile (Flutter)",
+      description: "Implémentations complètes pour l'écosystème web africain : PHP natif (cURL & Webhook hash_equals), commandes cURL et intégration sécurisée dans applications mobiles (Flutter / React Native).",
+      tags: ['PHP Natif (cURL)', 'cURL Universel', 'Flutter & Mobile', 'HMAC-SHA256 hash_equals']
     },
     {
       id: 'prompt7',
@@ -2578,28 +2579,468 @@ if __name__ == "__main__":
                 </div>
               )}
 
-              {/* ---------------- PROMPT 6: PLAFONDS RISQUE & KYC ---------------- */}
+              {/* ---------------- PROMPT 6: CONSOLE MULTI-LANGAGES — PHP & CURL / MOBILE ---------------- */}
               {activeView === 'prompt6' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-600">PROMPT 6 • RISQUE & CONFORMITÉ</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Plafonds Risque & Profils KYC (1M vs 5M XOF)</h2>
-                    <p className="text-slate-500 text-xs mt-1">Limites mensuelles strictes appliquées par le middleware de paiement.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-rose-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white">
+                            PROMPT 6 • docs/sdks/php-curl
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            Senior Developer Advocate (PHP & Mobile/cURL)
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                          Console Multi-Langages — PHP & cURL / Mobile
+                        </h2>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 self-start sm:self-auto">
+                        <FileCode className="w-4 h-4 text-rose-600" />
+                        Écosystème Web Africain & Mobile
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
+                      Implémentations officielles pour <strong>PHP natif</strong> (largement déployé sur l'écosystème web africain), requêtes <strong>cURL génériques</strong> pour tests API et intégration sécurisée dans des applications mobiles <strong>Flutter</strong> et <strong>React Native</strong>.
+                    </p>
+
+                    {/* Navigation Sub-Tabs */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        onClick={() => setActivePhpMobileTab('php')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition ${
+                          activePhpMobileTab === 'php'
+                            ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                        PHP Natif (cURL & hash_equals)
+                      </button>
+                      <button
+                        onClick={() => setActivePhpMobileTab('curl')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition ${
+                          activePhpMobileTab === 'curl'
+                            ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                        cURL / Requête Générique
+                      </button>
+                      <button
+                        onClick={() => setActivePhpMobileTab('mobile')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition ${
+                          activePhpMobileTab === 'mobile'
+                            ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        Applications Mobiles (Flutter / React Native)
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-                      <span className="font-black text-slate-900 text-sm">Particulier / Indépendant</span>
-                      <p className="text-2xl font-black text-blue-600">1 000 000 XOF <span className="text-xs font-semibold text-slate-500">/ mois</span></p>
-                      <p className="text-slate-500 text-[11px]">Pièces requises : CNIB (Recto & Verso) + Selfie vidéo/photo.</p>
-                    </div>
+                  {/* ======================= SUB-TAB: PHP NATIF ======================= */}
+                  {activePhpMobileTab === 'php' && (
+                    <div className="space-y-6 animate-in fade-in duration-150">
 
-                    <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-                      <span className="font-black text-slate-900 text-sm">Compte Entreprise</span>
-                      <p className="text-2xl font-black text-emerald-600">5 000 000 XOF <span className="text-xs font-semibold text-slate-500">/ mois</span></p>
-                      <p className="text-slate-500 text-[11px]">Pièces requises : RCCM + IFU + CNIB & Selfie du gérant.</p>
+                      {/* Guide Pédagogique PHP */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-rose-200 shadow-sm space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                          <span className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black text-sm">🐘</span>
+                          <div>
+                            <h3 className="text-base font-extrabold text-slate-900">Comment intégrer NanaSwitch dans votre site ou CMS PHP ?</h3>
+                            <p className="text-xs text-slate-500">Flux d'intégration en 4 étapes simples, compatible avec 100% des hébergements web mutualisés et serveurs dédiés.</p>
+                          </div>
+                        </div>
+
+                        {/* Les 4 Étapes PHP */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-rose-700 block">1. Formulaire Panier</span>
+                            <p className="text-slate-600 leading-relaxed">L'internaute valide son panier. Le formulaire HTML ou bouton soumet la commande vers votre script <code className="font-mono text-slate-800">checkout.php</code>.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-1.5">
+                            <span className="font-extrabold text-rose-700 block">2. Script cURL PHP</span>
+                            <p className="text-slate-600 leading-relaxed"><code className="font-mono text-rose-800">checkout.php</code> exécute un appel cURL serveur vers NanaSwitch Cloud avec vos clés secrètes et récupère <code className="font-mono text-emerald-700">$checkout_url</code>.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-rose-700 block">3. Redirection Client</span>
+                            <p className="text-slate-600 leading-relaxed">Votre script PHP redirige l'acheteur avec <code className="font-mono text-slate-800">header('Location: ' . $checkout_url);</code> vers la page de paiement sécurisée.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
+                            <span className="font-extrabold text-emerald-800 block">4. Webhook PHP</span>
+                            <p className="text-slate-600 leading-relaxed">NanaSwitch émet un webhook vers <code className="font-mono text-emerald-800">webhook.php</code>. Le script vérifie la signature HMAC avec <code className="font-mono text-emerald-800">hash_equals</code> et valide la commande.</p>
+                          </div>
+                        </div>
+
+                        {/* Exemple d'appel Frontend HTML classique */}
+                        <div className="space-y-2 pt-2">
+                          <span className="font-bold text-slate-900 block text-xs">🌐 Exemple de Formulaire Frontend (HTML / PHP) :</span>
+                          <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`<!-- Formulaire d'achat sur votre boutique PHP (index.php ou cart.php) -->
+<form action="checkout.php" method="POST">
+  <input type="hidden" name="order_id" value="CMD_12345">
+  <input type="hidden" name="amount" value="5000">
+  <button type="submit" class="btn-payer">
+    Payer 5 000 XOF avec NanaSwitch (Mobile Money / Carte)
+  </button>
+</form>`}
+                          </pre>
+                        </div>
+                      </div>
+
+                      {/* 1. Code d'appui officiel : Initialisation de Paiement PHP */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-black text-xs">1</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">1. Initialisation de Paiement PHP (cURL Natif)</h3>
+                              <p className="text-[11px] text-slate-500">Appel POST vers l'endpoint de routage NanaSwitch Cloud.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`<?php
+// Initialisation de Paiement
+$ch = curl_init('https://nana-payment-api.onrender.com/v1/switch/route');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode([
+        'amount' => 5000, 'currency' => 'XOF', 'order_id' => 'CMD_12345'
+    ]),
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'x-nanaswitch-key: ns_live_pk_12345',
+        'x-nanaswitch-skey: ns_live_sk_67890'
+    ]
+]);
+$response = json_decode(curl_exec($ch), true);
+$checkout_url = $response['checkout_url'];
+
+// Rediriger le client vers l'interface de paiement
+header("Location: " . $checkout_url);
+exit;`, 'Code PHP Initialisation')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`<?php
+// Initialisation de Paiement
+$ch = curl_init('https://nana-payment-api.onrender.com/v1/switch/route');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode([
+        'amount' => 5000, 'currency' => 'XOF', 'order_id' => 'CMD_12345'
+    ]),
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'x-nanaswitch-key: ns_live_pk_12345',
+        'x-nanaswitch-skey: ns_live_sk_67890'
+    ]
+]);
+$response = json_decode(curl_exec($ch), true);
+$checkout_url = $response['checkout_url'];
+
+// Redirection du client vers la page de paiement NanaSwitch
+header("Location: " . $checkout_url);
+exit;`}
+                        </pre>
+                      </div>
+
+                      {/* 2. Code d'appui officiel : Validation Webhook HMAC-SHA256 PHP */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">2. Validation Webhook HMAC-SHA256 (PHP)</h3>
+                              <p className="text-[11px] text-slate-500">Capture de php://input et comparaison timing-safe avec hash_equals.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`<?php
+// Validation Webhook HMAC-SHA256
+$webhook_secret = getenv('NANASWITCH_WEBHOOK_SECRET') ?: 'ns_whsec_...';
+$raw_body = file_get_contents('php://input');
+$sig_header = $_SERVER['HTTP_X_NANASWITCH_SIGNATURE'];
+parse_str(str_replace(',', '&', $sig_header), $sig_parts);
+
+$computed_sig = hash_hmac('sha256', $sig_parts['t'] . '.' . $raw_body, $webhook_secret);
+if (hash_equals($sig_parts['v1'], $computed_sig)) {
+    // Paiement valide
+    $event = json_decode($raw_body, true);
+    if ($event['event_type'] === 'payment.success') {
+        // Valider la commande en base MySQL / PDO
+    }
+    http_response_code(200);
+    echo json_encode(["received" => true]);
+} else {
+    http_response_code(401);
+    echo json_encode(["error" => "Invalid signature"]);
+}`, 'Code PHP Validation Webhook')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`<?php
+// Validation Webhook HMAC-SHA256
+$webhook_secret = getenv('NANASWITCH_WEBHOOK_SECRET') ?: 'ns_whsec_...';
+$raw_body = file_get_contents('php://input');
+$sig_header = $_SERVER['HTTP_X_NANASWITCH_SIGNATURE'];
+parse_str(str_replace(',', '&', $sig_header), $sig_parts);
+
+$computed_sig = hash_hmac('sha256', $sig_parts['t'] . '.' . $raw_body, $webhook_secret);
+if (hash_equals($sig_parts['v1'], $computed_sig)) {
+    // Paiement valide
+    $event = json_decode($raw_body, true);
+    if ($event['event_type'] === 'payment.success') {
+        // Valider la commande en base de données
+    }
+    http_response_code(200);
+    echo json_encode(["received" => true]);
+} else {
+    http_response_code(401);
+    echo json_encode(["error" => "Invalid signature"]);
+}`}
+                        </pre>
+                      </div>
+
                     </div>
-                  </div>
+                  )}
+
+                  {/* ======================= SUB-TAB: CURL ======================= */}
+                  {activePhpMobileTab === 'curl' && (
+                    <div className="space-y-6 animate-in fade-in duration-150">
+                      
+                      {/* Guide cURL */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-blue-200 shadow-sm space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                          <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm">⚡</span>
+                          <div>
+                            <h3 className="text-base font-extrabold text-slate-900">cURL / Requête Générique universelle</h3>
+                            <p className="text-xs text-slate-500">Testez l'initiation de paiement directement depuis votre terminal, Postman ou scripts shell.</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          La commande <strong>cURL</strong> est l'outil idéal pour tester vos clés d'API Zero-Trust (<code className="font-mono text-blue-700">ns_live_pk_...</code> et <code className="font-mono text-purple-700">ns_live_sk_...</code>) avant toute intégration logicielle.
+                        </p>
+                      </div>
+
+                      {/* Code d'appui officiel cURL */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">⚡</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">Requête cURL d'Appui Officielle</h3>
+                              <p className="text-[11px] text-slate-500">POST /v1/switch/route avec headers Zero-Trust.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`curl -X POST https://nana-payment-api.onrender.com/v1/switch/route \\
+  -H "Content-Type: application/json" \\
+  -H "x-nanaswitch-key: ns_live_pk_12345" \\
+  -H "x-nanaswitch-skey: ns_live_sk_67890" \\
+  -d '{
+    "amount": 5000,
+    "currency": "XOF",
+    "order_id": "CMD_12345",
+    "customer": { "email": "client@example.com" }
+  }'`, 'Commande cURL')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier cURL
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`curl -X POST https://nana-payment-api.onrender.com/v1/switch/route \\
+  -H "Content-Type: application/json" \\
+  -H "x-nanaswitch-key: ns_live_pk_12345" \\
+  -H "x-nanaswitch-skey: ns_live_sk_67890" \\
+  -d '{
+    "amount": 5000,
+    "currency": "XOF",
+    "order_id": "CMD_12345",
+    "customer": { "email": "client@example.com" }
+  }'`}
+                        </pre>
+
+                        {/* Réponse attendue cURL */}
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-xs font-bold text-slate-900">Réponse JSON Renvoyée (HTTP 200 / 201) :</span>
+                          <pre className="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`{
+  "success": true,
+  "transaction_id": "sw_749102",
+  "order_id": "CMD_12345",
+  "amount": 5000,
+  "currency": "XOF",
+  "status": "PENDING",
+  "checkout_url": "https://nana-payment-api.onrender.com/pay/sw_749102"
+}`}
+                          </pre>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* ======================= SUB-TAB: MOBILE ======================= */}
+                  {activePhpMobileTab === 'mobile' && (
+                    <div className="space-y-6 animate-in fade-in duration-150">
+                      
+                      {/* Règle de Sécurité Mobile Cruciale */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-200 shadow-sm space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                          <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm">📱</span>
+                          <div>
+                            <h3 className="text-base font-extrabold text-slate-900">Architecture Mobile Sécurisée (Flutter & React Native)</h3>
+                            <p className="text-xs text-slate-500">La règle d'or : ne JAMAIS inclure la clé secrète dans le code binaire de l'application.</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Les applications mobiles compilées (APK Android ou IPA iOS) peuvent être décompilées par des tiers. C'est pourquoi votre application mobile <strong>appelle votre propre API backend</strong> pour demander la création du paiement. Votre backend génère l'URL <code className="font-mono text-emerald-700">checkout_url</code> avec votre clé secrète, puis l'application mobile ouvre cette URL dans un navigateur intégré ou une WebView.
+                        </p>
+                      </div>
+
+                      {/* Exemple Flutter */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">FL</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">Intégration Mobile en Flutter (Dart)</h3>
+                              <p className="text-[11px] text-slate-500">Appel backend et ouverture de la page de paiement avec url_launcher.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<void> initiateNanaSwitchPayment() async {
+  // 1. Appel vers VOTRE serveur backend sécurisé
+  final response = await http.post(
+    Uri.parse('https://votre-domaine.com/api/create-payment'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'amount': 5000, 'orderId': 'CMD_12345'}),
+  );
+
+  final data = jsonDecode(response.body);
+  final String checkoutUrl = data['checkout_url'];
+
+  // 2. Ouverture de la page de paiement sécurisée
+  final Uri uri = Uri.parse(checkoutUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+  }
+}`, 'Code Flutter')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier Flutter
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<void> initiateNanaSwitchPayment() async {
+  // 1. Appel vers VOTRE serveur backend sécurisé
+  final response = await http.post(
+    Uri.parse('https://votre-domaine.com/api/create-payment'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'amount': 5000, 'orderId': 'CMD_12345'}),
+  );
+
+  final data = jsonDecode(response.body);
+  final String checkoutUrl = data['checkout_url'];
+
+  // 2. Ouverture de la page de paiement sécurisée dans l'application
+  final Uri uri = Uri.parse(checkoutUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+  }
+}`}
+                        </pre>
+                      </div>
+
+                      {/* Exemple React Native */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">RN</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">Intégration Mobile en React Native / Expo</h3>
+                              <p className="text-[11px] text-slate-500">Ouverture de session de paiement avec expo-web-browser.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`import * as WebBrowser from 'expo-web-browser';
+
+async function handleMobileCheckout() {
+  // 1. Obtenir le lien de paiement depuis votre serveur
+  const res = await fetch('https://votre-domaine.com/api/create-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: 5000, orderId: 'CMD_12345' }),
+  });
+  
+  const { checkout_url } = await res.json();
+
+  // 2. Ouvrir le guichet de paiement in-app
+  await WebBrowser.openBrowserAsync(checkout_url);
+}`, 'Code React Native')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier React Native
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`import * as WebBrowser from 'expo-web-browser';
+
+async function handleMobileCheckout() {
+  // 1. Obtenir le lien de paiement depuis votre serveur
+  const res = await fetch('https://votre-domaine.com/api/create-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: 5000, orderId: 'CMD_12345' }),
+  });
+  
+  const { checkout_url } = await res.json();
+
+  // 2. Ouvrir le guichet de paiement in-app
+  await WebBrowser.openBrowserAsync(checkout_url);
+}`}
+                        </pre>
+                      </div>
+
+                    </div>
+                  )}
+
                 </div>
               )}
 

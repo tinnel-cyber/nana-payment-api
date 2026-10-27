@@ -232,21 +232,21 @@
           </div>
         </a>
 
-        <!-- CARD 6: PLAFONDS KYC -->
-        <a href="#section-kyc" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="kyc plafonds 1000000 5000000 particulier entreprise 403 forbidden rccm ifu">
+        <!-- CARD 6: CONSOLE MULTI-LANGAGES PHP & CURL / MOBILE (PROMPT 6) -->
+        <a href="#section-sdks-php-curl" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="php curl mobile flutter react native hash_equals curl_init webhook php input">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-2xl">⚖️</span>
+              <span class="text-2xl">🐘</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white">PROMPT 6</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Plafonds Risque & KYC</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">1M (Particulier) vs 5M (Entreprise)</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">SDKs PHP & cURL / Mobile</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/sdks/php-curl</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Contrôles stricts de conformité mensuelle avec rejet automatique HTTP 403 Forbidden sur dépassement.</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Implémentations complètes : PHP natif (cURL & hash_equals), requêtes cURL universelles et architecture mobile Flutter / React Native.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Voir les Règles KYC &rarr;</span>
+            <span>Explorer PHP & Mobile &rarr;</span>
           </div>
         </a>
 
@@ -1038,25 +1038,154 @@ if __name__ == "__main__":
       </div>
     </section>
 
-    <!-- ==================== SECTION 6: PLAFONDS KYC ==================== -->
-    <section id="section-kyc" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+    <!-- ==================== SECTION 6: CONSOLE MULTI-LANGAGES — PHP & CURL / MOBILE (PROMPT 6) ==================== -->
+    <section id="section-sdks-php-curl" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-8">
       <div class="border-b border-slate-100 pb-4">
-        <span class="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-full text-[10px] font-black uppercase">SECTION 6 • PROMPT 6</span>
-        <h2 class="text-2xl font-black text-slate-900 mt-1">Plafonds Risque & Profils KYC</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Restrictions de volume mensuel appliquées en temps réel.</p>
+        <span class="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-full text-[10px] font-black uppercase">SECTION 6 • PROMPT 6 • docs/sdks/php-curl</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Console Multi-Langages — PHP & cURL / Mobile</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Rôle : Senior Developer Advocate. Implémentations PHP natif, cURL universel et intégration mobile Flutter & React Native.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-          <span class="font-black text-slate-900 text-sm">Profil Particulier / Indépendant</span>
-          <p class="text-2xl font-black text-blue-600">1 000 000 XOF <span class="text-xs text-slate-500 font-normal">/ mois</span></p>
-          <p class="text-slate-500 text-[11px]">Pièces exigées : CNIB Recto/Verso + Selfie visage.</p>
+      <!-- ==================== PARTIE 1: PHP NATIF ==================== -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center font-black text-xs">PHP</span>
+          <h3 class="text-base font-extrabold text-slate-900">Intégration PHP Natif & CMS (Écosystème Web Africain)</h3>
         </div>
 
-        <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-          <span class="font-black text-slate-900 text-sm">Profil Entreprise Enregistrée</span>
-          <p class="text-2xl font-black text-emerald-600">5 000 000 XOF <span class="text-xs text-slate-500 font-normal">/ mois</span></p>
-          <p class="text-slate-500 text-[11px]">Pièces exigées : RCCM + IFU + CNIB & Selfie du gérant.</p>
+        <!-- Guide pas-à-pas PHP -->
+        <div class="p-5 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-3 text-xs">
+          <span class="font-bold text-rose-900 text-sm block">💡 Comment intégrer NanaSwitch dans votre site ou CMS PHP ?</span>
+          <p class="text-slate-700 leading-relaxed">
+            Le parcours client en PHP s'effectue en 4 étapes simples : le formulaire du panier envoie la commande à votre script <code class="font-mono text-slate-800">checkout.php</code>. Ce script contacte NanaSwitch Cloud en cURL avec vos clés secrètes et redirige l'internaute vers <code class="font-mono text-emerald-700">$checkout_url</code>. Dès que le client saisit son PIN Mobile Money ou valide sa carte bancaire, NanaSwitch appelle votre script <code class="font-mono text-rose-900">webhook.php</code> qui valide la signature cryptographique et active la commande.
+          </p>
+          <div class="space-y-1 pt-1">
+            <span class="font-bold text-slate-900 block">Exemple de Formulaire Frontend (HTML / PHP) :</span>
+            <pre class="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+&lt;form action="checkout.php" method="POST"&gt;
+  &lt;input type="hidden" name="order_id" value="CMD_12345"&gt;
+  &lt;input type="hidden" name="amount" value="5000"&gt;
+  &lt;button type="submit" class="btn-payer"&gt;Payer 5 000 XOF avec NanaSwitch&lt;/button&gt;
+&lt;/form&gt;</pre>
+          </div>
+        </div>
+
+        <!-- 1.1 Initialisation PHP -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">1. Initialisation de Paiement PHP (cURL Natif)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+&lt;?php
+// Initialisation de Paiement
+$ch = curl_init('https://nana-payment-api.onrender.com/v1/switch/route');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode([
+        'amount' => 5000, 'currency' => 'XOF', 'order_id' => 'CMD_12345'
+    ]),
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'x-nanaswitch-key: ns_live_pk_12345',
+        'x-nanaswitch-skey: ns_live_sk_67890'
+    ]
+]);
+$response = json_decode(curl_exec($ch), true);
+$checkout_url = $response['checkout_url'];
+
+// Redirection du client vers la page de paiement
+header("Location: " . $checkout_url);
+exit;</pre>
+        </div>
+
+        <!-- 1.2 Validation Webhook PHP -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">2. Validation Webhook HMAC-SHA256 (PHP)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+&lt;?php
+// Validation Webhook HMAC-SHA256
+$webhook_secret = getenv('NANASWITCH_WEBHOOK_SECRET') ?: 'ns_whsec_...';
+$raw_body = file_get_contents('php://input');
+$sig_header = $_SERVER['HTTP_X_NANASWITCH_SIGNATURE'];
+parse_str(str_replace(',', '&', $sig_header), $sig_parts);
+
+$computed_sig = hash_hmac('sha256', $sig_parts['t'] . '.' . $raw_body, $webhook_secret);
+if (hash_equals($sig_parts['v1'], $computed_sig)) {
+    // Paiement valide
+    $event = json_decode($raw_body, true);
+    if ($event['event_type'] === 'payment.success') {
+        // Valider la commande dans votre base MySQL / PDO
+    }
+    http_response_code(200);
+    echo json_encode(["received" => true]);
+} else {
+    http_response_code(401);
+    echo json_encode(["error" => "Invalid signature"]);
+}</pre>
+        </div>
+      </div>
+
+      <!-- ==================== PARTIE 2: CURL ==================== -->
+      <div class="space-y-4 pt-4 border-t border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-black text-xs">CLI</span>
+          <h3 class="text-base font-extrabold text-slate-900">Requête cURL Universelle (Tests & API Gateway)</h3>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">Commande cURL de test d'initiation</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+curl -X POST https://nana-payment-api.onrender.com/v1/switch/route \
+  -H "Content-Type: application/json" \
+  -H "x-nanaswitch-key: ns_live_pk_12345" \
+  -H "x-nanaswitch-skey: ns_live_sk_67890" \
+  -d '{
+    "amount": 5000,
+    "currency": "XOF",
+    "order_id": "CMD_12345",
+    "customer": { "email": "client@example.com" }
+  }'</pre>
+        </div>
+      </div>
+
+      <!-- ==================== PARTIE 3: APPLICATIONS MOBILES ==================== -->
+      <div class="space-y-4 pt-4 border-t border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xs">APP</span>
+          <h3 class="text-base font-extrabold text-slate-900">Applications Mobiles (Flutter & React Native)</h3>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 text-xs text-slate-700 space-y-1">
+          <span class="font-bold text-emerald-900">Règle de sécurité mobile :</span>
+          <p>
+            Ne stockez jamais votre clé secrète (<code class="font-mono text-rose-700">ns_live_sk_...</code>) dans le code Flutter ou React Native. L'application mobile appelle votre propre serveur backend pour obtenir l'URL de paiement, puis l'ouvre dans un navigateur intégré ou une WebView.
+          </p>
+        </div>
+
+        <!-- Exemple Flutter -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">Exemple Flutter (Dart avec url_launcher)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+
+Future&lt;void&gt; initiateNanaSwitchPayment() async {
+  // 1. Appel vers votre serveur backend sécurisé
+  final response = await http.post(
+    Uri.parse('https://votre-domaine.com/api/create-payment'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'amount': 5000, 'orderId': 'CMD_12345'}),
+  );
+
+  final data = jsonDecode(response.body);
+  final String checkoutUrl = data['checkout_url'];
+
+  // 2. Ouverture de la page de paiement sécurisée in-app
+  final Uri uri = Uri.parse(checkoutUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+  }
+}</pre>
         </div>
       </div>
     </section>
