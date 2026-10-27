@@ -1877,6 +1877,25 @@ export const SaasAdminDashboard: React.FC<SaasAdminDashboardProps> = ({
               <span>Wameet (Réglages)</span>
             </button>
 
+            {/* 🔀 Bouton NanaSwitch Landing Page — Accès Super Admin */}
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  playTapBeep();
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', '/nana-switch');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#3B82F6] text-white border border-blue-400/40 ring-1 ring-blue-400/20 active:scale-95 text-xs font-black transition-all shadow-md shadow-blue-950/50 cursor-pointer"
+                title="Accéder à la Landing Page NanaSwitch Cloud (/nana-switch)"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-blue-200" />
+                <span>🔀 NanaSwitch Landing</span>
+              </button>
+            )}
+
             <button
 
               type="button"
