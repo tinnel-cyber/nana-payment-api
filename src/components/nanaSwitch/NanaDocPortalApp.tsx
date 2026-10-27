@@ -270,6 +270,7 @@ export function NanaDocPortalApp({
   const [activeView, setActiveView] = useState<string>(initialPrompt);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTabPrompt1, setActiveTabPrompt1] = useState<'simulator' | 'code' | 'specs'>('simulator');
+  const [activeSdkLang, setActiveSdkLang] = useState<'node' | 'python'>('node');
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   
   // Interactive Chat State for Prompt 1
@@ -330,14 +331,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt5',
-      badge: 'PROMPT 5',
+      badge: 'PROMPT 5 • SDKs & CODE',
       badgeColor: 'bg-indigo-600 text-white',
-      icon: Layers,
+      icon: Terminal,
       iconColor: 'text-indigo-600',
-      title: "Modèle Hybride B2B : Agrégé vs SaaS BYOK",
-      subtitle: "Marge +1.5% vs 0.02 XOF/requête",
-      description: "Gestion du commutateur d'intégration dans l'espace Développeur, modèle de tarification à l'usage SaaS et coupe-circuit automatique HTTP 402.",
-      tags: ['Master Merchant', 'BYOK Routeur', 'Crédits API', 'Coupe-Circuit 402']
+      title: "Console Multi-Langages — Node.js & Python",
+      subtitle: "docs/sdks/node-python • Exemples & SDKs Officiels",
+      description: "Initialisation de paiement universelle, validation cryptographique des webhooks HMAC-SHA256 et modèles de serveurs Express.js et FastAPI/Flask prêts pour la production.",
+      tags: ['Node.js / Express', 'Python (Requests & FastAPI)', 'HMAC-SHA256', 'Codes Complets Prêts à l\'Emploi']
     },
     {
       id: 'prompt6',
@@ -1749,6 +1750,18 @@ Concernant votre demande "${textToSend}" :
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Mode Agrégé */}
+                      <div className="p-5 rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 space-y-2 md:col-span-2">
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 bg-indigo-600 text-white rounded-lg text-xs font-black">AGREGATED</span>
+                          <span className="font-extrabold text-slate-900 text-sm">Mode Agrégé (Master Merchant)</span>
+                          <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full ml-auto">Compte Maître Régulé</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Modèle tout-en-un où <strong>NanaSwitch opère en tant que Maître Marchand</strong>. Aucune démarche ni contrat direct auprès des opérateurs télécoms ou bancaires n'est requise. NanaSwitch encaisse via son compte maître, retient sa marge (+1.5% de frais de switch à la source), et crédite directement le Wallet de l'application marchande. Ce mode est obligatoirement assujetti aux <strong>plafonds de vérification d'identité KYC</strong> (1 000 000 XOF/mois pour Particulier, 5 000 000 XOF/mois pour Entreprise).
+                        </p>
+                      </div>
+
                       {/* BYOK */}
                       <div className="p-5 rounded-2xl border border-blue-100 bg-blue-50/40 space-y-2">
                         <div className="flex items-center gap-2">
@@ -1997,26 +2010,525 @@ function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
                 </div>
               )}
 
-              {/* ---------------- PROMPT 5: MODÈLE HYBRIDE B2B ---------------- */}
+              {/* ---------------- PROMPT 5: CONSOLE MULTI-LANGAGES — NODE.JS & PYTHON ---------------- */}
               {activeView === 'prompt5' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">PROMPT 5 • BILLING & HYBRIDE</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Modèle Hybride B2B : Agrégé vs SaaS BYOK</h2>
-                    <p className="text-slate-500 text-xs mt-1">Choisissez entre le compte maître de régulation et l'injection de vos clés personnelles.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-indigo-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white">
+                            PROMPT 5 • docs/sdks/node-python
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            Senior Developer Advocate (Node.js & Python)
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                          Console Multi-Langages — Node.js & Python
+                        </h2>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 self-start sm:self-auto">
+                        <Terminal className="w-4 h-4 text-indigo-600" />
+                        SDKs & Code d'Appui
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
+                      Exemples complets et production-ready pour intégrer NanaSwitch Cloud en <strong>Node.js</strong> et <strong>Python</strong>. Couvre l'initialisation de paiement (POST <code className="font-mono text-indigo-700 bg-indigo-50 px-1 rounded">/v1/switch/route</code>) et la validation cryptographique des signatures Webhook HMAC-SHA256 avec protection anti-rejeu.
+                    </p>
+
+                    {/* Language Switcher Tabs */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <button
+                        onClick={() => setActiveSdkLang('node')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition ${
+                          activeSdkLang === 'node'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        Node.js / Express
+                      </button>
+                      <button
+                        onClick={() => setActiveSdkLang('python')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition ${
+                          activeSdkLang === 'python'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        Python / FastAPI / Flask
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-2xl border border-blue-200 bg-blue-50/50 space-y-2">
-                      <span className="font-extrabold text-blue-900 text-sm">Mode Simplifié (AGREGATED)</span>
-                      <p className="text-slate-600">Aucun contrat nécessaire. NanaSwitch encaisse via son compte maître de régulation. Marge retenue : +1.5% de frais de switch.</p>
-                    </div>
+                  {/* ======================= TAB NODE.JS ======================= */}
+                  {activeSdkLang === 'node' && (
+                    <div className="space-y-6 animate-in fade-in duration-150">
+                      
+                      {/* 1. Initialisation de Paiement Node.js */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">1</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">1. Initialisation de Paiement NanaSwitch Cloud (Node.js)</h3>
+                              <p className="text-[11px] text-slate-500">Appel POST avec Axios et en-têtes Zero-Trust.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`// Initialisation de paiement NanaSwitch Cloud
+const axios = require('axios');
+const crypto = require('crypto');
 
-                    <div className="p-5 rounded-2xl border border-purple-200 bg-purple-50/50 space-y-2">
-                      <span className="font-extrabold text-purple-900 text-sm">Mode SaaS Développeur (BYOK)</span>
-                      <p className="text-slate-600">Routage direct pass-through avec vos clés SasPay/Sebpay. 0% de commission de switch. Facturation SaaS à 0.02 XOF/requête.</p>
+async function createPayment() {
+  const response = await axios.post('https://nana-payment-api.onrender.com/v1/switch/route', {
+    amount: 5000,
+    currency: 'XOF',
+    order_id: 'CMD_12345',
+    customer: { email: 'client@example.com', phone: '+22670000000' }
+  }, {
+    headers: {
+      'x-nanaswitch-key': 'ns_live_pk_12345',
+      'x-nanaswitch-skey': 'ns_live_sk_67890'
+    }
+  });
+  return response.data.checkout_url;
+}`, 'Code Node.js Initialisation')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`// Initialisation de paiement NanaSwitch Cloud
+const axios = require('axios');
+const crypto = require('crypto');
+
+async function createPayment() {
+  const response = await axios.post('https://nana-payment-api.onrender.com/v1/switch/route', {
+    amount: 5000,
+    currency: 'XOF',
+    order_id: 'CMD_12345',
+    customer: { email: 'client@example.com', phone: '+22670000000' }
+  }, {
+    headers: {
+      'x-nanaswitch-key': 'ns_live_pk_12345',
+      'x-nanaswitch-skey': 'ns_live_sk_67890'
+    }
+  });
+  return response.data.checkout_url;
+}`}
+                        </pre>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span className="font-bold text-slate-900 block">En-tête Public</span>
+                            <span className="font-mono text-blue-600 text-[11px]">x-nanaswitch-key</span>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Votre clé publique (ns_live_pk_...).</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span className="font-bold text-slate-900 block">En-tête Secret</span>
+                            <span className="font-mono text-purple-600 text-[11px]">x-nanaswitch-skey</span>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Votre clé secrète backend (ns_live_sk_...).</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span className="font-bold text-slate-900 block">Réponse Attendue</span>
+                            <span className="font-mono text-emerald-600 text-[11px]">checkout_url</span>
+                            <p className="text-[11px] text-slate-500 mt-0.5">URL de redirection vers l'interface de paiement.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. Validation Webhook HMAC-SHA256 Node.js */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">2. Vérification Webhook HMAC-SHA256 (Node.js)</h3>
+                              <p className="text-[11px] text-slate-500">Comparaison cryptographique en temps constant avec crypto.timingSafeEqual.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`// Verification Webhook HMAC-SHA256
+function verifyWebhook(payload, signatureHeader, secret) {
+  const [timestamp, signature] = signatureHeader.split(',');
+  const tsValue = timestamp.split('=')[1];
+  const sigValue = signature.split('=')[1];
+  
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(\`\${tsValue}.\${payload}\`)
+    .digest('hex');
+    
+  return crypto.timingSafeEqual(Buffer.from(sigValue), Buffer.from(expectedSig));
+}`, 'Code Node.js Validation Webhook')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`// Verification Webhook HMAC-SHA256
+function verifyWebhook(payload, signatureHeader, secret) {
+  const [timestamp, signature] = signatureHeader.split(',');
+  const tsValue = timestamp.split('=')[1];
+  const sigValue = signature.split('=')[1];
+  
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(\`\${tsValue}.\${payload}\`)
+    .digest('hex');
+    
+  return crypto.timingSafeEqual(Buffer.from(sigValue), Buffer.from(expectedSig));
+}`}
+                        </pre>
+                      </div>
+
+                      {/* 3. Serveur Express Complet de Référence */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">3</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">3. Serveur Express.js Complet (Listener Production)</h3>
+                              <p className="text-[11px] text-slate-500">Capture du body brut et acquittement immédiat HTTP 200.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+const WEBHOOK_SECRET = process.env.NANASWITCH_WEBHOOK_SECRET || 'ns_whsec_...';
+
+// IMPORTANT : Conserver le corps brut de la requête pour le calcul HMAC
+app.post('/api/nanaswitch-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const signatureHeader = req.headers['x-nanaswitch-signature'];
+  const rawBody = req.body.toString('utf8');
+
+  try {
+    const isValid = verifyWebhook(rawBody, signatureHeader, WEBHOOK_SECRET);
+    if (!isValid) {
+      console.error('Signature webhook invalide');
+      return res.status(401).json({ error: 'INVALID_SIGNATURE' });
+    }
+
+    const event = JSON.parse(rawBody);
+    console.log('Événement reçu avec succès :', event.event_type, event.transaction_id);
+
+    if (event.event_type === 'payment.success') {
+      // Traitement de la commande payée (livraison, activation, validation panier)
+      console.log('Commande validée :', event.order_id, 'Montant :', event.amount, event.currency);
+    }
+
+    // Toujours retourner 200 immédiatement
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    console.error('Erreur traitement webhook :', err.message);
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.listen(3000, () => console.log('Serveur webhook écoute sur le port 3000'));`, 'Serveur Express Complet')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le serveur
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+const WEBHOOK_SECRET = process.env.NANASWITCH_WEBHOOK_SECRET || 'ns_whsec_...';
+
+// IMPORTANT : Conserver le corps brut de la requête pour le calcul HMAC
+app.post('/api/nanaswitch-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const signatureHeader = req.headers['x-nanaswitch-signature'];
+  const rawBody = req.body.toString('utf8');
+
+  try {
+    const isValid = verifyWebhook(rawBody, signatureHeader, WEBHOOK_SECRET);
+    if (!isValid) {
+      return res.status(401).json({ error: 'INVALID_SIGNATURE' });
+    }
+
+    const event = JSON.parse(rawBody);
+    if (event.event_type === 'payment.success') {
+      // Mettre à jour la commande dans votre base de données
+      console.log('Commande payée :', event.order_id, event.amount, event.currency);
+    }
+
+    // Acquittement immédiat HTTP 200
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.listen(3000, () => console.log('Écoute sur http://localhost:3000'));`}
+                        </pre>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* ======================= TAB PYTHON ======================= */}
+                  {activeSdkLang === 'python' && (
+                    <div className="space-y-6 animate-in fade-in duration-150">
+                      
+                      {/* 1. Initialisation de Paiement Python */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">1</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">1. Initialisation de Paiement NanaSwitch Cloud (Python)</h3>
+                              <p className="text-[11px] text-slate-500">Appel POST avec requests et payload structuré.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`# Initialisation de paiement NanaSwitch Cloud (Python)
+import requests
+
+def create_payment():
+    url = "https://nana-payment-api.onrender.com/v1/switch/route"
+    headers = {
+        "Content-Type": "application/json",
+        "x-nanaswitch-key": "ns_live_pk_12345",
+        "x-nanaswitch-skey": "ns_live_sk_67890"
+    }
+    payload = {
+        "amount": 5000,
+        "currency": "XOF",
+        "order_id": "CMD_12345",
+        "customer": {
+            "email": "client@example.com",
+            "phone": "+22670000000"
+        }
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("checkout_url")`, 'Code Python Initialisation')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`# Initialisation de paiement NanaSwitch Cloud (Python)
+import requests
+
+def create_payment():
+    url = "https://nana-payment-api.onrender.com/v1/switch/route"
+    headers = {
+        "Content-Type": "application/json",
+        "x-nanaswitch-key": "ns_live_pk_12345",
+        "x-nanaswitch-skey": "ns_live_sk_67890"
+    }
+    payload = {
+        "amount": 5000,
+        "currency": "XOF",
+        "order_id": "CMD_12345",
+        "customer": {
+            "email": "client@example.com",
+            "phone": "+22670000000"
+        }
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("checkout_url")`}
+                        </pre>
+                      </div>
+
+                      {/* 2. Validation Webhook HMAC-SHA256 Python */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">2. Vérification Webhook HMAC-SHA256 (Python)</h3>
+                              <p className="text-[11px] text-slate-500">Comparaison sécurisée avec hmac.compare_digest.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`# Verification Webhook HMAC-SHA256 (Python)
+import hmac
+import hashlib
+
+def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
+    """
+    Valide l'authenticité de la payload brute avec la signature reçue.
+    signature_header format: "t=1730000000,v1=6a3f..."
+    """
+    try:
+        parts = dict(part.strip().split('=') for part in signature_header.split(','))
+        ts_value = parts.get('t')
+        sig_value = parts.get('v1')
+        
+        if not ts_value or not sig_value:
+            return False
+            
+        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
+        expected_sig = hmac.new(
+            secret.encode('utf-8'),
+            signed_payload,
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(sig_value, expected_sig)
+    except Exception:
+        return False`, 'Code Python Validation Webhook')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier le code
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`# Verification Webhook HMAC-SHA256 (Python)
+import hmac
+import hashlib
+
+def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
+    try:
+        parts = dict(part.strip().split('=') for part in signature_header.split(','))
+        ts_value = parts.get('t')
+        sig_value = parts.get('v1')
+        
+        if not ts_value or not sig_value:
+            return False
+            
+        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
+        expected_sig = hmac.new(
+            secret.encode('utf-8'),
+            signed_payload,
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(sig_value, expected_sig)
+    except Exception:
+        return False`}
+                        </pre>
+                      </div>
+
+                      {/* 3. Serveur FastAPI / Flask de Référence */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">3</span>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900">3. Serveur Webhook Complet (FastAPI)</h3>
+                              <p className="text-[11px] text-slate-500">Réception du body brut (bytes) et réponse JSON 200.</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard?.(`from fastapi import FastAPI, Request, HTTPException
+import json
+import os
+
+app = FastAPI()
+WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
+
+@app.post("/api/nanaswitch-webhook")
+async def nanaswitch_webhook(request: Request):
+    signature_header = request.headers.get("x-nanaswitch-signature")
+    if not signature_header:
+        raise HTTPException(status_code=400, detail="Missing signature header")
+        
+    raw_body_bytes = await request.body()
+    raw_body_str = raw_body_bytes.decode("utf-8")
+    
+    is_valid = verify_webhook(raw_body_str, signature_header, WEBHOOK_SECRET)
+    if not is_valid:
+        raise HTTPException(status_code=401, detail="Invalid HMAC signature")
+        
+    event = json.loads(raw_body_str)
+    if event.get("event_type") == "payment.success":
+        order_id = event.get("order_id")
+        amount = event.get("amount")
+        print(f"Paiement confirmé pour la commande {order_id} ({amount} XOF)")
+        
+    return {"received": True}`, 'Serveur FastAPI')}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copier FastAPI
+                          </button>
+                        </div>
+
+                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`from fastapi import FastAPI, Request, HTTPException
+import json
+import os
+
+app = FastAPI()
+WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
+
+@app.post("/api/nanaswitch-webhook")
+async def nanaswitch_webhook(request: Request):
+    signature_header = request.headers.get("x-nanaswitch-signature")
+    if not signature_header:
+        raise HTTPException(status_code=400, detail="Missing signature header")
+        
+    raw_body_bytes = await request.body()
+    raw_body_str = raw_body_bytes.decode("utf-8")
+    
+    if not verify_webhook(raw_body_str, signature_header, WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+        
+    event = json.loads(raw_body_str)
+    if event.get("event_type") == "payment.success":
+        # Valider la commande dans votre système
+        pass
+        
+    return {"received": True}`}
+                        </pre>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* 4. En-têtes & Configuration Requise */}
+                  <div className="bg-slate-900 text-slate-200 p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
+                    <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-blue-400" />
+                      Tableau des Paramètres de Requête (`/v1/switch/route`)
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                      <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
+                        <span className="text-blue-400 font-bold">Headers Requis</span>
+                        <p className="text-slate-300 text-[11px]">x-nanaswitch-key: ns_live_pk_...</p>
+                        <p className="text-slate-300 text-[11px]">x-nanaswitch-skey: ns_live_sk_...</p>
+                        <p className="text-slate-400 text-[10px]">Content-Type: application/json</p>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
+                        <span className="text-emerald-400 font-bold">Champs JSON Obligatoires</span>
+                        <p className="text-slate-300 text-[11px]">amount (nombre entier en XOF)</p>
+                        <p className="text-slate-300 text-[11px]">currency ("XOF")</p>
+                        <p className="text-slate-300 text-[11px]">order_id (identifiant unique marchand)</p>
+                        <p className="text-slate-300 text-[11px]">customer (email, phone au format +226...)</p>
+                      </div>
                     </div>
                   </div>
+
                 </div>
               )}
 

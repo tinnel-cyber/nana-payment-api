@@ -214,21 +214,21 @@
           </div>
         </a>
 
-        <!-- CARD 5: MODÈLE HYBRIDE B2B -->
-        <a href="#section-hybrid" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="mode hybride agrege byok credits 0.02 xof 1.5% marge saas billing">
+        <!-- CARD 5: CONSOLE MULTI-LANGAGES NODE.JS & PYTHON (PROMPT 5) -->
+        <a href="#section-sdks-node-python" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="node python express fastapi requests sdk code hmac sha256 switch route createpayment verifywebhook">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-2xl">💳</span>
+              <span class="text-2xl">💻</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white">PROMPT 5</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Modèle Hybride B2B</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">Agrégé vs SaaS BYOK</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">SDKs Node.js & Python</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/sdks/node-python</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Mode Simplifié (+1.5% marge) ou Mode Routeur SaaS (0.02 XOF/requête débité de votre solde de crédits).</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Exemples officiels complets : initialisation de paiement POST, validation cryptographique HMAC-SHA256 et serveurs Express/FastAPI.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Voir les Tarifs &rarr;</span>
+            <span>Explorer le Code &rarr;</span>
           </div>
         </a>
 
@@ -684,6 +684,16 @@ console.log('URL de paiement :', data.checkout_url);</pre>
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2 md:col-span-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-indigo-900 text-sm">Mode Agrégé (Master Merchant)</span>
+              <span class="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">Compte Maître Régulé</span>
+            </div>
+            <p class="text-slate-700 leading-relaxed">
+              Modèle tout-en-un où <strong>NanaSwitch opère comme Maître Marchand</strong>. Aucun contrat préalable avec les opérateurs n'est requis. NanaSwitch encaisse sur ses comptes régulés, retient sa marge (+1.5% de frais de switch à la source) et crédite directement le Wallet du marchand. Ce mode est soumis aux <strong>plafonds stricts de vérification d'identité KYC</strong> (1 000 000 XOF/mois pour Particulier, 5 000 000 XOF/mois pour Entreprise).
+            </p>
+          </div>
+
           <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-2">
             <span class="font-bold text-blue-900 text-sm">BYOK (Bring Your Own Key)</span>
             <p class="text-slate-700 leading-relaxed">
@@ -821,23 +831,179 @@ function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
       </div>
     </section>
 
-    <!-- ==================== SECTION 5: MODÈLE HYBRIDE B2B ==================== -->
-    <section id="section-hybrid" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+    <!-- ==================== SECTION 5: CONSOLE MULTI-LANGAGES — NODE.JS & PYTHON (PROMPT 5) ==================== -->
+    <section id="section-sdks-node-python" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-8">
       <div class="border-b border-slate-100 pb-4">
-        <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-black uppercase">SECTION 5 • PROMPT 5</span>
-        <h2 class="text-2xl font-black text-slate-900 mt-1">Modèle Hybride B2B : Agrégé vs SaaS BYOK</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Deux modes de fonctionnement adaptés à chaque profil d'entreprise.</p>
+        <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-black uppercase">SECTION 5 • PROMPT 5 • docs/sdks/node-python</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Console Multi-Langages — Node.js & Python</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Rôle : Senior Developer Advocate. Initialisation de paiement et vérification cryptographique des webhooks HMAC-SHA256.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div class="p-5 rounded-2xl border border-blue-200 bg-blue-50/50 space-y-2">
-          <span class="font-black text-blue-900 text-sm">Mode Simplifié (AGREGATED)</span>
-          <p class="text-slate-700 leading-relaxed">Encaissement automatique via le compte maître régulé NanaSwitch. Aucune passerelle requise. Marge retenue : +1.5% de frais de switch à la source.</p>
+      <!-- ==================== PARTIE 1: NODE.JS ==================== -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xs">JS</span>
+          <h3 class="text-base font-extrabold text-slate-900">Intégration Node.js / Express (SDK / Native)</h3>
         </div>
 
-        <div class="p-5 rounded-2xl border border-purple-200 bg-purple-50/50 space-y-2">
-          <span class="font-black text-purple-900 text-sm">Mode Développeur SaaS (BYOK)</span>
-          <p class="text-slate-700 leading-relaxed">Injection de vos propres clés SasPay ou Sebpay. 0% de commission de switch. Facturation à l'usage SaaS : 0,02 XOF par requête débité de votre solde de crédits API.</p>
+        <!-- 1.1 Initialisation de paiement -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">1. Initialisation de paiement NanaSwitch Cloud</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+// Initialisation de paiement NanaSwitch Cloud
+const axios = require('axios');
+const crypto = require('crypto');
+
+async function createPayment() {
+  const response = await axios.post('https://nana-payment-api.onrender.com/v1/switch/route', {
+    amount: 5000,
+    currency: 'XOF',
+    order_id: 'CMD_12345',
+    customer: { email: 'client@example.com', phone: '+22670000000' }
+  }, {
+    headers: {
+      'x-nanaswitch-key': 'ns_live_pk_12345',
+      'x-nanaswitch-skey': 'ns_live_sk_67890'
+    }
+  });
+  return response.data.checkout_url;
+}</pre>
+        </div>
+
+        <!-- 1.2 Verification Webhook -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">2. Vérification Webhook HMAC-SHA256 (timingSafeEqual)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+// Verification Webhook HMAC-SHA256
+function verifyWebhook(payload, signatureHeader, secret) {
+  const [timestamp, signature] = signatureHeader.split(',');
+  const tsValue = timestamp.split('=')[1];
+  const sigValue = signature.split('=')[1];
+  
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(`${tsValue}.${payload}`)
+    .digest('hex');
+    
+  return crypto.timingSafeEqual(Buffer.from(sigValue), Buffer.from(expectedSig));
+}</pre>
+        </div>
+
+        <!-- 1.3 Serveur Express Complet -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">3. Serveur Express de Référence (Listener Production)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+const express = require('express');
+const app = express();
+const WEBHOOK_SECRET = process.env.NANASWITCH_WEBHOOK_SECRET;
+
+app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sigHeader = req.headers['x-nanaswitch-signature'];
+  const rawBody = req.body.toString('utf8');
+
+  if (!verifyWebhook(rawBody, sigHeader, WEBHOOK_SECRET)) {
+    return res.status(401).json({ error: 'Signature invalide' });
+  }
+
+  const event = JSON.parse(rawBody);
+  if (event.event_type === 'payment.success') {
+    console.log('Commande validée :', event.order_id, event.amount, event.currency);
+  }
+
+  return res.status(200).json({ received: true });
+});</pre>
+        </div>
+      </div>
+
+      <!-- ==================== PARTIE 2: PYTHON ==================== -->
+      <div class="space-y-4 pt-4 border-t border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-black text-xs">PY</span>
+          <h3 class="text-base font-extrabold text-slate-900">Intégration Python (Requests & FastAPI)</h3>
+        </div>
+
+        <!-- 2.1 Initialisation de paiement Python -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">1. Initialisation de paiement (Python Requests)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+# Initialisation de paiement NanaSwitch Cloud (Python)
+import requests
+
+def create_payment():
+    url = "https://nana-payment-api.onrender.com/v1/switch/route"
+    headers = {
+        "Content-Type": "application/json",
+        "x-nanaswitch-key": "ns_live_pk_12345",
+        "x-nanaswitch-skey": "ns_live_sk_67890"
+    }
+    payload = {
+        "amount": 5000,
+        "currency": "XOF",
+        "order_id": "CMD_12345",
+        "customer": {
+            "email": "client@example.com",
+            "phone": "+22670000000"
+        }
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()
+    return response.json().get("checkout_url")</pre>
+        </div>
+
+        <!-- 2.2 Verification Webhook Python -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">2. Vérification Webhook HMAC-SHA256 (Python)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+# Verification Webhook HMAC-SHA256 (Python)
+import hmac
+import hashlib
+
+def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
+    try:
+        parts = dict(part.strip().split('=') for part in signature_header.split(','))
+        ts_value = parts.get('t')
+        sig_value = parts.get('v1')
+        
+        if not ts_value or not sig_value:
+            return False
+            
+        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
+        expected_sig = hmac.new(
+            secret.encode('utf-8'),
+            signed_payload,
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(sig_value, expected_sig)
+    except Exception:
+        return False</pre>
+        </div>
+
+        <!-- 2.3 Serveur FastAPI Complet -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-slate-700">3. Serveur Webhook de Référence (FastAPI)</span>
+          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+from fastapi import FastAPI, Request, HTTPException
+import json
+import os
+
+app = FastAPI()
+WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
+
+@app.post("/api/webhook")
+async def handle_webhook(request: Request):
+    sig_header = request.headers.get("x-nanaswitch-signature")
+    body_bytes = await request.body()
+    body_str = body_bytes.decode("utf-8")
+
+    if not verify_webhook(body_str, sig_header, WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    event = json.loads(body_str)
+    if event.get("event_type") == "payment.success":
+        print(f"Paiement validé : {event.get('order_id')} ({event.get('amount')} XOF)")
+
+    return {"received": True}</pre>
         </div>
       </div>
     </section>
