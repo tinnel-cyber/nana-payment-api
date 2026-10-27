@@ -211,6 +211,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   /** Réessayer le rendu sans rechargement de page */
   private handleRetryRender = () => {
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      window.caches.keys().then((keys) => Promise.all(keys.map((k) => window.caches.delete(k)))).catch(() => {});
+    }
     this.setState({ hasError: false, errorMessage: '', isChunkOrPwaError: false });
   };
 
@@ -301,6 +304,16 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   ? 'Vérifiez votre connexion Internet mobile ou Wi-Fi pour continuer.'
                   : (this.props.fallbackMessage || "Une interruption système a été détectée. Vos données sont en sécurité.")}
               </p>
+
+              {/* Message d'erreur technique pour le diagnostic immédiat */}
+              {this.state.errorMessage && (
+                <div className="w-full mb-5 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-left">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Détail de l'interruption :</div>
+                  <div className="text-xs text-rose-300 font-mono break-all line-clamp-3 select-all">
+                    {this.state.errorMessage}
+                  </div>
+                </div>
+              )}
 
               <div className="w-full space-y-2.5">
                 {/* Réessayer d'abord le rendu local React sans recharger la page */}

@@ -696,15 +696,6 @@ export default function App() {
         return 'NANA_SWITCH_DOCS';
       }
       if (
-        pathname === '/docs' ||
-        pathname.startsWith('/docs') ||
-        pathname === '/documentation' ||
-        pathname.startsWith('/documentation') ||
-        pathname === '/nana-switch/docs' ||
-        pathname === '/nanaswitch/docs' ||
-        pathname === '/nanaswitch-docs' ||
-        params.get('view') === 'docs' ||
-        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
         pathname.startsWith('/nana-switch') ||
@@ -1877,15 +1868,6 @@ export default function App() {
 
       // Landing NaNaSwitch Cloud (/nana-switch)
       if (
-        pathname === '/docs' ||
-        pathname.startsWith('/docs') ||
-        pathname === '/documentation' ||
-        pathname.startsWith('/documentation') ||
-        pathname === '/nana-switch/docs' ||
-        pathname === '/nanaswitch/docs' ||
-        pathname === '/nanaswitch-docs' ||
-        params.get('view') === 'docs' ||
-        params.get('view') === 'documentation' ||
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
         pathname.startsWith('/nana-switch') ||

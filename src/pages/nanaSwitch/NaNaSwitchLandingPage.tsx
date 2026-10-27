@@ -152,6 +152,16 @@ export const NaNaSwitchLandingPage: React.FC<NaNaSwitchLandingPageProps> = ({
     }
   }, [onNavigateToConsole, onNavigate]);
 
+  const handleGoToAuth = useCallback(() => {
+    playTapBeep();
+    const destination = '/nana-switch/auth';
+    if (onNavigate) {
+      onNavigate(destination);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = destination;
+    }
+  }, [onNavigate]);
+
   const handleGoToExtension = useCallback(() => {
     playTapBeep();
     if (onNavigateToExtension) {
@@ -275,22 +285,24 @@ exit;`
           </nav>
 
           {/* Boutons d'Action Droite */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
-              onClick={handleGoToConsole}
-              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 hover:border-blue-400 bg-white text-slate-700 hover:text-blue-600 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+              onClick={handleGoToAuth}
+              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 hover:border-blue-400 bg-white text-slate-700 hover:text-blue-600 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               <Key className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Ouvrir la</span> Console Cloud
+              <span className="sm:hidden">Connexion</span>
+              <span className="hidden sm:inline">Se connecter / S&apos;inscrire</span>
             </button>
 
             <button
               type="button"
               onClick={handleGoToConsole}
-              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition cursor-pointer active:scale-95 flex items-center gap-1.5"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition cursor-pointer active:scale-95 flex items-center gap-1.5"
             >
-              <span>Démarrer Gratuitement</span>
+              <span className="hidden sm:inline">Accéder au Cockpit</span>
+              <span className="sm:hidden">Cockpit</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -330,7 +342,7 @@ exit;`
               NaNaSwitch Cloud est le routeur SaaS intelligent qui permet aux entrepreneurs et développeurs de connecter leurs propres clés d&apos;agrégateurs et services externes sur un Nœud Cloud à IP Fixe, avec bascule anti-panne en 0ms et Extension Isolée.
             </p>
 
-            {/* 2 Grands Boutons CTA */}
+            {/* 3 Grands Boutons CTA */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
               <button
                 type="button"
@@ -343,11 +355,20 @@ exit;`
 
               <button
                 type="button"
+                onClick={handleGoToAuth}
+                className="w-full sm:w-auto bg-white hover:bg-blue-50 text-slate-800 border-2 border-slate-300 hover:border-blue-600 font-bold px-6 py-4 rounded-xl transition cursor-pointer active:scale-98 flex items-center justify-center gap-2 text-sm sm:text-base"
+              >
+                <Key className="w-5 h-5 text-blue-600" />
+                <span>Se connecter / S&apos;inscrire</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleGoToExtension}
                 className="w-full sm:w-auto bg-white hover:bg-blue-50 text-blue-600 border-2 border-blue-600 font-bold px-6 py-4 rounded-xl transition cursor-pointer active:scale-98 flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 <Puzzle className="w-5 h-5 text-blue-600" />
-                <span>Télécharger l&apos;Extension Isolée</span>
+                <span>Extension Isolée</span>
               </button>
             </div>
 
