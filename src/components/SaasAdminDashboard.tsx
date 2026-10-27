@@ -1877,7 +1877,7 @@ export const SaasAdminDashboard: React.FC<SaasAdminDashboardProps> = ({
               <span>Wameet (Réglages)</span>
             </button>
 
-            {/* 🔀 Bouton NanaSwitch Landing Page — Accès Super Admin */}
+            {/* 🔀 Bouton NanaSwitch Landing Page (Nouvelle — BYOK + 26 Pays) */}
             {isSuperAdmin && (
               <button
                 type="button"
@@ -1889,10 +1889,29 @@ export const SaasAdminDashboard: React.FC<SaasAdminDashboardProps> = ({
                   }
                 }}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#3B82F6] text-white border border-blue-400/40 ring-1 ring-blue-400/20 active:scale-95 text-xs font-black transition-all shadow-md shadow-blue-950/50 cursor-pointer"
-                title="Accéder à la Landing Page NanaSwitch Cloud (/nana-switch)"
+                title="Nouvelle Landing Page NanaSwitch Cloud — BYOK + 26 Pays (/nana-switch)"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-blue-200" />
-                <span>🔀 NanaSwitch Landing</span>
+                <span>🔀 NanaSwitch Landing (Nouveau)</span>
+              </button>
+            )}
+
+            {/* 🔀 Bouton NanaSwitch AppPage (Ancienne console B2B) */}
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  playTapBeep();
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', '/nana-switch-apppage');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-500/40 active:scale-95 text-xs font-bold transition-all shadow-md cursor-pointer"
+                title="Ancienne Console NanaSwitch B2B AppPage (/nana-switch-apppage)"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                <span>⚙️ NanaSwitch AppPage</span>
               </button>
             )}
 

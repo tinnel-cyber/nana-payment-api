@@ -670,7 +670,9 @@ export default function App() {
         pathname === '/app/nanaswitch' ||
         pathname === '/apps/nanaswitch' ||
         pathname === '/nana-switch-app' ||
+        pathname === '/nana-switch-apppage' ||
         pathname === '/nanaswitch-app' ||
+        pathname === '/nanaswitch-apppage' ||
         pathname === '/dashboard/nanaswitch' ||
         pathname === '/dashboard/apps/nana-switch-app' ||
         params.get('app') === 'nanaswitch' ||
@@ -696,11 +698,15 @@ export default function App() {
       ) {
         return 'NANA_SWITCH_DOCS';
       }
+      // Sous-routes console (/nana-switch/auth, /nana-switch/overview...) → AppPage
+      if (pathname.startsWith('/nana-switch/') || pathname.startsWith('/nanaswitch/')) {
+        return 'NANA_SWITCH_APP';
+      }
+      // Nouvelle Landing Page NanaSwitch (BYOK + 26 Pays) — route stricte /nana-switch
       if (
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
-        pathname.startsWith('/nana-switch') ||
-        pathname.startsWith('/nanaswitch') ||
+        pathname === '/nana-switch/' ||
         params.get('view') === 'nana-switch' ||
         params.get('view') === 'nanaswitch' ||
         params.get('page') === 'nana-switch' ||
@@ -1868,12 +1874,22 @@ export default function App() {
         return;
       }
 
-      // Landing NaNaSwitch Cloud (/nana-switch)
+      // Sous-routes console (/nana-switch/auth, ...) et /nana-switch-apppage → AppPage
+      if (
+        pathname.startsWith('/nana-switch/') ||
+        pathname.startsWith('/nanaswitch/') ||
+        pathname === '/nana-switch-apppage' ||
+        pathname === '/nanaswitch-apppage'
+      ) {
+        setCurrentView('NANA_SWITCH_APP');
+        setShowWelcomeShowcase(false);
+        return;
+      }
+      // Landing NaNaSwitch Cloud (/nana-switch) — route stricte, pas de startsWith
       if (
         pathname === '/nana-switch' ||
         pathname === '/nanaswitch' ||
-        pathname.startsWith('/nana-switch') ||
-        pathname.startsWith('/nanaswitch') ||
+        pathname === '/nana-switch/' ||
         params.get('view') === 'nana-switch' ||
         params.get('view') === 'nanaswitch' ||
         params.get('page') === 'nana-switch' ||
@@ -5293,6 +5309,21 @@ export default function App() {
     currentView === 'NANA_SWITCH_APP' ||
     currentView === 'nana_switch_app'
   ) {
+    const swPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (
+      swPath.startsWith('/nana-switch/') ||
+      swPath.startsWith('/nanaswitch/') ||
+      swPath === '/nana-switch-apppage' ||
+      swPath === '/nanaswitch-apppage'
+    ) {
+      return (
+        <ModuleErrorBoundary moduleName="NaNaSwitch - AppPage Console">
+          <React.Suspense fallback={<LoadingScreen message="Connexion à NaNaSwitch Console..." />}>
+            <NaNaSwitchAppPage />
+          </React.Suspense>
+        </ModuleErrorBoundary>
+      );
+    }
     return (
       <ModuleErrorBoundary moduleName="NaNaSwitch - Application Partenaire">
         <React.Suspense fallback={<LoadingScreen message="Connexion à NanaSwitch App..." />}>
