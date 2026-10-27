@@ -196,21 +196,21 @@
           </div>
         </a>
 
-        <!-- CARD 4: SIGNATURES HMAC -->
-        <a href="#section-hmac" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="webhooks hmac sha256 signatures ns_whsec anti-rejeu timingsafeequal">
+        <!-- CARD 4: DICTIONNAIRE TECHNIQUE, SÉCURITÉ & BONNES PRATIQUES (PROMPT 4) -->
+        <a href="#section-security-glossary" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="securite zero-trust glossaire byok hmac-sha256 failover smart routing idempotence cles ns_live_pk ns_live_sk ns_whsec tresorerie">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-2xl">🛡️</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white">PROMPT 4</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Signatures Webhook HMAC-SHA256</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">x-nanaswitch-signature</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Dictionnaire Technique & Sécurité Zero-Trust</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/security-glossary</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Validation cryptographique anti-rejeu stricte avec secret ns_whsec_... et tolérance 300s.</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Glossaire (BYOK, HMAC-SHA256, Failover, Idempotence), architecture Zero-Trust des 3 clés (pk, sk, whsec) et gestion financière des risques.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Voir les Webhooks &rarr;</span>
+            <span>Explorer la Sécurité &rarr;</span>
           </div>
         </a>
 
@@ -525,7 +525,7 @@ Bienvenue dans le Skill officiel de l'Assistant IA Spécialisé NanaSwitch Cloud
             </div>
             <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
               <span class="font-bold text-blue-900">🌍 Diaspora / Cartes</span>
-              <p class="text-[11px] text-slate-500">VISA, Mastercard (3DS), Apple Pay</p>
+              <p class="text-[11px] text-slate-500">Cartes VISA, Mastercard</p>
             </div>
           </div>
         </div>
@@ -668,36 +668,157 @@ const data = await response.json();
 console.log('URL de paiement :', data.checkout_url);</pre>
     </section>
 
-    <!-- ==================== SECTION 4: WEBHOOKS HMAC ==================== -->
-    <section id="section-hmac" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+    <!-- ==================== SECTION 4: DICTIONNAIRE TECHNIQUE, SÉCURITÉ ZERO-TRUST & CONSEILS DE GESTION (PROMPT 4) ==================== -->
+    <section id="section-security-glossary" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-8">
       <div class="border-b border-slate-100 pb-4">
-        <span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-[10px] font-black uppercase">SECTION 4 • PROMPT 4</span>
-        <h2 class="text-2xl font-black text-slate-900 mt-1">Signatures Webhook & Anti-Rejeu HMAC-SHA256</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Vérification cryptographique en Node.js et PHP avec fenêtre stricte de 300 secondes.</p>
+        <span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-[10px] font-black uppercase">SECTION 4 • PROMPT 4 • docs/security-glossary</span>
+        <h2 class="text-2xl font-black text-slate-900 mt-1">Dictionnaire Technique, Modèle Zero-Trust & Conseils de Gestion</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Rôle : Cybersecurity & Technical Content Specialist. Glossaire fondamental, architecture des clés et hygiène financière.</p>
       </div>
 
-      <pre class="bg-slate-900 text-slate-100 p-6 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
+      <!-- 1. GLOSSAIRE DES TERMES TECHNIQUES -->
+      <div class="space-y-4">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">1</span>
+          Glossaire des Termes Techniques
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-2">
+            <span class="font-bold text-blue-900 text-sm">BYOK (Bring Your Own Key)</span>
+            <p class="text-slate-700 leading-relaxed">
+              Usage direct de ses propres clés d'accès API délivrées par contrat direct entre le marchand / fintech et ses opérateurs partenaires. NanaSwitch agit comme routeur SaaS pur (0% commission, 0,02 XOF/requête).
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-2">
+            <span class="font-bold text-purple-900 text-sm">HMAC-SHA256</span>
+            <p class="text-slate-700 leading-relaxed">
+              Signature cryptographique symétrique (<em>Hash-based Message Authentication Code</em>) garantissant l'inviolabilité absolue des webhooks et l'authenticité de chaque notification d'encaissement.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2">
+            <span class="font-bold text-emerald-900 text-sm">Failover / Smart Routing</span>
+            <p class="text-slate-700 leading-relaxed">
+              Routage dynamique automatique vers un agrégateur ou corridor de secours en cas d'indisponibilité d'un opérateur (ex: optimisation et forçage de l'indicatif <strong>+226</strong> au Burkina Faso).
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-2">
+            <span class="font-bold text-amber-900 text-sm">Idempotence (Idempotency Key)</span>
+            <p class="text-slate-700 leading-relaxed">
+              Envoi de l'en-tête <code class="font-mono bg-white px-1 rounded text-amber-800">x-idempotency-key</code> prévenant tout risque de double débit lors des retries réseau ou instabilités de connexion.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ARCHITECTURE DES CLÉS ZERO-TRUST -->
+      <div class="space-y-4">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">2</span>
+          Architecture des Clés Zero-Trust
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <!-- Public Key -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-blue-700 text-[11px] bg-blue-100 px-2 py-0.5 rounded">ns_live_pk_...</span>
+              <span class="text-[10px] uppercase font-bold text-slate-500">Front-End</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">Clé Publique (Public Key)</h4>
+            <p class="text-slate-600">Utilisée côté Client / Frontend (SDK Web, boutons de paiement, extensions e-commerce).</p>
+            <p class="text-slate-500"><strong>Sécurité :</strong> Peut être publique sans danger. Ne permet aucun retrait ni remboursement.</p>
+          </div>
+
+          <!-- Secret Key -->
+          <div class="p-5 rounded-2xl bg-purple-50/40 border-2 border-purple-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-purple-700 text-[11px] bg-purple-100 px-2 py-0.5 rounded">ns_live_sk_...</span>
+              <span class="text-[10px] uppercase font-bold text-rose-600">Confidentiel</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">Clé Secrète (Secret Key)</h4>
+            <p class="text-slate-600">À garder <strong>strictement confidentielle</strong> côté Serveur backend (<code class="font-mono text-purple-700">Authorization: Bearer</code>).</p>
+            <p class="text-rose-700"><strong>Interdiction :</strong> Jamais de commit sur GitHub ni d'exposition dans le code client React/JS.</p>
+          </div>
+
+          <!-- Webhook Secret -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-amber-700 text-[11px] bg-amber-100 px-2 py-0.5 rounded">ns_whsec_...</span>
+              <span class="text-[10px] uppercase font-bold text-amber-700">HMAC-SHA256</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">Clé Secrète Webhook (Signing Secret)</h4>
+            <p class="text-slate-600">Clé partagée servant à recalculer et authentifier l'en-tête de signature <code class="font-mono text-amber-800">x-nanaswitch-signature</code>.</p>
+            <p class="text-slate-500"><strong>Anti-rejeu :</strong> Tolérance stricte de 300 secondes (5 minutes) contre les attaques par rejeu.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. CONSEILS DE GESTION & PROCÉDURE D'URGENCE -->
+      <div class="space-y-4">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">3</span>
+          Conseils de Gestion Financière & Révocation d'Urgence
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-2">
+            <span class="font-bold text-rose-900 text-sm">Rotation d'Urgence (Fuite de Clé)</span>
+            <p class="text-slate-700 leading-relaxed">
+              En cas de compromission, régénérez vos clés depuis le dashboard. L'ancienne clé bénéficie d'une <strong>période de grâce de 24h</strong> pour permettre la bascule de vos serveurs de production sans coupure de service.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-2">
+            <span class="font-bold text-blue-900 text-sm">Stockage & Secrets Management</span>
+            <p class="text-slate-700 leading-relaxed">
+              Conservez vos clés dans des variables d'environnement (<code class="font-mono text-blue-800">.env</code>) obligatoirement incluses dans votre <code class="font-mono text-slate-800">.gitignore</code>, ou utilisez des vaults managés (AWS Secrets Manager, GCP Vault).
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2">
+            <span class="font-bold text-emerald-900 text-sm">Réconciliation de Trésorerie</span>
+            <p class="text-slate-700 leading-relaxed">
+              Rapprochez quotidiennement les webhooks <code class="font-mono text-emerald-800">payment.success</code> reçus et les soldes de vos wallets multi-devises pour anticiper les plafonds de volume KYC et auditer les flux.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE: VERIFICATION TIMING SAFE -->
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-slate-900">Implémentation de Référence : Vérification Cryptographique Timing-Safe (Node.js)</span>
+        <pre class="bg-slate-900 text-slate-100 p-6 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
 const crypto = require('crypto');
 
-function verifyNanaSwitchWebhook(rawBody, signatureHeader, secretKey) {
-  const parts = Object.fromEntries(signatureHeader.split(',').map(p => p.split('=')));
+function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
+  if (!signatureHeader || !webhookSecret) return false;
+
+  const parts = Object.fromEntries(
+    signatureHeader.split(',').map(pair => pair.trim().split('='))
+  );
+
   const timestamp = parseInt(parts.t, 10);
   const signature = parts.v1;
 
-  // 1. Fenêtre anti-rejeu 5 minutes
+  // 1. Fenêtre anti-rejeu stricte de 300 secondes (5 min)
   if (Math.abs(Date.now() / 1000 - timestamp) > 300) {
-    throw new Error('Timestamp expiré');
+    throw new Error('SECURITY_ERROR: Webhook timestamp expired (> 300s)');
   }
 
-  // 2. Calcul du HMAC sur "${timestamp}.${rawBody}"
+  // 2. Calcul du HMAC-SHA256 sur "${timestamp}.${rawBody}"
   const expected = crypto
-    .createHmac('sha256', secretKey)
+    .createHmac('sha256', webhookSecret)
     .update(`${timestamp}.${rawBody}`)
     .digest('hex');
 
-  // 3. Comparaison sécurisée timingSafeEqual
+  // 3. Comparaison en temps constant (timingSafeEqual)
   return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(expected, 'utf8'));
 }</pre>
+      </div>
     </section>
 
     <!-- ==================== SECTION 5: MODÈLE HYBRIDE B2B ==================== -->

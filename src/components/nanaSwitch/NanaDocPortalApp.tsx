@@ -319,14 +319,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt4',
-      badge: 'PROMPT 4',
+      badge: 'PROMPT 4 • SÉCURITÉ & GLOSSAIRE',
       badgeColor: 'bg-purple-600 text-white',
       icon: ShieldCheck,
       iconColor: 'text-purple-600',
-      title: "Signatures Webhook & Anti-Rejeu HMAC-SHA256",
-      subtitle: "x-nanaswitch-signature & ns_whsec_*",
-      description: "Protocole cryptographique de vérification des notifications entrantes. Fenêtre anti-rejeu 300s, timingSafeEqual et accusés de réception sécurisés.",
-      tags: ['HMAC-SHA256', 'Anti-Rejeu 300s', 'TimingSafeEqual', 'Accusés HTTP 200']
+      title: "Dictionnaire Technique, Sécurité & Conseils de Gestion",
+      subtitle: "docs/security-glossary • Zero-Trust & Bonnes Pratiques",
+      description: "Glossaire technique complet (BYOK, HMAC-SHA256, Failover/Smart Routing, Idempotence), architecture Zero-Trust des 3 types de clés et guide de gestion des risques financiers.",
+      tags: ['Glossaire Technique', 'Zero-Trust (pk, sk, whsec)', 'Failover +226', 'Rotation des Clés', 'Trésorerie & Risques']
     },
     {
       id: 'prompt5',
@@ -1356,7 +1356,7 @@ Concernant votre demande "${textToSend}" :
                             <span>🌍 Diaspora / Global</span>
                             <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-mono">Cartes</span>
                           </span>
-                          <p className="text-[11px] text-slate-600">Cartes VISA, Mastercard (3D Secure), Apple Pay, Taptap Send</p>
+                          <p className="text-[11px] text-slate-600">Cartes VISA, Mastercard</p>
                         </div>
                       </div>
                     </div>
@@ -1706,36 +1706,294 @@ Concernant votre demande "${textToSend}" :
                 </div>
               )}
 
-              {/* ---------------- PROMPT 4: SIGNATURES WEBHOOK HMAC ---------------- */}
+              {/* ---------------- PROMPT 4: DICTIONNAIRE TECHNIQUE, SÉCURITÉ ZERO-TRUST & CONSEILS DE GESTION ---------------- */}
               {activeView === 'prompt4' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600">PROMPT 4 • SÉCURITÉ ANTI-REJEU</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Vérification de Signature Webhook HMAC-SHA256</h2>
-                    <p className="text-slate-500 text-xs mt-1">Protocole timing-safe avec tolérance temporelle de 300 secondes.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-purple-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white">
+                            PROMPT 4 • docs/security-glossary
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            Cybersecurity & Technical Content Specialist
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                          Dictionnaire Technique, Modèle Zero-Trust & Bonnes Pratiques
+                        </h2>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 self-start sm:self-auto">
+                        <ShieldCheck className="w-4 h-4 text-purple-600" />
+                        Sécurité Critique & Zero-Trust
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
+                      Cette section fondamentale détaille le dictionnaire des technologies sous-jacentes de NanaSwitch Cloud, le modèle d'authentification <strong>Zero-Trust</strong> basé sur trois clés distinctes, ainsi que les protocoles opérationnels de gestion des secrets et de réconciliation de trésorerie.
+                    </p>
                   </div>
 
-                  <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto">
+                  {/* 1. GLOSSAIRE DES TERMES TECHNIQUES */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm">
+                        1
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Glossaire des Termes Techniques</h3>
+                        <p className="text-xs text-slate-500">Les définitions et concepts au cœur du switch de paiement intelligent.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* BYOK */}
+                      <div className="p-5 rounded-2xl border border-blue-100 bg-blue-50/40 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 bg-blue-600 text-white rounded-lg text-xs font-black">BYOK</span>
+                          <span className="font-extrabold text-slate-900 text-sm">Bring Your Own Key</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Modèle d'intégration où les marchands, startups et FinTechs utilisent directement leurs propres identifiants API obtenus par contrat auprès de leurs agrégateurs ou opérateurs de paiement. NanaSwitch agit comme un <strong>routeur technique pur</strong> (0% de commission de flux, facturé <strong>0,02 XOF / requête</strong>).
+                        </p>
+                      </div>
+
+                      {/* HMAC-SHA256 */}
+                      <div className="p-5 rounded-2xl border border-purple-100 bg-purple-50/40 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 bg-purple-600 text-white rounded-lg text-xs font-black">HMAC</span>
+                          <span className="font-extrabold text-slate-900 text-sm">HMAC-SHA256</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Signature cryptographique symétrique (<em>Hash-based Message Authentication Code</em>). Chaque webhook émis par NanaSwitch est signé avec votre secret <code className="font-mono text-purple-700 bg-white px-1 rounded">ns_whsec_...</code>, garantissant l'intégrité absolue de la payload et empêchant tout tiers de falsifier une notification de paiement.
+                        </p>
+                      </div>
+
+                      {/* Failover / Smart Routing */}
+                      <div className="p-5 rounded-2xl border border-emerald-100 bg-emerald-50/40 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 bg-emerald-600 text-white rounded-lg text-xs font-black">FAILOVER</span>
+                          <span className="font-extrabold text-slate-900 text-sm">Smart Routing & Tolérance de Panne</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Algorithme de routage dynamique résilient. En cas d'indisponibilité ou d'erreur réseau d'un opérateur mobile money, NanaSwitch bascule automatiquement la requête vers une route alternative ou un agrégateur de secours en temps réel (ex: optimisation et forçage de l'indicatif <strong>+226</strong> au Burkina Faso).
+                        </p>
+                      </div>
+
+                      {/* Idempotence */}
+                      <div className="p-5 rounded-2xl border border-amber-100 bg-amber-50/40 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 bg-amber-600 text-white rounded-lg text-xs font-black">IDEMPOTENCE</span>
+                          <span className="font-extrabold text-slate-900 text-sm">Clé d'Idempotence (Idempotency Key)</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Mécanisme anti-doublon via l'en-tête <code className="font-mono text-amber-800 bg-white px-1 rounded">x-idempotency-key</code>. Lors de micro-coupures réseau ou de renvois de requête côté client, le serveur garantit qu'une commande ne sera jamais débitée deux fois.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. ARCHITECTURE DES CLÉS ZERO-TRUST */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-sm">
+                        2
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Architecture des Clés Zero-Trust</h3>
+                        <p className="text-xs text-slate-500">Séparation stricte des privilèges et périmètres d'exposition des identifiants.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      {/* Clé Publique */}
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-3 flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase text-blue-700 bg-blue-100 px-2 py-0.5 rounded">Client / Frontend</span>
+                            <span className="text-[11px] font-bold text-slate-500">Portée Publique</span>
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm">Clé Publique (Public Key)</h4>
+                            <p className="text-xs font-mono text-blue-700 font-bold mt-0.5">ns_live_pk_... / ns_test_pk_...</p>
+                          </div>
+                          <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                            <li>Utilisée dans les SDKs Front-End, widgets JS et réglages WooCommerce.</li>
+                            <li>Identifie l'application marchande auprès de la passerelle.</li>
+                            <li><strong className="text-emerald-700">Sécurité :</strong> Peut être visible dans le code source HTML / JS sans risque direct.</li>
+                            <li><strong className="text-rose-700">Interdit :</strong> Ne dispose d'aucun privilège de retrait (Payout) ou d'annulation.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700">
+                          Format : <span className="text-blue-600">ns_live_pk_0123456789abcdef...</span> (32 car.)
+                        </div>
+                      </div>
+
+                      {/* Clé Secrète */}
+                      <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/30 p-5 space-y-3 flex flex-col justify-between shadow-sm">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Serveur / Backend</span>
+                            <span className="text-[11px] font-bold text-rose-600">Strictement Privé</span>
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm">Clé Secrète (Secret Key)</h4>
+                            <p className="text-xs font-mono text-purple-700 font-bold mt-0.5">ns_live_sk_... / ns_test_sk_...</p>
+                          </div>
+                          <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                            <li>Envoyée dans l'en-tête <code className="font-mono text-purple-700">Authorization: Bearer</code> ou <code className="font-mono text-purple-700">x-nanaswitch-skey</code>.</li>
+                            <li>Permet d'initier des débits directs, remboursements et retraits vers wallets.</li>
+                            <li><strong className="text-rose-700">Règle d'or :</strong> Ne JAMAIS commiter sur GitHub, ni injecter dans une app mobile ou React client.</li>
+                            <li>Seul son condensé haché SHA-256 est conservé dans Firestore.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-purple-200 text-[11px] font-mono text-slate-700">
+                          Format : <span className="text-purple-600">ns_live_sk_fedcba9876543210...</span> (32 car.)
+                        </div>
+                      </div>
+
+                      {/* Secret Webhook */}
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-3 flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Webhook Listener</span>
+                            <span className="text-[11px] font-bold text-amber-700">Signature HMAC</span>
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm">Clé Secrète Webhook (Signing Secret)</h4>
+                            <p className="text-xs font-mono text-amber-700 font-bold mt-0.5">ns_whsec_...</p>
+                          </div>
+                          <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                            <li>Secret cryptographique partagé entre NanaSwitch et votre serveur de webhook.</li>
+                            <li>Sert à recalculer et authentifier la signature <code className="font-mono text-amber-800">x-nanaswitch-signature</code>.</li>
+                            <li>Contient un timestamp anti-rejeu garantissant une validité maximale de <strong>300 secondes (5 min)</strong>.</li>
+                            <li>Immunise votre backend contre les injections frauduleuses d'événements.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700">
+                          Format : <span className="text-amber-700">ns_whsec_a1b2c3d4e5f6...</span> (64 car.)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. CONSEILS DE GESTION & SÉCURITÉ FINANCIÈRE */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-sm">
+                        3
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Conseils de Gestion & Sécurité de Trésorerie</h3>
+                        <p className="text-xs text-slate-500">Procédures d'urgence en cas de compromission et gouvernance financière.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-slate-700">
+                      {/* Rotation d'urgence */}
+                      <div className="p-5 rounded-2xl border border-rose-200 bg-rose-50/30 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="w-4 h-4 text-rose-600" />
+                          <span className="font-extrabold text-rose-900 text-sm">Procédure de Rotation d'Urgence</span>
+                        </div>
+                        <p className="leading-relaxed">
+                          Si une clé secrète (<code className="font-mono text-rose-700">ns_live_sk_...</code>) est accidentellement exposée sur un dépôt public ou des logs :
+                        </p>
+                        <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                          <li>Accédez immédiatement à l'onglet <strong>Développeur & Clés API</strong> du dashboard.</li>
+                          <li>Cliquez sur <strong>"Régénérer les clés"</strong> pour générer instantanément une nouvelle paire.</li>
+                          <li>Déployez la nouvelle clé dans vos variables d'environnement serveur.</li>
+                          <li>L'ancienne clé reste valide pendant <strong>24h en période de grâce</strong> pour éviter toute interruption de service avant désactivation complète.</li>
+                        </ol>
+                      </div>
+
+                      {/* Stockage Sécurisé */}
+                      <div className="p-5 rounded-2xl border border-blue-200 bg-blue-50/30 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-blue-600" />
+                          <span className="font-extrabold text-blue-900 text-sm">Stockage & Secrets Management</span>
+                        </div>
+                        <p className="leading-relaxed">
+                          Ne stockez jamais les clés secrètes en clair dans le code applicatif.
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-slate-600">
+                          <li>Utilisez des variables d'environnement chiffrées (<code className="font-mono text-blue-700">process.env.NANASWITCH_SECRET_KEY</code>).</li>
+                          <li>Vérifiez impérativement la présence de <code className="font-mono text-slate-800">.env</code> dans votre fichier <code className="font-mono text-slate-800">.gitignore</code>.</li>
+                          <li>En production, préférez des coffres-forts dédiés (AWS Secrets Manager, Google Secret Manager ou HashiCorp Vault).</li>
+                        </ul>
+                      </div>
+
+                      {/* Réconciliation financière */}
+                      <div className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <Wallet className="w-4 h-4 text-emerald-600" />
+                          <span className="font-extrabold text-emerald-900 text-sm">Réconciliation de Trésorerie</span>
+                        </div>
+                        <p className="leading-relaxed">
+                          Pour assurer une gestion saine et détecter toute anomalie :
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-slate-600">
+                          <li>Rapprochez quotidiennement la somme des webhooks reçus (<code className="font-mono text-emerald-700">payment.success</code>) avec le solde du Wallet marchand.</li>
+                          <li>Surveillez les alertes de volume KYC pour éviter le blocage préventif à 1M ou 5M XOF.</li>
+                          <li>Exportez vos relevés mensuels au format CSV / Excel depuis le module <strong>Historique & Relevés</strong> pour votre comptabilité fiscale.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Code Snippet Timing Safe Webhook Verification */}
+                    <div className="pt-4 border-t border-slate-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900">Implémentation de Référence : Vérification Cryptographique Timing-Safe (Node.js)</span>
+                        <span className="text-[11px] font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded font-bold">Anti-Rejeu 300s</span>
+                      </div>
+                      <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
 {`const crypto = require('crypto');
 
-function verifyNanaSwitchWebhook(rawBody, signatureHeader, secretKey) {
-  const parts = Object.fromEntries(signatureHeader.split(',').map(p => p.split('=')));
-  const timestamp = parseInt(parts.t, 10);
-  const signature = parts.v1;
+/**
+ * Valide cryptographiquement la provenance d'un webhook NanaSwitch
+ * @param {string|Buffer} rawBody - Corps brut de la requête (ne pas parser en JSON avant)
+ * @param {string} signatureHeader - En-tête "x-nanaswitch-signature"
+ * @param {string} webhookSecret - Votre secret ns_whsec_...
+ * @returns {boolean} true si valide, false ou exception si invalide
+ */
+function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
+  if (!signatureHeader || !webhookSecret) return false;
 
-  // Fenêtre anti-rejeu 5 minutes
-  if (Math.abs(Date.now() / 1000 - timestamp) > 300) {
-    throw new Error('Timestamp expiré');
+  // 1. Découpage de l'en-tête (format: t=1730000000,v1=6a3f...)
+  const elements = Object.fromEntries(
+    signatureHeader.split(',').map(pair => pair.trim().split('='))
+  );
+
+  const timestamp = parseInt(elements.t, 10);
+  const receivedSignature = elements.v1;
+
+  if (!timestamp || !receivedSignature) return false;
+
+  // 2. Fenêtre de tolérance anti-rejeu stricte de 300 secondes (5 minutes)
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  if (Math.abs(currentTimestamp - timestamp) > 300) {
+    throw new Error('SECURITY_ERROR: Webhook timestamp expired (> 300 seconds).');
   }
 
-  const expected = crypto
-    .createHmac('sha256', secretKey)
+  // 3. Calcul du HMAC-SHA256 sur la chaîne standardisée "\${timestamp}.\${rawBody}"
+  const computedSignature = crypto
+    .createHmac('sha256', webhookSecret)
     .update(\`\${timestamp}.\${rawBody}\`)
     .digest('hex');
 
-  return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(expected, 'utf8'));
+  // 4. Comparaison temporelle constante (timing-safe) contre les attaques temporelles
+  return crypto.timingSafeEqual(
+    Buffer.from(receivedSignature, 'utf8'),
+    Buffer.from(computedSignature, 'utf8')
+  );
 }`}
-                  </pre>
+                      </pre>
+                    </div>
+
+                  </div>
+
                 </div>
               )}
 
