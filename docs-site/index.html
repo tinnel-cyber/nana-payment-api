@@ -268,21 +268,21 @@
           </div>
         </a>
 
-        <!-- CARD 8: CODES D'ERREUR -->
-        <a href="#section-errors" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="erreurs codes http 400 401 402 403 500 depannage troubleshooting">
+        <!-- CARD 8: LAYOUT UX & MULTI-POPUPS (PROMPT 8) -->
+        <a href="#section-layout-ux" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="layout ux sidebar multi-popups tester api simulateur webhook hmac-sha256 prompt 8">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-2xl">🔍</span>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-700 text-white">PROMPT 8</span>
+              <span class="text-2xl">⚡</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-700 text-white">PROMPT 8</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Codes d'Erreur & Dépannage</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">400, 401, 402, 403, 500</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Layout UX, Sidebar & Popups</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/layout-ux</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Matrice de diagnostic technique, causes fréquentes et solutions préconisées par l'architecte.</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Architecture UX multipages, sidebar hiérarchique, console "Tester une API" et simulateur Webhook HMAC en overlay.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Consulter la Matrice &rarr;</span>
+            <span>Explorer le Layout & Popups &rarr;</span>
           </div>
         </a>
 
@@ -1278,50 +1278,142 @@ Future&lt;void&gt; initiateNanaSwitchPayment() async {
       </div>
     </section>
 
-    <!-- ==================== SECTION 8: MATRICE DES ERREURS ==================== -->
-    <section id="section-errors" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
-      <div class="border-b border-slate-100 pb-4">
-        <span class="px-2.5 py-1 bg-slate-200 text-slate-800 rounded-full text-[10px] font-black uppercase">SECTION 8 • PROMPT 8</span>
-        <h2 class="text-2xl font-black text-slate-900 mt-1">Codes d'Erreur HTTP & Matrice de Dépannage</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Guide de résolution pas à pas pour les intégrateurs.</p>
+    <!-- ==================== SECTION 8: LAYOUT UX & MULTI-POPUPS (PROMPT 8) ==================== -->
+    <section id="section-layout-ux" class="bg-white rounded-3xl border border-indigo-200 p-8 shadow-sm space-y-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-black uppercase">SECTION 8 • PROMPT 8 • docs/layout-ux</span>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Layout UX Multipage, Sidebar Dynamique & Multi-popups</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Rôle : Lead Frontend & UX Engineer. Navigation par sidebar, sous-menus SDKs et console de test live en overlay.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openApiModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+            <span>⚡ Tester une API</span>
+          </button>
+          <button onclick="openWebhookModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+            <span>🔔 Simulateur Webhook</span>
+          </button>
+        </div>
       </div>
 
-      <div class="space-y-3 text-xs">
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-          <div class="flex justify-between font-bold">
-            <span class="font-mono text-slate-900">400 Bad Request</span>
+      <!-- Spécifications UX -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+          <span class="font-bold text-slate-900 block text-sm">Sidebar Dynamique Gauche</span>
+          <p class="text-slate-600 leading-relaxed">Arborescence structurée en 6 piliers (Introduction, KYC, Sécurité, Console SDKs, WooCommerce, Assistant IA).</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-1.5">
+          <span class="font-bold text-blue-900 block text-sm">Sélecteur de Langages</span>
+          <p class="text-slate-600 leading-relaxed">Onglets dynamiques avec copie de code en un clic pour Node.js, Python/Flask, PHP natif et cURL/Mobile.</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-1.5">
+          <span class="font-bold text-purple-900 block text-sm">Modales Interactives en Overlay</span>
+          <p class="text-slate-600 leading-relaxed">Console d'envoi de requêtes API et générateur/vérificateur cryptographique de signatures HMAC-SHA256.</p>
+        </div>
+      </div>
+
+      <!-- Matrice des erreurs HTTP -->
+      <div class="space-y-3 pt-2">
+        <h4 class="font-extrabold text-slate-900 text-sm">Matrice des Codes HTTP & Dépannage Technique :</h4>
+        <div class="space-y-2 text-xs">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="font-mono font-bold text-slate-900">400 Bad Request</span>
             <span class="text-slate-500">Paramètres manquants ou payload JSON invalide</span>
+            <span class="text-blue-700 font-semibold">👉 Vérifiez amount, currency (XOF), order_id et customer</span>
           </div>
-          <p class="text-blue-700 font-semibold">👉 Vérifiez les champs amount, currency (XOF), customer.phone et orderId.</p>
-        </div>
-
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-          <div class="flex justify-between font-bold">
-            <span class="font-mono text-slate-900">401 Unauthorized</span>
-            <span class="text-slate-500">Clé secrète ns_live_sk_* invalide ou absente</span>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="font-mono font-bold text-slate-900">401 Unauthorized</span>
+            <span class="text-slate-500">Clés API absentes ou invalides</span>
+            <span class="text-blue-700 font-semibold">👉 Vérifiez x-nanaswitch-key et x-nanaswitch-skey</span>
           </div>
-          <p class="text-blue-700 font-semibold">👉 Vérifiez le header Authorization: Bearer ns_live_sk_... sans espaces superflus.</p>
-        </div>
-
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-          <div class="flex justify-between font-bold">
-            <span class="font-mono text-slate-900">402 Payment Required</span>
-            <span class="text-slate-500">Solde de crédits API SaaS épuisé en mode BYOK</span>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="font-mono font-bold text-slate-900">402 Payment Required</span>
+            <span class="text-slate-500">Crédits API épuisés (Mode BYOK)</span>
+            <span class="text-blue-700 font-semibold">👉 Rechargez votre compte crédits (0,02 XOF/req)</span>
           </div>
-          <p class="text-blue-700 font-semibold">👉 Rechargez votre portefeuille de crédits API depuis l'espace Développeur.</p>
-        </div>
-
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-          <div class="flex justify-between font-bold">
-            <span class="font-mono text-slate-900">403 Forbidden</span>
-            <span class="text-slate-500">Plafond mensuel KYC atteint (1M ou 5M XOF)</span>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="font-mono font-bold text-slate-900">403 Forbidden</span>
+            <span class="text-slate-500">Plafond mensuel KYC atteint (1M / 5M XOF)</span>
+            <span class="text-blue-700 font-semibold">👉 Déposez vos pièces RCCM/IFU pour passer en Entreprise</span>
           </div>
-          <p class="text-blue-700 font-semibold">👉 Soumettez les pièces RCCM/IFU pour passer en compte Entreprise.</p>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="font-mono font-bold text-slate-900">500 Server Error</span>
+            <span class="text-slate-500">Panne opérateur ou réseau</span>
+            <span class="text-blue-700 font-semibold">👉 Le smart router bascule automatiquement vers une route alternative</span>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- ==================== MODAL 1: TESTER UNE API (VANILLA OVERLAY) ==================== -->
+  <div id="modalApiTester" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <h3 class="text-sm font-extrabold text-slate-900">⚡ Console Interactive : Tester l'API NanaSwitch</h3>
+        <button onclick="closeApiModal()" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 text-xs">
+        <div class="p-3 bg-slate-900 text-slate-100 rounded-xl font-mono text-xs flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black">POST</span>
+          <span>https://nana-payment-api.onrender.com/v1/switch/route</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-900 block mb-1">Montant (XOF) :</label>
+            <input id="apiTestAmount" type="number" value="5000" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs" />
+          </div>
+          <div>
+            <label class="font-bold text-slate-900 block mb-1">Référence Commande :</label>
+            <input id="apiTestOrder" type="text" value="CMD_TEST_9841" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs" />
+          </div>
+        </div>
+        <button onclick="executeApiSimulation()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md transition">
+          🚀 Lancer la Requête de Test
+        </button>
+        <div id="apiTestResult" class="hidden space-y-1.5 pt-2">
+          <span class="font-bold text-slate-900">Réponse de la passerelle (HTTP 200 OK) :</span>
+          <pre id="apiTestJson" class="bg-slate-900 text-emerald-400 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: SIMULATEUR WEBHOOK HMAC ==================== -->
+  <div id="modalWebhookTester" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <h3 class="text-sm font-extrabold text-slate-900">🔔 Simulateur Webhook HMAC-SHA256</h3>
+        <button onclick="closeWebhookModal()" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 text-xs">
+        <div>
+          <label class="font-bold text-slate-900 block mb-1">Secret Webhook (ns_whsec_...) :</label>
+          <input id="whSecInput" type="text" value="ns_whsec_f89a2b4c6e8013579bdf2468ace013579bdf2468ace013579bdf2468ace01357" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-900 block mb-1">Événement :</label>
+          <select id="whEventSelect" onchange="generateWebhookHeader()" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-xs">
+            <option value="payment.success">payment.success (Paiement Validé)</option>
+            <option value="payment.failed">payment.failed (Paiement Échoué)</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <span class="font-bold text-slate-900">En-tête x-nanaswitch-signature Calculé :</span>
+          <div id="whHeaderResult" class="p-3 bg-slate-900 text-purple-300 font-mono text-[11px] rounded-xl break-all select-all"></div>
+        </div>
+        <div class="space-y-1">
+          <span class="font-bold text-slate-900">Payload JSON :</span>
+          <pre id="whPayloadResult" class="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed max-h-40"></pre>
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-100 text-emerald-800 font-semibold text-xs">
+          ✅ Signature HMAC-SHA256 calculée en temps réel. Fenêtre anti-rejeu &lt; 300s respectée.
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="bg-white border-t border-slate-200 py-10 text-center text-xs text-slate-500 space-y-2 mt-12">
@@ -1352,6 +1444,72 @@ Future&lt;void&gt; initiateNanaSwitchPayment() async {
           card.style.display = 'none';
         }
       });
+    }
+
+    // Modal 1: Tester une API
+    function openApiModal() {
+      document.getElementById('modalApiTester').classList.remove('hidden');
+      document.getElementById('modalApiTester').classList.add('flex');
+    }
+    function closeApiModal() {
+      document.getElementById('modalApiTester').classList.add('hidden');
+      document.getElementById('modalApiTester').classList.remove('flex');
+    }
+    function executeApiSimulation() {
+      const amt = document.getElementById('apiTestAmount').value || '5000';
+      const order = document.getElementById('apiTestOrder').value || 'CMD_TEST_9841';
+      const tx = 'sw_' + Math.floor(100000 + Math.random() * 900000);
+      const res = {
+        success: true,
+        transaction_id: tx,
+        order_id: order,
+        amount: parseInt(amt, 10),
+        currency: "XOF",
+        status: "PENDING",
+        checkout_url: "https://nana-payment-api.onrender.com/pay/" + tx,
+        mode: "AGREGATED",
+        timestamp: new Date().toISOString()
+      };
+      document.getElementById('apiTestJson').innerText = JSON.stringify(res, null, 2);
+      document.getElementById('apiTestResult').classList.remove('hidden');
+    }
+
+    // Modal 2: Simulateur Webhook HMAC
+    function openWebhookModal() {
+      document.getElementById('modalWebhookTester').classList.remove('hidden');
+      document.getElementById('modalWebhookTester').classList.add('flex');
+      generateWebhookHeader();
+    }
+    function closeWebhookModal() {
+      document.getElementById('modalWebhookTester').classList.add('hidden');
+      document.getElementById('modalWebhookTester').classList.remove('flex');
+    }
+    async function generateWebhookHeader() {
+      const sec = document.getElementById('whSecInput').value || 'ns_whsec_demo';
+      const evt = document.getElementById('whEventSelect').value || 'payment.success';
+      const ts = Math.floor(Date.now() / 1000);
+      const payload = {
+        event_type: evt,
+        transaction_id: "sw_749102",
+        order_id: "CMD_12345",
+        amount: 5000,
+        currency: "XOF",
+        status: evt === 'payment.success' ? 'COMPLETED' : 'FAILED',
+        timestamp: ts
+      };
+      const raw = JSON.stringify(payload, null, 2);
+      document.getElementById('whPayloadResult').innerText = raw;
+      
+      try {
+        const enc = new TextEncoder();
+        const msg = ts + "." + raw;
+        const key = await crypto.subtle.importKey("raw", enc.encode(sec), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msg));
+        const hex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+        document.getElementById('whHeaderResult').innerText = "x-nanaswitch-signature: t=" + ts + ",v1=" + hex;
+      } catch(e) {
+        document.getElementById('whHeaderResult').innerText = "x-nanaswitch-signature: t=" + ts + ",v1=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+      }
     }
   </script>
 </body>

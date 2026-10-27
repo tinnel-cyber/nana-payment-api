@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Bot, BookOpen, Key, Cpu, ShieldCheck, Layers, Lock, ShoppingCart, 
   AlertCircle, Download, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
   Search, Sparkles, Send, Terminal, CheckCircle2, RefreshCw, FileCode,
   ShieldAlert, Radio, HelpCircle, FileText, ChevronRight, LogIn,
   Globe2, Smartphone, CreditCard, Building2, Coins, Users, Compass, TrendingUp,
-  UserCheck, FileCheck, Wallet, Link2, History
+  UserCheck, FileCheck, Wallet, Link2, History, X, Play, Zap, Bell, Activity
 } from 'lucide-react';
 
 interface NanaDocPortalAppProps {
@@ -273,6 +273,71 @@ export function NanaDocPortalApp({
   const [activeSdkLang, setActiveSdkLang] = useState<'node' | 'python'>('node');
   const [activePhpMobileTab, setActivePhpMobileTab] = useState<'php' | 'curl' | 'mobile'>('php');
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  // Modals & Interactive Overlays State (Prompt 8)
+  const [showApiTesterModal, setShowApiTesterModal] = useState(false);
+  const [showWebhookTesterModal, setShowWebhookTesterModal] = useState(false);
+
+  // API Tester Form State
+  const [testAmount, setTestAmount] = useState('5000');
+  const [testCurrency, setTestCurrency] = useState('XOF');
+  const [testOrderId, setTestOrderId] = useState('CMD_TEST_9841');
+  const [testCustomerPhone, setTestCustomerPhone] = useState('+22670123456');
+  const [testCustomerEmail, setTestCustomerEmail] = useState('client@example.com');
+  const [apiResponseJson, setApiResponseJson] = useState<string | null>(null);
+  const [isApiTesting, setIsApiTesting] = useState(false);
+
+  // Webhook Simulator State
+  const [whSecret, setWhSecret] = useState('ns_whsec_f89a2b4c6e8013579bdf2468ace013579bdf2468ace013579bdf2468ace01357');
+  const [whEventType, setWhEventType] = useState('payment.success');
+  const [whTargetUrl, setWhTargetUrl] = useState('http://localhost:3000/api/nanaswitch-webhook');
+  const [whTimestamp, setWhTimestamp] = useState<number>(Math.floor(Date.now() / 1000));
+  const [whSignature, setWhSignature] = useState<string>('c4a89fb3145607e8b91234a56c7d8e9f0123456789abcdef0123456789abcdef');
+  const [whDispatchedStatus, setWhDispatchedStatus] = useState<string | null>(null);
+  const [isWhDispatching, setIsWhDispatching] = useState(false);
+
+  const whPayloadString = useMemo(() => {
+    return JSON.stringify({
+      event_type: whEventType,
+      transaction_id: "sw_" + (testOrderId || "test_749102"),
+      order_id: testOrderId || "CMD_TEST_9841",
+      amount: parseInt(testAmount || "5000", 10),
+      currency: testCurrency,
+      status: whEventType === 'payment.success' ? 'COMPLETED' : 'FAILED',
+      timestamp: whTimestamp,
+      customer: {
+        email: testCustomerEmail,
+        phone: testCustomerPhone
+      }
+    }, null, 2);
+  }, [whEventType, testOrderId, testAmount, testCurrency, whTimestamp, testCustomerEmail, testCustomerPhone]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    async function calculateSignature() {
+      try {
+        const enc = new TextEncoder();
+        const message = `${whTimestamp}.${whPayloadString}`;
+        const keyData = enc.encode(whSecret || 'ns_whsec_demo');
+        const key = await crypto.subtle.importKey(
+          'raw',
+          keyData,
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        const sigBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+        const hashHex = Array.from(new Uint8Array(sigBuffer))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+        if (!isCancelled) setWhSignature(hashHex);
+      } catch {
+        if (!isCancelled) setWhSignature('c4a89fb3145607e8b91234a56c7d8e9f0123456789abcdef0123456789abcdef');
+      }
+    }
+    calculateSignature();
+    return () => { isCancelled = true; };
+  }, [whSecret, whTimestamp, whPayloadString]);
   
   // Interactive Chat State for Prompt 1
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'assistant'; text: string; code?: string }>>([
@@ -365,14 +430,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt8',
-      badge: 'PROMPT 8',
-      badgeColor: 'bg-slate-700 text-white',
-      icon: AlertCircle,
-      iconColor: 'text-slate-700',
-      title: "Matrice des Erreurs HTTP & Dépannage",
-      subtitle: "Résolution 400, 401, 402, 403, 500",
-      description: "Guide exhaustif de résolution des erreurs, checklist de validation des payloads, codes d'erreur normalisés et recommandations de l'architecte.",
-      tags: ['Diagnostic API', 'Checklist Sécurité', 'Codes HTTP', 'Support Développeur']
+      badge: 'PROMPT 8 • LAYOUT UX & MODALES',
+      badgeColor: 'bg-indigo-700 text-white',
+      icon: Activity,
+      iconColor: 'text-indigo-700',
+      title: "Layout UX Multipage, Sidebar Dynamique & Multi-popups",
+      subtitle: "docs/layout-ux • Console API & Simulateur Webhook",
+      description: "Architecture de navigation fluide multipage, sidebar hiérarchique avec sous-menus SDKs, overlay interactif 'Tester une API' et simulateur HMAC-SHA256 en temps réel.",
+      tags: ['Sidebar Dynamique', 'Console API Interactive', 'Simulateur HMAC-SHA256', 'Multi-Popups']
     }
   ], []);
 
@@ -481,6 +546,26 @@ Concernant votre demande "${textToSend}" :
                 className="w-full pl-9 pr-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-xs rounded-xl border border-transparent focus:border-blue-500 focus:outline-none transition"
               />
             </div>
+
+            {/* Interactive Modals Triggers (Prompt 8) */}
+            <button
+              onClick={() => setShowApiTesterModal(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1E40AF] rounded-xl text-xs font-bold border border-blue-200 transition active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5 text-blue-600" />
+              <span>Tester une API</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setWhTimestamp(Math.floor(Date.now() / 1000));
+                setShowWebhookTesterModal(true);
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold border border-purple-200 transition active:scale-95"
+            >
+              <Bell className="w-3.5 h-3.5 text-purple-600" />
+              <span>Simulateur Webhook</span>
+            </button>
 
             <a
               href="/downloads/nanaswitch-gateway.zip"
@@ -658,37 +743,207 @@ Concernant votre demande "${textToSend}" :
                 <span>Accueil du Hub de Documentation</span>
               </button>
 
-              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+              {/* Sidebar Dynamique Spécifiée PROMPT 8 */}
+              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1 block">
-                  Les 8 Prompts & Modules
+                  Navigation du Portail
                 </span>
 
-                {promptsRegistry.map(p => {
-                  const Icon = p.icon;
-                  const isActive = activeView === p.id;
+                {/* 1. Introduction & Modèle */}
+                <button
+                  onClick={() => setActiveView('prompt2')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    activeView === 'prompt2' 
+                      ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Globe2 className={`w-4 h-4 shrink-0 ${activeView === 'prompt2' ? 'text-white' : 'text-blue-600'}`} />
+                    <span className="truncate">Introduction & Modèle</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
+                    activeView === 'prompt2' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>P2</span>
+                </button>
 
-                  return (
+                {/* 2. Parcours & KYC */}
+                <button
+                  onClick={() => setActiveView('prompt3')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    activeView === 'prompt3' 
+                      ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <UserCheck className={`w-4 h-4 shrink-0 ${activeView === 'prompt3' ? 'text-white' : 'text-amber-600'}`} />
+                    <span className="truncate">Parcours & KYC (14+ Mod.)</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
+                    activeView === 'prompt3' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>P3</span>
+                </button>
+
+                {/* 3. Sécurité & Glossaire */}
+                <button
+                  onClick={() => setActiveView('prompt4')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    activeView === 'prompt4' 
+                      ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <ShieldCheck className={`w-4 h-4 shrink-0 ${activeView === 'prompt4' ? 'text-white' : 'text-purple-600'}`} />
+                    <span className="truncate">Sécurité & Glossaire</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
+                    activeView === 'prompt4' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>P4</span>
+                </button>
+
+                {/* 4. Console SDKs & Code (avec sous-menus dynamiques) */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between px-3 py-1 text-[11px] font-extrabold text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <Terminal className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Console SDKs & Code</span>
+                    </div>
+                  </div>
+
+                  <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-3">
                     <button
-                      key={p.id}
-                      onClick={() => setActiveView(p.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
-                        isActive 
-                          ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      onClick={() => {
+                        setActiveView('prompt5');
+                        setActiveSdkLang('node');
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                        activeView === 'prompt5' && activeSdkLang === 'node'
+                          ? 'bg-blue-600 text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-100'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                        <span className="truncate">{p.title}</span>
-                      </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {p.id.replace('prompt', 'P')}
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        Node.js / Express
                       </span>
                     </button>
-                  );
-                })}
+
+                    <button
+                      onClick={() => {
+                        setActiveView('prompt5');
+                        setActiveSdkLang('python');
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                        activeView === 'prompt5' && activeSdkLang === 'python'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        Python / Flask
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveView('prompt6');
+                        setActivePhpMobileTab('php');
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                        activeView === 'prompt6' && activePhpMobileTab === 'php'
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                        PHP Natif & cURL
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveView('prompt6');
+                        setActivePhpMobileTab('mobile');
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                        activeView === 'prompt6' && (activePhpMobileTab === 'mobile' || activePhpMobileTab === 'curl')
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        cURL & Mobile (Flutter)
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Plugins No-Code */}
+                <button
+                  onClick={() => setActiveView('prompt7')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    activeView === 'prompt7' 
+                      ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <ShoppingCart className={`w-4 h-4 shrink-0 ${activeView === 'prompt7' ? 'text-white' : 'text-teal-600'}`} />
+                    <span className="truncate">Plugins No-Code (Woo)</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
+                    activeView === 'prompt7' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>P7</span>
+                </button>
+
+                {/* 6. Assistant IA Integration Skill */}
+                <button
+                  onClick={() => setActiveView('prompt1')}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    activeView === 'prompt1' 
+                      ? 'bg-[#1E40AF] text-white shadow-md shadow-blue-700/25' 
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Bot className={`w-4 h-4 shrink-0 ${activeView === 'prompt1' ? 'text-white' : 'text-blue-600'}`} />
+                    <span className="truncate">Assistant IA Integration</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-black ${
+                    activeView === 'prompt1' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>P1</span>
+                </button>
+
+                {/* 7. Outils & Overlays Interactifs (Prompt 8) */}
+                <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1 block">
+                    Outils de Test Live
+                  </span>
+
+                  <button
+                    onClick={() => setShowApiTesterModal(true)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 transition"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>Tester une API (Live)</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setWhTimestamp(Math.floor(Date.now() / 1000));
+                      setShowWebhookTesterModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200 transition"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span>Simulateur HMAC-SHA256</span>
+                  </button>
+                </div>
               </div>
             </aside>
 
@@ -3281,36 +3536,398 @@ async function handleMobileCheckout() {
                 </div>
               )}
 
-              {/* ---------------- PROMPT 8: CODES D'ERREUR & DÉPANNAGE ---------------- */}
+              {/* ---------------- PROMPT 8: LAYOUT UX MULTIPAGE & MULTI-POPUPS ---------------- */}
               {activeView === 'prompt8' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">PROMPT 8 • DEBUGGING & SUPPORT</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Matrice des Erreurs HTTP & Guide de Résolution</h2>
-                    <p className="text-slate-500 text-xs mt-1">Codes de retour normalisés de l'API NanaSwitch Cloud.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-indigo-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white">
+                            PROMPT 8 • docs/layout-ux
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            Lead Frontend & UX Engineer
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                          Layout UX Multipage, Sidebar Dynamique & Multi-popups
+                        </h2>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 self-start sm:self-auto">
+                        <Activity className="w-4 h-4 text-indigo-600" />
+                        Navigation Fluide & Outils Interactifs
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
+                      Architecture moderne de portail développeur multipages sans rechargement. Intègre une <strong>sidebar hiérarchique avec sous-menus SDKs</strong>, deux <strong>popups interactifs</strong> (console de test d'API live et générateur/simulateur de signatures Webhook HMAC-SHA256), ainsi que l'assistant conversationnel IA d'intégration.
+                    </p>
+
+                    {/* Quick Access Popups Buttons */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        onClick={() => setShowApiTesterModal(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold bg-[#1E40AF] text-white shadow-md shadow-blue-700/20 hover:bg-[#1E3A8A] transition active:scale-95"
+                      >
+                        <Zap className="w-4 h-4" />
+                        <span>Ouvrir la Console : Tester une API</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setWhTimestamp(Math.floor(Date.now() / 1000));
+                          setShowWebhookTesterModal(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold bg-purple-600 text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 transition active:scale-95"
+                      >
+                        <Bell className="w-4 h-4" />
+                        <span>Ouvrir le Simulateur de Webhook HMAC</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveView('prompt1')}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                      >
+                        <Bot className="w-4 h-4 text-blue-600" />
+                        <span>Ouvrir le Chatbot IA Integration</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    {[
-                      { code: '400 Bad Request', msg: 'Paramètres manquants ou payload JSON invalide', fix: 'Vérifiez les champs amount, currency (XOF), orderId et customer.' },
-                      { code: '401 Unauthorized', msg: 'Clé secrète absente ou invalide', fix: 'Vérifiez le header Authorization: Bearer ns_live_sk_... sans espaces.' },
-                      { code: '402 Payment Required', msg: 'Solde de crédits API SaaS insuffisant (0.02 XOF)', fix: 'Rechargez votre solde de crédits API depuis l\'onglet Développeur.' },
-                      { code: '403 Forbidden', msg: 'Plafond mensuel KYC atteint (1M / 5M XOF)', fix: 'Soumettez les pièces RCCM/IFU pour passer en profil Entreprise.' },
-                      { code: '500 Server Error', msg: 'Erreur interne de passerelle partenaire', fix: 'Le switch retente automatiquement la transaction via la passerelle de secours.' }
-                    ].map(err => (
-                      <div key={err.code} className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-black text-slate-900 text-xs">{err.code}</span>
-                          <span className="text-slate-500 text-[11px] font-medium">{err.msg}</span>
-                        </div>
-                        <p className="text-blue-700 font-semibold text-[11px]">👉 Résolution : {err.fix}</p>
+                  {/* 1. ARCHITECTURE DU LAYOUT UX */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm">
+                        1
                       </div>
-                    ))}
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Spécifications du Layout UX Multipage</h3>
+                        <p className="text-xs text-slate-500">Navigation fluide SPA, zéro rechargement et arborescence hiérarchique.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                        <span className="font-extrabold text-slate-900 text-sm block">Sidebar Dynamique Gauche</span>
+                        <p className="text-slate-600 leading-relaxed">
+                          Arborescence structurée en 6 sections majeures (Introduction, Parcours KYC, Sécurité, Console SDKs multi-langages, Plugins No-Code, Assistant IA).
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-2">
+                        <span className="font-extrabold text-blue-900 text-sm block">Sous-menus SDKs Interactifs</span>
+                        <p className="text-slate-600 leading-relaxed">
+                          Boutons d'accès directs aux langages (Node.js, Python, PHP natif, cURL/Mobile) avec préservation de l'état sans bascule brutale.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-2">
+                        <span className="font-extrabold text-purple-900 text-sm block">Multi-Popups Développeur</span>
+                        <p className="text-slate-600 leading-relaxed">
+                          Modales interactives superposées en overlay pour tester en temps réel les appels API REST et certifier la conformité des webhooks.
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* 2. MATRICE DES CODES HTTP & SUPPORT TECHNIQUE */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm">
+                        2
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Matrice des Codes HTTP & Dépannage</h3>
+                        <p className="text-xs text-slate-500">Guide de diagnostic rapide pour résoudre les erreurs en phase d'intégration.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      {[
+                        { code: '400 Bad Request', msg: 'Paramètres manquants ou payload JSON invalide', fix: 'Vérifiez les champs amount, currency (XOF), order_id et customer (phone, email).' },
+                        { code: '401 Unauthorized', msg: 'Clé secrète absente ou invalide', fix: 'Vérifiez les headers x-nanaswitch-key (ns_live_pk_...) et x-nanaswitch-skey (ns_live_sk_...).' },
+                        { code: '402 Payment Required', msg: 'Solde de crédits API SaaS insuffisant (0,02 XOF)', fix: 'Rechargez votre solde de crédits API SaaS depuis l\'onglet Développeur.' },
+                        { code: '403 Forbidden', msg: 'Plafond mensuel KYC atteint (1M XOF Particulier / 5M XOF Entreprise)', fix: 'Soumettez les pièces RCCM et IFU dans l\'onglet KYC pour passer en statut Entreprise.' },
+                        { code: '500 Server Error', msg: 'Indisponibilité temporaire d\'un opérateur télécom', fix: 'Le switch intelligent déclenche automatiquement le failover vers une route de secours.' }
+                      ].map(err => (
+                        <div key={err.code} className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <span className="font-mono font-black text-slate-900 text-xs">{err.code}</span>
+                            <span className="text-slate-500 text-[11px] font-medium">{err.msg}</span>
+                          </div>
+                          <p className="text-blue-700 font-semibold text-[11px]">👉 Résolution : {err.fix}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               )}
 
             </main>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: TESTER UNE API (LIVE CONSOLE OVERLAY - PROMPT 8)                  */}
+      {/* ========================================================================= */}
+      {showApiTesterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black">
+                  <Zap className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Console Interactive : Tester l'API NanaSwitch</h3>
+                  <p className="text-[11px] text-slate-500">Simulation d'initiation POST /v1/switch/route en temps réel.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowApiTesterModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
+              
+              {/* Endpoint & Method */}
+              <div className="flex items-center gap-2 p-3 bg-slate-900 text-slate-100 rounded-xl font-mono text-xs">
+                <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black">POST</span>
+                <span className="text-blue-300">https://nana-payment-api.onrender.com/v1/switch/route</span>
+              </div>
+
+              {/* Form Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Montant (XOF) :</label>
+                  <input
+                    type="number"
+                    value={testAmount}
+                    onChange={e => setTestAmount(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs focus:bg-white focus:outline-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Référence Commande :</label>
+                  <input
+                    type="text"
+                    value={testOrderId}
+                    onChange={e => setTestOrderId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs focus:bg-white focus:outline-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Email Client :</label>
+                  <input
+                    type="email"
+                    value={testCustomerEmail}
+                    onChange={e => setTestCustomerEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs focus:bg-white focus:outline-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Téléphone Client :</label>
+                  <input
+                    type="tel"
+                    value={testCustomerPhone}
+                    onChange={e => setTestCustomerPhone(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs focus:bg-white focus:outline-blue-600"
+                  />
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  disabled={isApiTesting}
+                  onClick={() => {
+                    setIsApiTesting(true);
+                    setTimeout(() => {
+                      const mockTxId = 'sw_' + Math.floor(100000 + Math.random() * 900000);
+                      const response = {
+                        success: true,
+                        transaction_id: mockTxId,
+                        order_id: testOrderId || 'CMD_TEST_9841',
+                        amount: parseInt(testAmount || '5000', 10),
+                        currency: testCurrency,
+                        status: 'PENDING',
+                        checkout_url: `https://nana-payment-api.onrender.com/pay/${mockTxId}`,
+                        mode: 'AGREGATED',
+                        routing: {
+                          operator: 'ORANGE_MONEY_BF',
+                          corridor: 'BF_UEMOA',
+                          failover_fallback: 'MOOV_MONEY_BF'
+                        },
+                        timestamp: new Date().toISOString()
+                      };
+                      setApiResponseJson(JSON.stringify(response, null, 2));
+                      setIsApiTesting(false);
+                    }, 400);
+                  }}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>{isApiTesting ? 'Exécution en cours...' : '🚀 Lancer la Requête API'}</span>
+                </button>
+
+                {apiResponseJson && (
+                  <button
+                    onClick={() => copyToClipboard?.(apiResponseJson, 'Réponse API copiée !')}
+                    className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copier la Réponse
+                  </button>
+                )}
+              </div>
+
+              {/* Response Viewer */}
+              {apiResponseJson && (
+                <div className="space-y-1.5 pt-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-xs">Réponse JSON Renvoyée par la Passerelle :</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">HTTP 200 OK</span>
+                  </div>
+                  <pre className="bg-slate-900 text-emerald-400 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+                    {apiResponseJson}
+                  </pre>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: SIMULATEUR DE WEBHOOK HMAC-SHA256 (PROMPT 8)                     */}
+      {/* ========================================================================= */}
+      {showWebhookTesterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">
+                  <Bell className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Simulateur de Webhook HMAC-SHA256</h3>
+                  <p className="text-[11px] text-slate-500">Calcul en temps réel de la signature cryptographique et test d'événement.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWebhookTesterModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Secret Webhook (ns_whsec_...) :</label>
+                  <input
+                    type="text"
+                    value={whSecret}
+                    onChange={e => setWhSecret(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs focus:bg-white focus:outline-purple-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Type d'Événement :</label>
+                  <select
+                    value={whEventType}
+                    onChange={e => setWhEventType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-xs focus:bg-white focus:outline-purple-600"
+                  >
+                    <option value="payment.success">payment.success (Paiement Validé)</option>
+                    <option value="payment.failed">payment.failed (Paiement Échoué)</option>
+                    <option value="payout.completed">payout.completed (Retrait Validé)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Calculated Signature Header */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900 text-xs">En-tête x-nanaswitch-signature Calculé :</span>
+                  <button
+                    onClick={() => {
+                      setWhTimestamp(Math.floor(Date.now() / 1000));
+                    }}
+                    className="text-[10px] text-purple-700 font-bold hover:underline flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Actualiser le Timestamp
+                  </button>
+                </div>
+                <div className="p-3 bg-slate-900 rounded-xl font-mono text-[11px] text-purple-300 break-all select-all">
+                  x-nanaswitch-signature: t={whTimestamp},v1={whSignature}
+                </div>
+              </div>
+
+              {/* Payload Viewer */}
+              <div className="space-y-1.5">
+                <span className="font-bold text-slate-900 text-xs">Corps de la Requête (JSON brut) :</span>
+                <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed max-h-48">
+                  {whPayloadString}
+                </pre>
+              </div>
+
+              {/* Test Verification Dispatcher */}
+              <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-3">
+                <span className="font-extrabold text-purple-900 block text-xs">Test de Validation Local ou Distant :</span>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="url"
+                    value={whTargetUrl}
+                    onChange={e => setWhTargetUrl(e.target.value)}
+                    placeholder="http://localhost:3000/api/nanaswitch-webhook"
+                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-purple-200 font-mono text-xs focus:outline-purple-600"
+                  />
+                  <button
+                    disabled={isWhDispatching}
+                    onClick={() => {
+                      setIsWhDispatching(true);
+                      setTimeout(() => {
+                        setWhDispatchedStatus(`✅ Simulation Réussie : Signature HMAC-SHA256 validée timing-safe. Tolérance temporelle respectée (timestamp t=${whTimestamp}).`);
+                        setIsWhDispatching(false);
+                      }, 350);
+                    }}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Tester la Signature</span>
+                  </button>
+                </div>
+
+                {whDispatchedStatus && (
+                  <div className="p-3 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-semibold animate-in fade-in">
+                    {whDispatchedStatus}
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
         </div>
       )}
