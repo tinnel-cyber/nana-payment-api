@@ -354,14 +354,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt7',
-      badge: 'PROMPT 7',
+      badge: 'PROMPT 7 • WOOCOMMERCE & CMS',
       badgeColor: 'bg-teal-600 text-white',
       icon: ShoppingCart,
       iconColor: 'text-teal-600',
-      title: "Plugin Officiel WooCommerce (.zip HPOS Ready)",
-      subtitle: "nanaswitch-gateway.zip v1.0.0",
-      description: "Extension WordPress packageable complète avec panneau d'administration des clés, compatibilité High-Performance Order Storage (HPOS) et webhook REST automatique.",
-      tags: ['WordPress / Woo', 'HPOS Conforme', 'Archive .zip', 'Auto-Webhook']
+      title: "Volet d'Intégration WooCommerce & CMS No-Code",
+      subtitle: "docs/integrations/woocommerce • nanaswitch-gateway.zip",
+      description: "Installation pas à pas en 4 étapes de l'extension WordPress/WooCommerce, configuration des clés Zero-Trust, sélection du mode (AGREGATED vs BYOK) et liaison automatique du Webhook REST.",
+      tags: ['WordPress & Woo', 'Téléchargement .zip', 'Guide 4 Étapes', 'Webhook REST /wp-json']
     },
     {
       id: 'prompt8',
@@ -3044,34 +3044,240 @@ async function handleMobileCheckout() {
                 </div>
               )}
 
-              {/* ---------------- PROMPT 7: WOOCOMMERCE PLUGIN ---------------- */}
+              {/* ---------------- PROMPT 7: WOOCOMMERCE & CMS NO-CODE ---------------- */}
               {activeView === 'prompt7' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">PROMPT 7 • EXTENSION CMS</span>
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Plugin Officiel WooCommerce — NanaSwitch Gateway</h2>
-                      <p className="text-slate-500 text-xs mt-1">Version 1.0.0 • High-Performance Order Storage (HPOS) Ready.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Header Banner & Download Action */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-teal-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-600 text-white">
+                            PROMPT 7 • docs/integrations/woocommerce
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            WooCommerce & WordPress Integration Lead
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                          Volet d'Intégration WooCommerce & CMS No-Code
+                        </h2>
+                      </div>
+
+                      <a 
+                        href="/downloads/nanaswitch-gateway.zip" 
+                        download="nanaswitch-gateway.zip"
+                        className="px-5 py-3 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-black text-xs rounded-2xl shadow-lg shadow-blue-700/25 transition flex items-center justify-center gap-2 self-start sm:self-auto shrink-0 group"
+                      >
+                        <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition" />
+                        <span>Télécharger nanaswitch-gateway.zip</span>
+                      </a>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
+                      Déployez la passerelle NanaSwitch Cloud sur votre boutique WordPress / WooCommerce en quelques clics sans écrire la moindre ligne de code. L'extension officielle gère le routage multi-opérateurs (Orange Money, Moov, MTN, Wave, Cartes VISA/Mastercard), supporte les deux modes d'intégration (<strong>AGREGATED</strong> et <strong>BYOK</strong>), et s'intègre au système de stockage haute performance HPOS.
+                    </p>
+
+                    {/* Compatibility Badges */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+                      <span className="px-3 py-1 rounded-xl bg-teal-50 text-teal-800 font-bold border border-teal-200 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                        HPOS Ready (Custom Order Tables)
+                      </span>
+                      <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                        WordPress 5.8 à 6.7+
+                      </span>
+                      <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                        WooCommerce 7.0 à 9.5+
+                      </span>
+                      <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-800 font-bold border border-blue-200">
+                        Sécurité HMAC-SHA256 Native
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 1. TÉLÉCHARGEMENT & PRÉSENTATION DU PLUGIN */}
+                  <div className="bg-gradient-to-br from-teal-500/10 via-white to-blue-500/10 p-6 sm:p-8 rounded-3xl border border-teal-200 space-y-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase text-teal-700 tracking-wider">Archive Officielle Recommandée</span>
+                        <h3 className="text-lg font-black text-slate-900">1. Téléchargement du Plugin Officiel</h3>
+                        <p className="text-xs text-slate-600">Archive installable directement depuis l'administration de WordPress (.zip conforme aux standards WP.org).</p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <a 
+                          href="/downloads/nanaswitch-gateway.zip" 
+                          download="nanaswitch-gateway.zip"
+                          className="px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-2xl shadow-md shadow-teal-600/20 transition flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>nanaswitch-gateway.zip (v1.0.0)</span>
+                        </a>
+                      </div>
                     </div>
 
-                    <a 
-                      href="/downloads/nanaswitch-gateway.zip" 
-                      download="nanaswitch-gateway.zip"
-                      className="px-4 py-2.5 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-extrabold rounded-xl shadow-md shadow-blue-700/20 transition flex items-center justify-center gap-2 shrink-0"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Télécharger l'archive .zip</span>
-                    </a>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
+                      <div className="bg-white p-3.5 rounded-2xl border border-slate-200">
+                        <span className="font-bold text-slate-900 block">Nom de l'Extension</span>
+                        <p className="text-slate-600 font-mono text-[11px] mt-0.5">NanaSwitch Gateway for WooCommerce</p>
+                      </div>
+                      <div className="bg-white p-3.5 rounded-2xl border border-slate-200">
+                        <span className="font-bold text-slate-900 block">Identifiant Passerelle</span>
+                        <p className="text-slate-600 font-mono text-[11px] mt-0.5">nanaswitch_gateway</p>
+                      </div>
+                      <div className="bg-white p-3.5 rounded-2xl border border-slate-200">
+                        <span className="font-bold text-slate-900 block">Endpoint Webhook Automatique</span>
+                        <p className="text-teal-700 font-mono text-[11px] mt-0.5 font-bold">/wp-json/nanaswitch/v1/webhook</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                    <h4 className="font-extrabold text-slate-900 text-sm">Guide d'installation pas à pas :</h4>
-                    <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
-                      <li>Téléversez l'archive <code className="bg-slate-200 px-1 py-0.5 rounded">nanaswitch-gateway.zip</code> dans <strong>Extensions &gt; Ajouter &gt; Téléverser</strong> sur WordPress.</li>
-                      <li>Activez l'extension puis rendez-vous dans <strong>WooCommerce &gt; Réglages &gt; Paiements &gt; NanaSwitch Gateway</strong>.</li>
-                      <li>Sélectionnez votre mode (<code className="bg-slate-200 px-1 py-0.5 rounded">AGREGATED</code> ou <code className="bg-slate-200 px-1 py-0.5 rounded">BYOK</code>) et renseignez votre <strong>Public Key</strong>, <strong>Secret Key</strong> et <strong>Secret Webhook</strong>.</li>
-                    </ol>
+                  {/* 2. PROCÉDURE D'INSTALLATION EN 4 ÉTAPES */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-black text-sm">
+                        2
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Procédure d'Installation en 4 Étapes</h3>
+                        <p className="text-xs text-slate-500">Guide détaillé pour configurer la passerelle sans intervention technique.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      
+                      {/* Étape 1 */}
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">1</span>
+                          <h4 className="font-extrabold text-slate-900 text-sm">Téléverser l'extension dans WordPress</h4>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Dans le menu d'administration de votre site WordPress, rendez-vous dans :<br />
+                          <strong>Extensions (Plugins) &gt; Ajouter une extension</strong>.<br />
+                          Cliquez sur le bouton <strong>"Téléverser une extension"</strong> situé tout en haut, sélectionnez le fichier <code className="font-mono text-blue-700 bg-white px-1 rounded">nanaswitch-gateway.zip</code> puis cliquez sur <strong>"Installer maintenant"</strong>.
+                        </p>
+                      </div>
+
+                      {/* Étape 2 */}
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">2</span>
+                          <h4 className="font-extrabold text-slate-900 text-sm">Activer le plugin NanaSwitch Gateway</h4>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Une fois l'installation confirmée, cliquez sur le bouton bleu <strong>"Activer l'extension"</strong>.<br />
+                          L'extension apparaît sous le nom officiel :<br />
+                          <strong className="text-slate-900">NanaSwitch Gateway for WooCommerce</strong> (compatible avec les commandes HPOS).
+                        </p>
+                      </div>
+
+                      {/* Étape 3 */}
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">3</span>
+                          <h4 className="font-extrabold text-slate-900 text-sm">Accéder aux réglages de paiement WooCommerce</h4>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Dans le menu de gauche, rendez-vous dans :<br />
+                          <strong>WooCommerce &gt; Réglages &gt; Onglet Paiements</strong>.<br />
+                          Recherchez la ligne <strong>NanaSwitch Gateway</strong>, activez le commutateur principal, puis cliquez sur le bouton <strong>"Gérer"</strong> pour ouvrir le panneau d'administration des clés.
+                        </p>
+                      </div>
+
+                      {/* Étape 4 */}
+                      <div className="p-5 rounded-2xl border-2 border-teal-200 bg-teal-50/30 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full bg-teal-600 text-white font-black text-xs flex items-center justify-center">4</span>
+                          <h4 className="font-extrabold text-slate-900 text-sm">Choisir le mode & renseigner vos clés Zero-Trust</h4>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Renseignez les champs de configuration avec les identifiants de votre application :
+                        </p>
+                        <ul className="text-xs text-slate-700 space-y-1 list-disc list-inside">
+                          <li><strong>Mode de Fonctionnement :</strong> Choisissez entre <code className="font-mono text-blue-700 font-bold">AGREGATED</code> (*Mode Simplifié Master Merchant*) ou <code className="font-mono text-purple-700 font-bold">BYOK</code> (*Bring Your Own Keys*).</li>
+                          <li><strong>Clé Publique :</strong> Collez votre <code className="font-mono text-blue-600">ns_live_pk_...</code></li>
+                          <li><strong>Clé Secrète :</strong> Collez votre <code className="font-mono text-purple-600">ns_live_sk_...</code></li>
+                          <li><strong>Secret Webhook :</strong> Collez votre <code className="font-mono text-amber-700">ns_whsec_...</code></li>
+                        </ul>
+                        <p className="text-[11px] text-teal-800 font-semibold pt-1">
+                          N'oubliez pas de cliquer sur <strong>"Enregistrer les modifications"</strong> en bas de page.
+                        </p>
+                      </div>
+
+                    </div>
                   </div>
+
+                  {/* 3. LIER L'URL DU WEBHOOK */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-sm">
+                        3
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">Lier l'URL du Webhook Automatique</h3>
+                        <p className="text-xs text-slate-500">L'étape essentielle pour valider automatiquement vos commandes après le paiement client.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
+                      <p>
+                        Lors de l'activation, le plugin WooCommerce NanaSwitch crée automatiquement une route REST standardisée sur votre boutique WordPress :
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 bg-slate-900 rounded-2xl">
+                        <div className="font-mono text-xs text-emerald-400 break-all flex-1">
+                          https://votre-site.com/wp-json/nanaswitch/v1/webhook
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard?.('https://votre-site.com/wp-json/nanaswitch/v1/webhook', 'URL Webhook WooCommerce')}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition shrink-0"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copier l'URL</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                          <span className="font-bold text-slate-900 block">1. Copier depuis WooCommerce</span>
+                          <p className="text-slate-600 text-[11px]">Cette URL est visible dans les réglages de votre passerelle NanaSwitch sous WordPress.</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1">
+                          <span className="font-bold text-blue-900 block">2. Coller dans NanaSwitch Cloud</span>
+                          <p className="text-slate-600 text-[11px]">Connectez-vous à la console NanaSwitch Cloud &gt; Onglet Développeur &gt; Champ <strong>Webhook Endpoint URL</strong>.</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1">
+                          <span className="font-bold text-emerald-900 block">3. Validation Instantanée</span>
+                          <p className="text-slate-600 text-[11px]">Chaque paiement validé par le client met à jour immédiatement la commande WooCommerce vers le statut <strong>Terminée</strong> ou <strong>En cours</strong>.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. CHECKLIST DE TEST & RECETTE */}
+                  <div className="bg-slate-900 text-slate-200 p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
+                    <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      Checklist de Validation & Recette E-commerce
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                      <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
+                        <span className="text-blue-400 font-bold block">1. Mode Sandbox</span>
+                        <p className="text-slate-300 text-[11px]">Testez d'abord un achat avec vos clés de test (<code className="text-blue-300">ns_test_pk_...</code>) pour vérifier le parcours sans débit réel.</p>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
+                        <span className="text-emerald-400 font-bold block">2. Certificat SSL (HTTPS)</span>
+                        <p className="text-slate-300 text-[11px]">Le webhook exige impérativement une adresse <code className="text-emerald-300">https://</code> valide pour garantir le chiffrement des données de transaction.</p>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
+                        <span className="text-purple-400 font-bold block">3. Bascule en Production</span>
+                        <p className="text-slate-300 text-[11px]">Remplacez simplement les clés de test par vos clés Live (<code className="text-purple-300">ns_live_pk_...</code>) dès la validation du compte marchand.</p>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               )}
 

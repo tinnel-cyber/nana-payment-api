@@ -250,21 +250,21 @@
           </div>
         </a>
 
-        <!-- CARD 7: PLUGIN WOOCOMMERCE -->
-        <a href="#section-woocommerce" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="plugin woocommerce wordpress nanaswitch-gateway.zip hpos zip extension">
+        <!-- CARD 7: PLUGIN WOOCOMMERCE & CMS NO-CODE (PROMPT 7) -->
+        <a href="#section-woocommerce" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="plugin woocommerce wordpress nanaswitch-gateway.zip hpos zip extension no-code cms aggregated byok webhook">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-2xl">🛍️</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-600 text-white">PROMPT 7</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Plugin WooCommerce (.zip)</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">nanaswitch-gateway.zip v1.0.0</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Intégration WooCommerce & No-Code</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/integrations/woocommerce</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Plugin WordPress prêt à installer, compatible HPOS, supportant AGREGATED et BYOK avec webhook automatique.</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Guide en 4 étapes : installation du plugin .zip, configuration des clés Zero-Trust, bascule AGREGATED/BYOK et liaison automatique du Webhook.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Télécharger l'Archive &rarr;</span>
+            <span>Guide WooCommerce &rarr;</span>
           </div>
         </a>
 
@@ -1190,27 +1190,91 @@ Future&lt;void&gt; initiateNanaSwitchPayment() async {
       </div>
     </section>
 
-    <!-- ==================== SECTION 7: PLUGIN WOOCOMMERCE ==================== -->
-    <section id="section-woocommerce" class="bg-white rounded-3xl border border-teal-200 p-8 shadow-sm space-y-6">
+    <!-- ==================== SECTION 7: VOLET D'INTÉGRATION WOOCOMMERCE & CMS NO-CODE (PROMPT 7) ==================== -->
+    <section id="section-woocommerce" class="bg-white rounded-3xl border border-teal-200 p-8 shadow-sm space-y-8">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
-          <span class="px-2.5 py-1 bg-teal-100 text-teal-800 rounded-full text-[10px] font-black uppercase">SECTION 7 • PROMPT 7</span>
-          <h2 class="text-2xl font-black text-slate-900 mt-1">Plugin Officiel WooCommerce — NanaSwitch Gateway</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Version 1.0.0 • Conforme HPOS & WordPress 5.8 à 6.7+</p>
+          <span class="px-2.5 py-1 bg-teal-100 text-teal-800 rounded-full text-[10px] font-black uppercase">SECTION 7 • PROMPT 7 • docs/integrations/woocommerce</span>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Volet d'Intégration WooCommerce & CMS No-Code</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Rôle : WooCommerce & WordPress Integration Lead. Installation pas à pas, configuration et liaison du Webhook.</p>
         </div>
-        <a href="./downloads/nanaswitch-gateway.zip" download="nanaswitch-gateway.zip" class="px-5 py-3 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2">
+        <a href="./downloads/nanaswitch-gateway.zip" download="nanaswitch-gateway.zip" class="px-5 py-3 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2 self-start sm:self-auto shrink-0">
           <span>📦 Télécharger nanaswitch-gateway.zip</span>
         </a>
       </div>
 
-      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs text-slate-700">
-        <h4 class="font-extrabold text-slate-900">Guide d'installation rapide :</h4>
-        <ol class="list-decimal list-inside space-y-1">
-          <li>Dans WordPress, rendez-vous dans <strong>Extensions &gt; Ajouter &gt; Téléverser</strong>.</li>
-          <li>Sélectionnez l'archive <code>nanaswitch-gateway.zip</code> et cliquez sur Installer.</li>
-          <li>Activez l'extension puis ouvrez <strong>WooCommerce &gt; Réglages &gt; Paiements &gt; NanaSwitch Gateway</strong>.</li>
-          <li>Renseignez votre Public Key, Secret Key et Secret Webhook générés sur la console.</li>
-        </ol>
+      <!-- 1. TÉLÉCHARGEMENT & PRÉSENTATION -->
+      <div class="p-6 rounded-2xl bg-teal-50/50 border border-teal-200 space-y-3 text-xs">
+        <span class="font-bold text-teal-900 text-sm block">1. Téléchargement du Plugin Officiel NanaSwitch</span>
+        <p class="text-slate-700 leading-relaxed">
+          Le plugin officiel <strong>NanaSwitch Gateway for WooCommerce</strong> est fourni sous forme d'archive <code class="font-mono text-teal-800 font-bold">nanaswitch-gateway.zip</code> prête à être déployée sur votre boutique en ligne. Il est 100% compatible avec le système de stockage haute performance HPOS (<em>High-Performance Order Storage</em>) de WooCommerce et gère nativement le routage multi-opérateurs ainsi que la signature Webhook HMAC-SHA256.
+        </p>
+      </div>
+
+      <!-- 2. PROCÉDURE D'INSTALLATION EN 4 ÉTAPES -->
+      <div class="space-y-4">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs">2</span>
+          Procédure d'Installation en 4 Étapes
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <!-- Étape 1 -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <span class="font-bold text-slate-900 block">Étape 1 : Téléverser l'extension dans WordPress</span>
+            <p class="text-slate-600 leading-relaxed">
+              Dans le menu d'administration de votre site WordPress, rendez-vous dans <strong>Extensions &gt; Ajouter une extension</strong>. Cliquez sur <strong>"Téléverser une extension"</strong> en haut de page, sélectionnez le fichier <code class="font-mono text-blue-700">nanaswitch-gateway.zip</code> et cliquez sur <strong>"Installer maintenant"</strong>.
+            </p>
+          </div>
+
+          <!-- Étape 2 -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <span class="font-bold text-slate-900 block">Étape 2 : Activer le plugin</span>
+            <p class="text-slate-600 leading-relaxed">
+              Cliquez sur le bouton bleu <strong>"Activer l'extension"</strong>. L'extension apparaît sous le nom <strong>NanaSwitch Gateway for WooCommerce</strong> dans votre liste des extensions actives.
+            </p>
+          </div>
+
+          <!-- Étape 3 -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <span class="font-bold text-slate-900 block">Étape 3 : Accéder aux réglages de paiement WooCommerce</span>
+            <p class="text-slate-600 leading-relaxed">
+              Rendez-vous dans <strong>WooCommerce &gt; Réglages &gt; Onglet Paiements</strong>. Activez la passerelle <strong>NanaSwitch Gateway</strong> et cliquez sur le bouton <strong>"Gérer"</strong>.
+            </p>
+          </div>
+
+          <!-- Étape 4 -->
+          <div class="p-4 rounded-2xl bg-teal-50/50 border border-teal-200 space-y-1.5">
+            <span class="font-bold text-teal-900 block">Étape 4 : Choisir le mode & renseigner vos clés</span>
+            <ul class="text-slate-700 space-y-1 list-disc list-inside">
+              <li><strong>Mode :</strong> Choisissez entre <code class="font-mono text-blue-800 font-bold">AGREGATED</code> (*Master Merchant*) et <code class="font-mono text-purple-800 font-bold">BYOK</code> (*Bring Your Own Keys*).</li>
+              <li><strong>Clé Publique :</strong> Collez votre <code class="font-mono text-blue-700">ns_live_pk_...</code></li>
+              <li><strong>Clé Secrète :</strong> Collez votre <code class="font-mono text-purple-700">ns_live_sk_...</code></li>
+              <li><strong>Secret Webhook :</strong> Collez votre <code class="font-mono text-amber-700">ns_whsec_...</code></li>
+            </ul>
+            <p class="text-slate-500 text-[11px] pt-1">Cliquez sur <strong>"Enregistrer les modifications"</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. LIER L'URL DU WEBHOOK -->
+      <div class="space-y-4">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">3</span>
+          Lier l'URL du Webhook Automatique
+        </h3>
+
+        <div class="space-y-3 text-xs text-slate-700">
+          <p>
+            Copiez l'URL de webhook générée automatiquement par le plugin WooCommerce :
+          </p>
+          <div class="p-4 bg-slate-900 rounded-2xl font-mono text-xs text-emerald-400 break-all">
+            https://votre-site.com/wp-json/nanaswitch/v1/webhook
+          </div>
+          <p class="leading-relaxed">
+            Connectez-vous à votre <strong>Console NanaSwitch Cloud</strong> &gt; Onglet Développeur, collez cette adresse dans le champ <strong>Webhook Endpoint URL</strong> et enregistrez. Dès qu'un client paie sa commande (Orange Money, Moov, MTN, Wave ou Carte), la commande WooCommerce passe instantanément au statut <strong>"En cours"</strong> ou <strong>"Terminée"</strong> sans aucune action manuelle !
+          </p>
+        </div>
       </div>
     </section>
 
