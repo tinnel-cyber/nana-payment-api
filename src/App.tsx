@@ -1131,6 +1131,7 @@ export default function App() {
     const syncFaviconByEcosystem = () => {
       if (typeof document === 'undefined' || typeof window === 'undefined') return;
       const pathname = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
       let targetHref = '/nanasore-icon.svg?v=nanasore_arrow_v3';
 
       if (
