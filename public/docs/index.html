@@ -846,6 +846,35 @@ function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
           <h3 class="text-base font-extrabold text-slate-900">Intégration Node.js / Express (SDK / Native)</h3>
         </div>
 
+        <!-- Guide pas-à-pas Node.js -->
+        <div class="p-5 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-3 text-xs">
+          <span class="font-bold text-blue-900 text-sm block">💡 Comment intégrer NanaSwitch dans votre application Node.js ?</span>
+          <p class="text-slate-700 leading-relaxed">
+            L'intégration repose sur un flux sécurisé en 2 temps : votre frontend (React, Vue, ou HTML) appelle <strong>votre backend</strong>, qui lui-même s'authentifie auprès de NanaSwitch Cloud avec vos clés secrètes. Le client est ensuite redirigé vers <code class="font-mono text-blue-800">checkout_url</code> pour valider son paiement (Mobile Money ou Carte VISA/Mastercard). Une fois le paiement opéré, NanaSwitch notifie votre serveur via un <strong>Webhook HMAC-SHA256</strong> pour confirmer la commande.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-900 block">📦 Installation :</span>
+              <code class="font-mono text-blue-700 text-[11px]">npm install axios express dotenv</code>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-900 block">🔐 Variables .env :</span>
+              <code class="font-mono text-purple-700 text-[11px]">NANASWITCH_SECRET_KEY=ns_live_sk_...</code>
+            </div>
+          </div>
+          <!-- Exemple Frontend Fetch -->
+          <div class="space-y-1 pt-1">
+            <span class="font-bold text-slate-900 block">Exemple d'Appel Frontend (JavaScript / Bouton Payer) :</span>
+            <pre class="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+// Côté Frontend : déclenché au clic sur "Commander"
+async function handlePay() {
+  const res = await fetch('/api/create-payment', { method: 'POST', body: JSON.stringify({ amount: 5000 }) });
+  const { checkout_url } = await res.json();
+  window.location.href = checkout_url; // Redirection vers le guichet de paiement
+}</pre>
+          </div>
+        </div>
+
         <!-- 1.1 Initialisation de paiement -->
         <div class="space-y-2">
           <span class="text-xs font-bold text-slate-700">1. Initialisation de paiement NanaSwitch Cloud</span>
@@ -920,6 +949,35 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) =
         <div class="flex items-center gap-2">
           <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">PY</span>
           <h3 class="text-base font-extrabold text-slate-900">2. Python / Flask (SDK & Script Officiel)</h3>
+        </div>
+
+        <!-- Guide pas-à-pas Python -->
+        <div class="p-5 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-3 text-xs">
+          <span class="font-bold text-amber-900 text-sm block">💡 Comment intégrer NanaSwitch dans votre application Python / Flask ?</span>
+          <p class="text-slate-700 leading-relaxed">
+            Votre application web Flask ou Django expose une route d'initiation de commande. Le frontend lui transmet les détails du panier, et le serveur Python contacte NanaSwitch Cloud avec <code class="font-mono text-amber-900">requests.post</code>. En réponse, l'utilisateur est redirigé vers le guichet de paiement NanaSwitch. Dès que le client saisit son code secret Mobile Money ou valide sa carte, le serveur webhook Flask valide la signature HMAC et met à jour le statut de la commande en base.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-900 block">📦 Installation :</span>
+              <code class="font-mono text-amber-800 text-[11px]">pip install requests flask python-dotenv</code>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-900 block">🔐 Variables .env :</span>
+              <code class="font-mono text-purple-700 text-[11px]">NANASWITCH_SECRET_KEY=ns_live_sk_...</code>
+            </div>
+          </div>
+          <!-- Exemple Frontend Fetch -->
+          <div class="space-y-1 pt-1">
+            <span class="font-bold text-slate-900 block">Exemple d'Appel Frontend (JavaScript / Bouton Payer vers Flask) :</span>
+            <pre class="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+// Côté Frontend : appel de votre route Flask
+async function onPay() {
+  const res = await fetch('/api/create-order', { method: 'POST', body: JSON.stringify({ amount: 5000 }) });
+  const data = await res.json();
+  window.location.href = data.checkout_url; // Redirection vers le paiement
+}</pre>
+          </div>
         </div>
 
         <!-- 2.1 Initialisation & Verification Webhook Python (Code d'appui requis) -->

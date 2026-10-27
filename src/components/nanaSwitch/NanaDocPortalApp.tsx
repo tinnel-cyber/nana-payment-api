@@ -2069,14 +2069,78 @@ function verifyNanaSwitchWebhook(rawBody, signatureHeader, webhookSecret) {
                   {/* ======================= TAB NODE.JS ======================= */}
                   {activeSdkLang === 'node' && (
                     <div className="space-y-6 animate-in fade-in duration-150">
+
+                      {/* Guide Pédagogique d'Intégration Node.js */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-blue-200 shadow-sm space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                          <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm">💡</span>
+                          <div>
+                            <h3 className="text-base font-extrabold text-slate-900">Comment intégrer NanaSwitch dans votre site ou application Node.js ?</h3>
+                            <p className="text-xs text-slate-500">Comprendre l'architecture en 4 étapes simples avant d'écrire le code.</p>
+                          </div>
+                        </div>
+
+                        {/* Les 4 Étapes du Flux */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-blue-700 block">1. Clic Client</span>
+                            <p className="text-slate-600 leading-relaxed">Le visiteur clique sur <strong>"Payer"</strong> sur votre site. Votre frontend appelle votre propre route backend (<code className="font-mono text-slate-800">/api/create-order</code>).</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1.5">
+                            <span className="font-extrabold text-blue-700 block">2. Session Backend</span>
+                            <p className="text-slate-600 leading-relaxed">Votre serveur Node.js appelle NanaSwitch (<code className="font-mono text-blue-800">/v1/switch/route</code>) avec votre clé secrète et récupère l'URL <code className="font-mono text-emerald-700">checkout_url</code>.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-blue-700 block">3. Redirection</span>
+                            <p className="text-slate-600 leading-relaxed">Le frontend redirige le client vers cette URL. Le client confirme le débit sur son Mobile Money ou sa Carte bancaire.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
+                            <span className="font-extrabold text-emerald-800 block">4. Validation Webhook</span>
+                            <p className="text-slate-600 leading-relaxed">NanaSwitch notifie votre serveur via un webhook signé HMAC-SHA256. Votre backend valide la signature et active le service.</p>
+                          </div>
+                        </div>
+
+                        {/* Pré-requis & Fichier .env */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
+                          <div className="space-y-1.5">
+                            <span className="font-bold text-slate-900 block">📦 1. Installation des Dépendances</span>
+                            <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px]">npm install axios express dotenv</pre>
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="font-bold text-slate-900 block">🔐 2. Variables d'Environnement (.env)</span>
+                            <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px]">{`NANASWITCH_PUBLIC_KEY=ns_live_pk_12345
+NANASWITCH_SECRET_KEY=ns_live_sk_67890
+NANASWITCH_WEBHOOK_SECRET=ns_whsec_...`}</pre>
+                          </div>
+                        </div>
+
+                        {/* Exemple d'appel Frontend */}
+                        <div className="space-y-2 pt-2">
+                          <span className="font-bold text-slate-900 block text-xs">🌐 3. Exemple d'Appel Frontend (JavaScript / Fetch depuis votre bouton de paiement) :</span>
+                          <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`// Côté Client (React, Vue, ou simple fichier HTML/JS de votre boutique)
+async function onPayButtonClicked() {
+  const response = await fetch('/api/create-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: 5000, orderId: 'CMD_12345' })
+  });
+
+  const { checkoutUrl } = await response.json();
+  // Redirection automatique vers la page de paiement sécurisée NanaSwitch
+  window.location.href = checkoutUrl;
+}`}
+                          </pre>
+                        </div>
+                      </div>
                       
                       {/* 1. Initialisation de Paiement Node.js */}
                       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">1</span>
+                            <span className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">4</span>
                             <div>
-                              <h3 className="text-sm font-extrabold text-slate-900">1. Initialisation de Paiement NanaSwitch Cloud (Node.js)</h3>
+                              <h3 className="text-sm font-extrabold text-slate-900">4. Code Backend : Initialisation de Paiement (Node.js)</h3>
                               <p className="text-[11px] text-slate-500">Appel POST avec Axios et en-têtes Zero-Trust.</p>
                             </div>
                           </div>
@@ -2288,15 +2352,79 @@ app.listen(3000, () => console.log('Écoute sur http://localhost:3000'));`}
                   {/* ======================= TAB PYTHON ======================= */}
                   {activeSdkLang === 'python' && (
                     <div className="space-y-6 animate-in fade-in duration-150">
+
+                      {/* Guide Pédagogique d'Intégration Python */}
+                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-amber-200 shadow-sm space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                          <span className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm">🐍</span>
+                          <div>
+                            <h3 className="text-base font-extrabold text-slate-900">Comment intégrer NanaSwitch dans votre site ou application Python / Flask ?</h3>
+                            <p className="text-xs text-slate-500">Flux d'intégration étape par étape : du bouton de paiement à la validation asynchrone.</p>
+                          </div>
+                        </div>
+
+                        {/* Les 4 Étapes du Flux Python */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-amber-800 block">1. Clic Client</span>
+                            <p className="text-slate-600 leading-relaxed">L'utilisateur valide son panier sur votre site. Votre frontend envoie une requête POST vers votre application Flask (<code className="font-mono text-slate-800">/api/checkout</code>).</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1.5">
+                            <span className="font-extrabold text-amber-800 block">2. Requête API</span>
+                            <p className="text-slate-600 leading-relaxed">Votre vue Flask appelle NanaSwitch Cloud via <code className="font-mono text-amber-900">requests.post</code> avec vos clés secrètes et récupère le <code className="font-mono text-emerald-700">checkout_url</code>.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <span className="font-extrabold text-amber-800 block">3. Paiement Mobile</span>
+                            <p className="text-slate-600 leading-relaxed">Le navigateur redirige l'acheteur vers la page sécurisée. L'acheteur tape son code USSD ou saisit sa carte VISA / Mastercard.</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
+                            <span className="font-extrabold text-emerald-800 block">4. Webhook Flask</span>
+                            <p className="text-slate-600 leading-relaxed">NanaSwitch émet un webhook HMAC-SHA256. Votre serveur Flask vérifie la signature avec <code className="font-mono text-emerald-800">hmac.compare_digest</code> et valide la commande.</p>
+                          </div>
+                        </div>
+
+                        {/* Pré-requis & Fichier .env */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
+                          <div className="space-y-1.5">
+                            <span className="font-bold text-slate-900 block">📦 1. Installation des Dépendances</span>
+                            <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px]">pip install requests flask python-dotenv</pre>
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="font-bold text-slate-900 block">🔐 2. Variables d'Environnement (.env)</span>
+                            <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px]">{`NANASWITCH_PUBLIC_KEY=ns_live_pk_12345
+NANASWITCH_SECRET_KEY=ns_live_sk_67890
+NANASWITCH_WEBHOOK_SECRET=ns_whsec_...`}</pre>
+                          </div>
+                        </div>
+
+                        {/* Exemple d'appel Frontend */}
+                        <div className="space-y-2 pt-2">
+                          <span className="font-bold text-slate-900 block text-xs">🌐 3. Exemple d'Appel Frontend (JavaScript Fetch vers la route Flask) :</span>
+                          <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+{`// Côté Client (sur votre site e-commerce ou dashboard client)
+async function onPayButtonClicked() {
+  const response = await fetch('/api/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: 5000, order_id: 'CMD_12345' })
+  });
+
+  const data = await response.json();
+  // Redirection immédiate vers le guichet de paiement NanaSwitch
+  window.location.href = data.checkout_url;
+}`}
+                          </pre>
+                        </div>
+                      </div>
                       
                       {/* 1. Initialisation & Verification Webhook Python (Code Officiel) */}
                       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">PY</span>
+                            <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">4</span>
                             <div>
-                              <h3 className="text-sm font-extrabold text-slate-900">2. Python / Flask (SDK & Script Officiel)</h3>
-                              <p className="text-[11px] text-slate-500">Initialisation de paiement et vérification cryptographique HMAC-SHA256.</p>
+                              <h3 className="text-sm font-extrabold text-slate-900">4. Code Python d'Appui : Initialisation & Vérification Webhook</h3>
+                              <p className="text-[11px] text-slate-500">Fonctions pures réutilisables dans n'importe quel framework Python.</p>
                             </div>
                           </div>
                           <button
