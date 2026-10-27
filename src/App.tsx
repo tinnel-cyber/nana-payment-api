@@ -119,6 +119,7 @@ const StoreStudioPage = lazyWithRetry(() => import('./pages/StoreStudioPage'));
 const PublicStorefrontPage = lazyWithRetry(() => import('./pages/PublicStorefrontPage'));
 const NaNaSwitchAppPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchAppPage').then(m => ({ default: m.NaNaSwitchAppPage || m.default })));
 const NaNaSwitchDocsPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchDocsPage').then(m => ({ default: m.NaNaSwitchDocsPage || m.default })));
+const NaNaSwitchLandingPage = React.lazy(() => import('./pages/nanaSwitch/NaNaSwitchLandingPage').then(m => ({ default: m.NaNaSwitchLandingPage || m.default })));
 const NanaSwitchApp = React.lazy(() => import('./components/nanaSwitch/NanaSwitchApp').then(m => ({ default: m.NanaSwitchApp || m.default })));
 const WameetSupraApp = React.lazy(() => import('./pages/wameet/WameetSupraApp').then(m => ({ default: m.WameetSupraApp || m.default })));
 const SallesVipDiscoveryScreen = React.lazy(() => import('./components/vip/SallesVipDiscoveryScreen').then(m => ({ default: m.SallesVipDiscoveryScreen || m.default })));
@@ -5273,15 +5274,15 @@ export default function App() {
     );
   }
 
-  // 1c. NaNaSwitch Cloud : Routeur Cloud Intelligent & SaaS d'Aiguillage d'API (/nana-switch)
+  // 1c. NaNaSwitch Cloud : Landing Page Publique (/nana-switch)
   if (
     currentView === 'NANA_SWITCH' ||
     currentView === 'nana_switch'
   ) {
     return (
-      <ModuleErrorBoundary moduleName="Multi-Tenant - NaNaSwitch Cloud">
-        <React.Suspense fallback={<LoadingScreen message="Connexion à NaNaSwitch Cloud..." />}>
-          <NaNaSwitchAppPage />
+      <ModuleErrorBoundary moduleName="NaNaSwitch Cloud - Landing Page">
+        <React.Suspense fallback={<LoadingScreen message="Chargement NaNaSwitch Cloud..." />}>
+          <NaNaSwitchLandingPage />
         </React.Suspense>
       </ModuleErrorBoundary>
     );
