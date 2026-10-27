@@ -272,13 +272,16 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
   const [copiedKey, setCopiedKey] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // KYC Form State (Particulier vs Entreprise)
+  // KYC Form State (Particulier vs Entreprise & Mode BYOK vs AGREGATED)
   const [kycForm, setKycForm] = useState({
+    integration_mode: 'AGREGATED' as 'AGREGATED' | 'BYOK',
     type: 'entreprise' as 'entreprise' | 'particulier',
     appName: '',
     sector: 'E-commerce & Vente en ligne',
     website: '',
     description: '',
+    byokSaspayKey: '',
+    byokSebpayKey: '',
     // Champs spécifiques Particulier
     fullName: '',
     cnibNumber: '',
@@ -427,16 +430,27 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
   // Soumission d'une nouvelle application (avec persistance Firestore)
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const isByokMode = kycForm.integration_mode === 'BYOK';
     const newId = `app_nana_${Date.now().toString().slice(-4)}`;
     const appDisplayName = kycForm.appName || (kycForm.type === 'entreprise' ? kycForm.companyName : kycForm.fullName) || 'Nouvelle Application';
     const sectorChosen = kycForm.sector || 'E-commerce & Vente en ligne';
+
+    const generatedByokKeys: AppKeys | undefined = isByokMode ? {
+      publicKey: `ns_live_pk_${Math.random().toString(36).substring(2, 14)}${Date.now().toString(36)}`,
+      secretKey: `ns_live_sk_${Math.random().toString(36).substring(2, 14)}${Date.now().toString(36)}`,
+      webhookSecret: `ns_whsec_${Math.random().toString(36).substring(2, 14)}${Date.now().toString(36)}`,
+      mode: 'BYOK'
+    } : undefined;
 
     const newApp: NanaMerchantApp = {
       id: newId,
       name: appDisplayName,
       sector: sectorChosen,
       type: kycForm.type,
-      status: 'PENDING_KYC',
+      status: isByokMode ? 'VERIFIED' : 'PENDING_KYC',
+      integration_mode: kycForm.integration_mode || 'AGREGATED',
+      api_credits_balance: 5000,
+      keys: generatedByokKeys,
       createdAt: new Date().toISOString().split('T')[0],
       balances: { XOF: 0, USD: 0, XAF: 0, GNF: 0, GHS: 0 },
       monthly_usage: {
@@ -447,7 +461,9 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
       kyc_limits: {
         tier: kycForm.type === 'entreprise' ? 'ENTERPRISE' : 'INDIVIDUAL',
         max_monthly_volume_xof: kycForm.type === 'entreprise' ? 5000000 : 1000000,
-        description: kycForm.type === 'entreprise' ? 'Compte Entreprise Enregistrée' : 'Compte Particulier / Indépendant'
+        description: isByokMode
+          ? 'Mode BYOK Express (0.02 XOF/req - Aucune commission switch)'
+          : (kycForm.type === 'entreprise' ? 'Compte Entreprise Enregistrée' : 'Compte Particulier / Indépendant')
       },
       kyc: { 
         ...kycForm,
@@ -456,14 +472,20 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
         ifuCompany: kycForm.type === 'entreprise' ? kycForm.ifuCompany : undefined,
         managerName: kycForm.type === 'entreprise' ? kycForm.managerName : undefined,
         companyEmail: kycForm.type === 'entreprise' ? kycForm.companyEmail : undefined,
-        fullName: kycForm.fullName || kycForm.managerName,
+        fullName: kycForm.fullName || kycForm.managerName || appDisplayName,
         sector: sectorChosen
       }
     };
 
     setApps([newApp, ...apps]);
+    setSelectedAppId(newId);
     setIsKycModalOpen(false);
-    showToast('Dossier KYC soumis avec succès ! En attente de validation Super Admin.', 'success');
+    showToast(
+      isByokMode
+        ? 'Application BYOK Express créée et activée ! Clés API générées (0.02 XOF/req).'
+        : 'Dossier KYC soumis avec succès ! En attente de validation Super Admin.',
+      'success'
+    );
 
     // Sauvegarde asynchrone dans Firestore si disponible
     if (db) {
@@ -471,21 +493,21 @@ export const NanaSwitchApp: React.FC<NanaSwitchAppProps> = ({
         await setDoc(doc(db, 'merchants', newId), {
           merchant_id: newId,
           business_name: kycForm.type === 'entreprise' ? (kycForm.companyName || appDisplayName) : (kycForm.fullName || appDisplayName),
-          // Règle stricte : AUCUN IFU ni RCCM pour Particulier
-          rccm: kycForm.type === 'entreprise' ? (kycForm.rccm || null) : null,
-          ifu: kycForm.type === 'entreprise' ? (kycForm.ifuCompany || null) : null,
+          rccm: (!isByokMode && kycForm.type === 'entreprise') ? (kycForm.rccm || null) : null,
+          ifu: (!isByokMode && kycForm.type === 'entreprise') ? (kycForm.ifuCompany || null) : null,
           company_email: kycForm.type === 'entreprise' ? (kycForm.companyEmail || null) : null,
           manager_name: kycForm.type === 'entreprise' ? (kycForm.managerName || null) : null,
-          account_type: 'EXTERNAL_BYOK',
+          account_type: isByokMode ? 'EXTERNAL_BYOK' : 'AGREGATED',
+          integration_mode: kycForm.integration_mode || 'AGREGATED',
           type: kycForm.type,
           sector: sectorChosen,
-          status: 'PENDING_VERIFICATION',
-          storeApprovalStatus: 'PENDING',
+          status: isByokMode ? 'ACTIVE' : 'PENDING_VERIFICATION',
+          storeApprovalStatus: isByokMode ? 'APPROVED' : 'PENDING',
           created_at: new Date().toISOString(),
+          ...(generatedByokKeys ? { api_keys: generatedByokKeys } : {}),
           kyc_payload: {
             ...kycForm,
-            // Nettoyage : aucun champ entreprise polluant pour les particuliers
-            ...(kycForm.type === 'particulier' ? { rccm: null, ifuCompany: null, companyName: null, companyEmail: null } : {})
+            ...(kycForm.type === 'particulier' || isByokMode ? { rccm: null, ifuCompany: null, companyName: null, companyEmail: null } : {})
           }
         }, { merge: true });
       } catch (fbErr) {
@@ -1913,7 +1935,7 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
   handleKycSubmit: (e: React.FormEvent) => void 
 }) {
   const isParticulier = kycForm.type === 'particulier';
-
+  const isByok = kycForm.integration_mode === 'BYOK';
   // Helper pour simuler la sélection d'un fichier et mettre à jour le nom
   const handleFileChange = (field: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1945,6 +1967,95 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
         {/* Modal Form Content */}
         <form onSubmit={handleKycSubmit} className="p-6 space-y-6 text-xs">
           
+          {/* STEP 0: Mode d'intégration (BYOK express vs Agrégé avec KYC) */}
+          <div className="space-y-3">
+            <label className="font-bold text-slate-900 block text-sm">Mode d'intégration</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setKycForm({ ...kycForm, integration_mode: 'BYOK' })}
+                className={`p-4 rounded-2xl border text-left transition ${
+                  isByok
+                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20 shadow-sm'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                }`}
+              >
+                <Key className="w-6 h-6 text-[#1E40AF] mb-2" />
+                <p className="font-bold text-sm">Mode BYOK (Express)</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Vos propres clés opérateurs. Pas de dossier KYC. Commission de switch 0 %, 0,02 XOF par requête.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setKycForm({ ...kycForm, integration_mode: 'AGREGATED' })}
+                className={`p-4 rounded-2xl border text-left transition ${
+                  !isByok
+                    ? 'border-[#1E40AF] bg-blue-50/50 text-blue-900 ring-2 ring-blue-600/20 shadow-sm'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                }`}
+              >
+                <ShieldCheck className="w-6 h-6 text-[#1E40AF] mb-2" />
+                <p className="font-bold text-sm">Mode Agrégé</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Aucun contrat opérateur requis. KYC Particulier (1M XOF/mois) ou Entreprise (5M XOF/mois).
+                </p>
+              </button>
+            </div>
+            {isByok && (
+              <div className="space-y-4 bg-blue-50/40 border border-blue-200 rounded-2xl p-4">
+                <p className="text-[11px] text-blue-900 leading-snug font-semibold">
+                  ⚡ Mode BYOK Express (0,02 XOF / requête • 0% commission de switch) : renseignez le nom de votre application et injectez vos clés passerelles maintenant ou plus tard dans « Clés API & Accès ».
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Nom de l'Application / Projet <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={kycForm.appName}
+                      onChange={e => setKycForm({ ...kycForm, appName: e.target.value })}
+                      placeholder="Ex: Ma Boutique SaaS"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1E40AF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Domaine d'activité</label>
+                    <input
+                      type="text"
+                      value={kycForm.sector}
+                      onChange={e => setKycForm({ ...kycForm, sector: e.target.value })}
+                      placeholder="E-commerce & Vente en ligne"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1E40AF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Clé API SasPay (Optionnel)</label>
+                    <input
+                      type="password"
+                      value={kycForm.byokSaspayKey || ''}
+                      onChange={e => setKycForm({ ...kycForm, byokSaspayKey: e.target.value })}
+                      placeholder="sp_live_..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono focus:outline-none focus:border-[#1E40AF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Clé API Sebpay (Optionnel)</label>
+                    <input
+                      type="password"
+                      value={kycForm.byokSebpayKey || ''}
+                      onChange={e => setKycForm({ ...kycForm, byokSebpayKey: e.target.value })}
+                      placeholder="seb_live_..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-mono focus:outline-none focus:border-[#1E40AF]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!isByok && (
+          <>
           {/* STEP 1: Type Selection (Entreprise vs Particulier) */}
           <div className="space-y-3">
             <label className="font-bold text-slate-900 block text-sm">1. Type de Compte Partenaire</label>
@@ -2353,6 +2464,8 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
 
             </div>
           )}
+          </>
+          )}
 
           {/* STEP 4: Engagement & Contrat Partenaire */}
           <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-200 flex items-start gap-3">
@@ -2365,7 +2478,11 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
               className="mt-1 w-4 h-4 text-[#1E40AF] rounded"
             />
             <label htmlFor="contract" className="text-[11px] text-blue-900 leading-tight">
-              Je certifie l'exactitude des pièces et informations fournies pour mon compte <strong>{isParticulier ? 'Particulier (Plafond 1M XOF)' : 'Entreprise (Plafond 5M XOF)'}</strong> et j'accepte les termes du Contrat Partenaire NanaSwitch Cloud.
+              {isByok ? (
+                <>J'accepte la tarification <strong>Mode BYOK Express (0,02 XOF / requête, 0% commission)</strong> et les termes du Contrat Partenaire NanaSwitch Cloud.</>
+              ) : (
+                <>Je certifie l'exactitude des pièces et informations fournies pour mon compte <strong>{isParticulier ? 'Particulier (Plafond 1M XOF)' : 'Entreprise (Plafond 5M XOF)'}</strong> et j'accepte les termes du Contrat Partenaire NanaSwitch Cloud.</>
+              )}
             </label>
           </div>
 
@@ -2376,7 +2493,7 @@ function KycModal({ onClose, kycForm, setKycForm, handleKycSubmit }: {
             </button>
             <button type="submit" className="px-6 py-2.5 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-bold rounded-xl shadow-lg shadow-blue-700/25 transition flex items-center gap-2">
               <FileCheck className="w-4 h-4" />
-              <span>Soumettre pour validation Super Admin</span>
+              <span>{isByok ? 'Créer mon Application BYOK Express' : 'Soumettre pour validation Super Admin'}</span>
             </button>
           </div>
 

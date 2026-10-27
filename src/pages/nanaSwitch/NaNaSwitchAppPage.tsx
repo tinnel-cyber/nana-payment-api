@@ -112,14 +112,23 @@ export const NaNaSwitchAppPage: React.FC<NaNaSwitchAppPageProps> = ({
     else if (path === '/nana-switch/billing') setActivePage('billing');
     else if (path === '/nana-switch/overview') setActivePage('overview');
     else if (path === '/nana-switch/auth') setActivePage('auth');
-    else if (path === '/nana-switch') setActivePage('landing');
+    else if (path === '/nana-switch') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+      setActivePage('landing');
+    } else if (path === '/nana-switch-app' || path === '/app/nanaswitch') {
+      if (typeof window !== 'undefined') {
+        window.location.href = path;
+      }
+    }
   }, []);
 
   // 1. Landing Page publique pure (/nana-switch)
   if (activePage === 'landing') {
     return (
       <NaNaSwitchLandingPage
-        onNavigateToConsole={() => handleNavigate('/nana-switch/overview')}
+        onNavigateToConsole={() => handleNavigate('/nana-switch-app')}
         onNavigateToExtension={() => handleNavigate('/nana-switch/extension')}
         onNavigate={handleNavigate}
       />

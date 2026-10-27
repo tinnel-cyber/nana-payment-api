@@ -142,7 +142,7 @@ export const NaNaSwitchLandingPage: React.FC<NaNaSwitchLandingPageProps> = ({
   // Redirections internes fluides
   const handleGoToConsole = useCallback(() => {
     playValidationBeep();
-    const destination = auth.currentUser ? '/nana-switch/overview' : '/nana-switch/auth';
+    const destination = auth.currentUser ? '/nana-switch-app' : '/nana-switch/auth';
     if (onNavigate) {
       onNavigate(destination);
     } else if (onNavigateToConsole) {

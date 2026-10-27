@@ -140,9 +140,9 @@ export const NaNaSwitchAuthPage: React.FC<NaNaSwitchAuthPageProps> = ({
   const redirectToOverview = useCallback(() => {
     playValidationBeep();
     if (onNavigate) {
-      onNavigate('/nana-switch/overview');
+      onNavigate('/nana-switch-app');
     } else if (typeof window !== 'undefined') {
-      window.location.href = '/nana-switch/overview';
+      window.location.href = '/nana-switch-app';
     }
   }, [onNavigate]);
 
