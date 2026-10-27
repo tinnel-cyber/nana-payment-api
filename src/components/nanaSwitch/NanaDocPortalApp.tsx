@@ -4,7 +4,8 @@ import {
   AlertCircle, Download, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
   Search, Sparkles, Send, Terminal, CheckCircle2, RefreshCw, FileCode,
   ShieldAlert, Radio, HelpCircle, FileText, ChevronRight, LogIn,
-  Globe2, Smartphone, CreditCard, Building2, Coins, Users, Compass, TrendingUp
+  Globe2, Smartphone, CreditCard, Building2, Coins, Users, Compass, TrendingUp,
+  UserCheck, FileCheck, Wallet, Link2, History
 } from 'lucide-react';
 
 interface NanaDocPortalAppProps {
@@ -300,21 +301,21 @@ export function NanaDocPortalApp({
       badgeColor: 'bg-emerald-600 text-white',
       icon: Globe2,
       iconColor: 'text-emerald-600',
-      title: "Vision, Modèle d'Affaires & Couverture UEMOA",
-      subtitle: "docs/overview • Agrégé vs BYOK • 6+ Pays",
-      description: "Présentation de NanaSwitch Cloud (NANASORE TECHNOLOGIES), comparatif complet Agrégé (+1.5% marge) vs SaaS BYOK (0.02 XOF/req), plafonds KYC et couverture régionale multi-opérateurs.",
-      tags: ['Vision B2B', 'Mode Agrégé (+1.5%)', 'Mode BYOK (0.02 XOF)', 'Plafonds KYC', 'UEMOA 6+ Pays']
+      title: "Vision, Modèle d'Affaires & Couverture 26 Pays",
+      subtitle: "docs/overview • Agrégé vs BYOK • 26 Pays",
+      description: "Présentation de NanaSwitch Cloud (NANASORE TECHNOLOGIES), comparatif complet Agrégé (+1.5% marge) vs SaaS BYOK (0.02 XOF/req), plafonds KYC et couverture de 26 pays africains et internationaux.",
+      tags: ['Vision B2B', 'Mode Agrégé (+1.5%)', 'Mode BYOK (0.02 XOF)', '26 Pays Couverts', 'Multi-Opérateurs']
     },
     {
       id: 'prompt3',
-      badge: 'PROMPT 3',
+      badge: 'PROMPT 3 • ONBOARDING & KYC',
       badgeColor: 'bg-amber-600 text-white',
-      icon: Cpu,
+      icon: UserCheck,
       iconColor: 'text-amber-600',
-      title: "Routage Dynamique & API Gateway Mobile Money",
-      subtitle: "POST /v1/switch/route",
-      description: "Endpoint universel de paiement unifié agrégeant Orange Money, Moov, Wave, SasPay et Sebpay avec repli automatique (failover) en cas d'indisponibilité.",
-      tags: ['Orange Money', 'Moov Africa', 'Wave', 'Failover Dynamique']
+      title: "Guide Inscription, KYC & Dashboard (14+ Modules)",
+      subtitle: "docs/onboarding-kyc • Particulier vs Entreprise",
+      description: "Création d'application (Nom, Devise XOF, Sandbox vs Live), guide KYC par profil (Particulier 1M sans RCCM/IFU vs Entreprise 5M), affichage du Domaine d'activité et exploration des 14+ modules du dashboard.",
+      tags: ['Onboarding', 'KYC Particulier (1M)', 'KYC Entreprise (5M)', 'Domaine d\'Activité', '14+ Modules']
     },
     {
       id: 'prompt4',
@@ -1049,14 +1050,14 @@ Concernant votre demande "${textToSend}" :
                           <div>
                             <h3 className="text-lg font-black text-slate-900">Routeur API SaaS Haute Performance</h3>
                             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                              Conçu pour les Startups FinTech, plateformes et grandes entreprises disposant déjà de leurs propres contrats marchands (SasPay, Sebpay, banques).
+                              Conçu pour les <strong>FinTechs, entrepreneurs, e-commerçants, startups et grandes entreprises</strong> qui possèdent déjà leurs propres clés d'API délivrées dans le cadre d'un contrat direct entre eux et leurs agrégateurs ou opérateurs de paiement (Orange Money, MTN MoMo, Moov Africa, Wave Business, SasPay, Sebpay, banques partenaires, etc.).
                             </p>
                           </div>
 
                           <div className="space-y-2.5 text-xs text-slate-700">
                             <div className="flex items-start gap-2.5">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                              <span><strong>Gestion des fonds :</strong> Routage direct <em>pass-through</em>. Les fonds vont directement sur vos propres comptes marchands. NanaSwitch ne stocke aucun fonds.</span>
+                              <span><strong>Gestion des fonds :</strong> Routage direct <em>pass-through</em>. Les fonds vont directement sur vos propres comptes marchands chez vos opérateurs/agrégateurs. NanaSwitch ne touche pas à l'argent et ne stocke aucun fonds.</span>
                             </div>
                             <div className="flex items-start gap-2.5">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -1072,7 +1073,7 @@ Concernant votre demande "${textToSend}" :
                             </div>
                             <div className="flex items-start gap-2.5">
                               <ShieldAlert className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                              <span><strong>Responsabilité :</strong> Vos clés privées (<code className="text-purple-700">saspay_api_key</code>, <code className="text-purple-700">sebpay_public_key</code>) restent sous votre entière responsabilité.</span>
+                              <span><strong>Responsabilité :</strong> Vos clés d'API délivrées par vos agrégateurs ou opérateurs partenaires restent sous votre entière responsabilité et sont injectées en toute sécurité via notre coffre-fort Zero-Trust.</span>
                             </div>
                           </div>
                         </div>
@@ -1130,161 +1131,578 @@ Concernant votre demande "${textToSend}" :
                     </div>
                   </div>
 
-                  {/* 3. COUVERTURE RÉGIONALE & OPÉRATEURS PRIS EN CHARGE */}
+                  {/* 3. COUVERTURE RÉGIONALE & OPÉRATEURS : LES 26 PAYS AFRICAINS ET INTERNATIONAUX */}
                   <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">ZONE GÉOGRAPHIQUE & OPÉRATEURS</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">COUVERTURE COMPLÈTE • 26 PAYS</span>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-                          Couverture UEMOA & Réseaux de Paiement Intégrés
+                          26 Pays Couverts & Opérateurs Télécoms Partenaires
                         </h2>
                         <p className="text-xs text-slate-500 mt-1">
-                          Accédez à plus de 120 millions d'utilisateurs Mobile Money et porteurs de cartes en Afrique de l'Ouest.
+                          Présence panafricaine et internationale avec interconnexion directe aux opérateurs Mobile Money et réseaux bancaires.
                         </p>
                       </div>
                       <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200 flex items-center gap-1.5 shrink-0">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Réseau Opérationnel 99.98%</span>
+                        <span>26 / 26 Pays Opérationnels</span>
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-                      
-                      {/* BURKINA FASO */}
-                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>🇧🇫</span> Burkina Faso (BF)
+                    {/* ZONE 1 : UEMOA (8 PAYS) */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-600" />
+                        <span>Zone UEMOA (8 Pays • Devise Franc CFA XOF)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇧🇫 Burkina Faso</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                          <p className="text-[11px] text-slate-600">Orange Money BF, Moov Money BF, Wave BF, LigdiCash</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money BF</strong> (Push OTP / USSD)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money BF</strong> (Flooz)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Burkina</strong> (QR / Deep Link)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-emerald-600" /> <strong>LigdiCash</strong> (Wallet agrégé)</li>
-                        </ul>
-                      </div>
-
-                      {/* CÔTE D'IVOIRE */}
-                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>🇨🇮</span> Côte d'Ivoire (CI)
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇨🇮 Côte d'Ivoire</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                          <p className="text-[11px] text-slate-600">Wave CI, Orange Money CI, MTN MoMo CI, Moov Money CI</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money CI</strong> (OTP / Web)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-yellow-600" /> <strong>MTN MoMo CI</strong></li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Côte d'Ivoire</strong></li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money CI</strong></li>
-                        </ul>
-                      </div>
-
-                      {/* SÉNÉGAL */}
-                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>🇸🇳</span> Sénégal (SN)
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇸🇳 Sénégal</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                          <p className="text-[11px] text-slate-600">Wave Sénégal, Orange Money SN, Free Money Sénégal</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Sénégal</strong> (Instantané)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money Sénégal</strong></li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-red-600" /> <strong>Free Money Sénégal</strong></li>
-                        </ul>
-                      </div>
-
-                      {/* BÉNIN */}
-                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>🇧🇯</span> Bénin (BJ)
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇧🇯 Bénin</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo Bénin, Moov Money Bénin, Celtiis Cash</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-yellow-600" /> <strong>MTN Mobile Money Bénin</strong></li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money Bénin</strong></li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-indigo-600" /> <strong>Celtiis Cash</strong></li>
-                        </ul>
-                      </div>
-
-                      {/* MALI & TOGO */}
-                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>🇲🇱 / 🇹🇬</span> Mali & Togo
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇲🇱 Mali</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                          <p className="text-[11px] text-slate-600">Orange Money Mali, Moov Mali (Malitel), Wave Mali</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money Mali</strong> & Moov ML</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-purple-600" /> <strong>TMoney Togo</strong> (Togocom)</li>
-                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Togo (Flooz)</strong></li>
-                        </ul>
-                      </div>
-
-                      {/* CARTES INTERNATIONALES */}
-                      <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
-                            <span>💳</span> Cartes Bancaires
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇹🇬 Togo</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Global</span>
+                          <p className="text-[11px] text-slate-600">T-Money (TogoCom), Moov Money Togo (Flooz), Wave Togo</p>
                         </div>
-                        <ul className="space-y-1.5 text-slate-600 pt-1">
-                          <li className="flex items-center gap-2"><CreditCard className="w-3.5 h-3.5 text-blue-700" /> <strong>Cartes VISA</strong> (Débit & Crédit)</li>
-                          <li className="flex items-center gap-2"><CreditCard className="w-3.5 h-3.5 text-rose-600" /> <strong>Mastercard</strong></li>
-                          <li className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> <strong>3D-Secure 2.0 Universel</strong></li>
-                        </ul>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇳🇪 Niger</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Airtel Money Niger, Moov Niger, Wave Niger, Zamani Telecom</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇼 Guinée-Bissau</span>
+                            <span className="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">XOF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Orange Bissau, MTN Bissau</p>
+                        </div>
                       </div>
-
                     </div>
+
+                    {/* ZONE 2 : CEMAC (6 PAYS) */}
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                        <span>Zone CEMAC (6 Pays • Devise Franc CFA XAF)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇨🇲 Cameroun</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo Cameroun, Orange Money Cameroun</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇦 Gabon</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Airtel Money Gabon, Moov Money Gabon</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇨🇬 Congo-Brazzaville</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo Congo, Airtel Money Congo</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇹🇩 Tchad</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Airtel Money Tchad, Moov Money Tchad</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇨🇫 Centrafrique</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Orange Centrafrique, Telecel Centrafrique</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇶 Guinée Équatoriale</span>
+                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">XAF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Getesa Guinée Équatoriale</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ZONE 3 : AUTRES PAYS D'AFRIQUE & INTERNATIONAL (12 PAYS) */}
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-purple-600" />
+                        <span>Autres Régions d'Afrique & Diaspora Internationale (12 Pays)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇳 Guinée (Conakry)</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">GNF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Orange Money Guinée, MTN MoMo Guinée</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇭 Ghana</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">GHS</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo Ghana, Telecel Cash, AT Money</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇳🇬 Nigeria</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">NGN</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo PSB, SmartCash PSB, Paystack Virement</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇨🇩 R.D. Congo</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">CDF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">M-Pesa Vodacom, Orange Money RDC, Airtel, AfriMoney</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇰🇪 Kenya</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">KES</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">M-Pesa Safaricom Kenya, Airtel Money Kenya</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇷🇼 Rwanda</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">RWF</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN Mobile Money Rwanda, Airtel Rwanda</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇺🇬 Ouganda</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">UGX</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">MTN MoMo Uganda, Airtel Money Uganda</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇹🇿 Tanzanie</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">TZS</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">M-Pesa Vodacom, Airtel Money, Tigo Pesa, Halotel</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇿🇲 Zambie</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">ZMW</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Airtel Money Zambie, MTN MoMo Zambie</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇲🇷 Mauritanie</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">MRU</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Bankily (BPM), Masrvi, Sedad Payment</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1">
+                          <span className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>🇬🇲 Gambie</span>
+                            <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">GMD</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">AfriMoney Gambie</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl border border-blue-200 bg-blue-50/60 space-y-1">
+                          <span className="font-bold text-blue-900 flex items-center justify-between">
+                            <span>🌍 Diaspora / Global</span>
+                            <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-mono">Cartes</span>
+                          </span>
+                          <p className="text-[11px] text-slate-600">Cartes VISA, Mastercard (3D Secure), Apple Pay, Taptap Send</p>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
 
                 </div>
               )}
 
-              {/* ---------------- PROMPT 3: ROUTAGE DYNAMIQUE ---------------- */}
+              {/* ---------------- PROMPT 3: GUIDE INSCRIPTION, KYC & DASHBOARD (14+ MODULES) ---------------- */}
               {activeView === 'prompt3' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">PROMPT 3 • CORE API GATEWAY</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Routage Dynamique & API Gateway Mobile Money</h2>
-                    <p className="text-slate-500 text-xs mt-1">Endpoint universel multi-opérateurs avec repli automatique (Failover).</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Prompt 3 Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-amber-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>PROMPT 3 • docs/onboarding-kyc • UX WRITER & ONBOARDING SPECIALIST</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-2">
+                          Guide Complet Inscription, KYC & Dashboard (14+ Modules)
+                        </h1>
+                        <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                          Parcours pas à pas pour configurer votre compte, soumettre votre dossier KYC et exploiter les 14+ modules métier.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-mono font-bold border border-slate-200">
+                          Route : /docs/onboarding-kyc
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      Ce guide accompagne les commerçants, indépendants et entreprises dans leur parcours d'onboarding sur NanaSwitch Cloud : de la création de la première application marchande jusqu'à la validation par le Super Admin et la maîtrise du tableau de bord.
+                    </p>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="font-bold text-slate-900 text-sm">Exemple d'initiation d'un paiement universel :</h4>
-                    <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto">
-{`const res = await fetch('https://nana-payment-api.onrender.com/v1/switch/route', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ns_live_sk_YOUR_SECRET_KEY',
-    'x-nanaswitch-skey': 'ns_live_sk_YOUR_SECRET_KEY'
-  },
-  body: JSON.stringify({
-    amount: 15000,
-    currency: 'XOF',
-    country: 'BF',
-    orderId: 'CMD-10492',
-    customer: {
-      name: 'Issa Ouédraogo',
-      phone: '+22670112233'
-    },
-    returnUrl: 'https://maboutique.com/merci',
-    callbackUrl: 'https://maboutique.com/api/webhook'
-  })
-});
+                  {/* 1. CRÉATION D'APPLICATION */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">ÉTAPE 1</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Création & Configuration d'une Application Marchande
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Chaque projet (boutique e-commerce, application mobile, plateforme SaaS) est isolé dans une Application dédiée.
+                      </p>
+                    </div>
 
-const data = await res.json();
-console.log('Lien de redirection client :', data.checkout_url);`}
-                    </pre>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">1</div>
+                        <h3 className="font-extrabold text-slate-900 text-sm">Nom de l'Application</h3>
+                        <p className="text-slate-600 leading-relaxed">
+                          Choisissez un libellé clair représentant votre enseigne (ex : <em>"Boutique Nana Ouaga"</em>, <em>"Fintech Express"</em>). Il sera affiché sur les reçus de paiement et la page de checkout client.
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">2</div>
+                        <h3 className="font-extrabold text-slate-900 text-sm">Devise Principale (XOF)</h3>
+                        <p className="text-slate-600 leading-relaxed">
+                          Sélectionnez votre devise de référence comptable (par défaut <strong>XOF - Franc CFA</strong>). Votre wallet principal et vos rapports d'encaissement seront libellés dans cette devise.
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">3</div>
+                        <h3 className="font-extrabold text-slate-900 text-sm">Test Sandbox vs Live Production</h3>
+                        <p className="text-slate-600 leading-relaxed">
+                          Basculez facilement entre l'environnement <strong>Sandbox</strong> (simulation avec numéros d'essai) et l'environnement <strong>Live Production</strong> pour traiter des transactions bancaires réelles.
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* 2. GUIDE DES DOCUMENTS KYC PAR PROFIL */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">ÉTAPE 2 • CONFORMITÉ</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Guide des Documents KYC par Profil (Particulier vs Entreprise)
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Pour respecter la réglementation BCEAO et prévenir la fraude financière, les marchands soumettent leur dossier selon leur forme légale.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+                      
+                      {/* PROFIL PARTICULIER */}
+                      <div className="p-6 rounded-3xl border-2 border-blue-200 bg-blue-50/40 space-y-4">
+                        <div className="flex items-center justify-between border-b border-blue-200/80 pb-3">
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-blue-700">PROFIL INDÉPENDANT</span>
+                            <h3 className="text-lg font-black text-slate-900 mt-0.5">Particulier / Vendeur Indépendant</h3>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-black bg-blue-600 text-white">
+                            Plafond : 1 000 000 XOF / mois
+                          </span>
+                        </div>
+
+                        <p className="text-slate-600 leading-relaxed">
+                          Ce statut est destiné aux créateurs individuels, freelances et vendeurs sur réseaux sociaux sans structure légale immatriculée.
+                        </p>
+
+                        <div className="space-y-3 pt-1">
+                          <h4 className="font-bold text-slate-900">Documents obligatoires requis :</h4>
+                          <ul className="space-y-2 text-slate-700">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Nom complet & Prénoms :</strong> Identique à la pièce d'identité officielle.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Domaine d'activité :</strong> E-commerce, Prestation, Artisanat, Services digitaux, etc.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>CNIB ou Passeport valide (Recto ET Verso) :</strong> Scan ou photo haute résolution lisible sans reflets.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Photo / Selfie de capture de visage :</strong> Pour la vérification de présence (liveness detection).</span>
+                            </li>
+                          </ul>
+
+                          {/* NOTE IMPORTANTE PARTICULIER */}
+                          <div className="p-3 bg-emerald-100/70 border border-emerald-300 text-emerald-950 rounded-xl font-bold flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                            <span>Règle stricte : AUCUN document d'entreprise (RCCM, IFU) n'est demandé aux particuliers.</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* PROFIL ENTREPRISE */}
+                      <div className="p-6 rounded-3xl border-2 border-emerald-200 bg-emerald-50/40 space-y-4">
+                        <div className="flex items-center justify-between border-b border-emerald-200/80 pb-3">
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700">PROFIL SOCIÉTÉ</span>
+                            <h3 className="text-lg font-black text-slate-900 mt-0.5">Entreprise Enregistrée (SARL, SAS, SUARL)</h3>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-700 text-white">
+                            Plafond : 5 000 000 XOF / mois
+                          </span>
+                        </div>
+
+                        <p className="text-slate-600 leading-relaxed">
+                          Ce statut est destiné aux sociétés formalisées désireuses de traiter des volumes financiers importants (extensible sur demande Super Admin).
+                        </p>
+
+                        <div className="space-y-3 pt-1">
+                          <h4 className="font-bold text-slate-900">Documents obligatoires requis :</h4>
+                          <ul className="space-y-2 text-slate-700">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Nom complet du Gérant :</strong> Représentant légal de l'entreprise.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Email professionnel :</strong> Adresse email corporate (ex: <em>contact@entreprise.com</em>).</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Domaine d'activité :</strong> Secteur d'activité de l'entreprise.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>CNIB ou Passeport du Gérant (Recto ET Verso) :</strong> Pièce officielle en cours de validité.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Photo / Selfie du Gérant :</strong> Capture pour certification biométrique.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <FileCheck className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                              <span><strong>RCCM :</strong> Registre du Commerce et du Crédit Mobilier de la société.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <FileCheck className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                              <span><strong>IFU :</strong> Identifiant Fiscal Unique officiel de l'administration fiscale.</span>
+                            </li>
+                          </ul>
+
+                          <div className="p-3 bg-white border border-emerald-200 text-emerald-950 rounded-xl font-medium">
+                            📈 Possibilité d'extension de quota au-delà de 5 000 000 XOF/mois après audit d'activité par le Super Admin.
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* 3. AFFICHAGE DU DOMAINE D'ACTIVITÉ DANS LE DASHBOARD */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-600">IDENTITÉ COMMERCIALE</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Affichage Dynamique du Domaine d'Activité
+                      </h2>
+                      <p className="text-slate-500 mt-1">
+                        Pour renforcer la traçabilité et la transparence des flux financiers, le Domaine d'activité renseigné lors du KYC est automatiquement lié au compte marchand.
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-800">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Ma Super Boutique</span>
+                          <span className="font-mono text-[10px] text-slate-400 font-semibold px-1.5 py-0.5 bg-slate-100 rounded">
+                            m_live_bf98124
+                          </span>
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-blue-50 text-[#1E40AF] border border-blue-200 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1E40AF]" />
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">Domaine :</span>
+                          <span>E-commerce & Vente en ligne</span>
+                        </span>
+                      </div>
+                      <p className="text-slate-600 leading-relaxed pt-1">
+                        Ce badge dynamique est visible en permanence dans la barre supérieure du Dashboard, dans la liste des applications et sur les factures et reçus émis par le marchand.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 4. COMPRÉHENSION DES 14+ MODULES DU DASHBOARD */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">FONCTIONNALITÉS MÉTIER</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Exploration des 14+ Modules du Tableau de Bord Marchand
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Une suite d'outils complète conçue pour piloter la croissance financière de votre entreprise en Afrique.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                      
+                      {/* Module 1: Wallets Multi-Devises */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-blue-700 font-extrabold">
+                          <Wallet className="w-4 h-4" />
+                          <span>1. Wallets Multi-Devises</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Gestion instantanée des soldes disponibles en Franc CFA (XOF, XAF), GNF, GHS, USD et EUR avec calcul de la réserve de sécurité.
+                        </p>
+                      </div>
+
+                      {/* Module 2: Liens de Paiement */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-700 font-extrabold">
+                          <Link2 className="w-4 h-4" />
+                          <span>2. Liens de Paiement (Payment Links)</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Génération en un clic de pages de paiement sécurisées à montant fixe ou libre, partageables par WhatsApp, SMS, QR code ou email.
+                        </p>
+                      </div>
+
+                      {/* Module 3: Gestion des Litiges */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-rose-700 font-extrabold">
+                          <ShieldAlert className="w-4 h-4" />
+                          <span>3. Gestion des Litiges & Chargebacks</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Suivi transparent des réclamations clients, téléversement des bordereaux de livraison et résolution amiable avant arbitrage bancaire.
+                        </p>
+                      </div>
+
+                      {/* Module 4: Logs & Moniteur Webhooks */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-purple-700 font-extrabold">
+                          <History className="w-4 h-4" />
+                          <span>4. Logs & Moniteur Webhooks</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Journalisation détaillée de chaque tentative de notification sortante avec statut HTTP, payload JSON brut et signature HMAC-SHA256.
+                        </p>
+                      </div>
+
+                      {/* Module 5: Retraits & Reversements (Payouts) */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-amber-700 font-extrabold">
+                          <Coins className="w-4 h-4" />
+                          <span>5. Retraits & Reversements (Payouts)</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Demandes de virement des fonds disponibles vers vos comptes bancaires d'Afrique de l'Ouest ou vos comptes Mobile Money (Orange, Moov, Wave, MTN).
+                        </p>
+                      </div>
+
+                      {/* Module 6: Développeur & Clés API */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-indigo-700 font-extrabold">
+                          <Key className="w-4 h-4" />
+                          <span>6. Développeur & Clés API</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Commutateur dynamique entre le mode Agrégé et le mode BYOK, consultation de la clé publique `ns_live_pk_*` et secret webhook `ns_whsec_*`.
+                        </p>
+                      </div>
+
+                      {/* Module 7: Caisses POS & Boutiques */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-teal-700 font-extrabold">
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>7. Terminaux & Caisses POS</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Connexion de points de vente physiques pour l'encaissement direct au comptoir par QR code dynamique ou terminal intelligent.
+                        </p>
+                      </div>
+
+                      {/* Module 8: Reçus & Facturation Automatique */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-slate-700 font-extrabold">
+                          <FileText className="w-4 h-4" />
+                          <span>8. Reçus & Factures PDF</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Génération instantanée de reçus fiscaux certifiés avec QR code de vérification pour chaque paiement client réussi.
+                        </p>
+                      </div>
+
+                      {/* Module 9: Supervision Super Admin */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center gap-2 text-yellow-700 font-extrabold">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>9. Audit & File d'Attente Super Admin</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          Validation manuelle des dossiers KYC d'entreprise et extension personnalisée des plafonds de volume mensuel.
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+
                 </div>
               )}
 
