@@ -2289,40 +2289,37 @@ app.listen(3000, () => console.log('Écoute sur http://localhost:3000'));`}
                   {activeSdkLang === 'python' && (
                     <div className="space-y-6 animate-in fade-in duration-150">
                       
-                      {/* 1. Initialisation de Paiement Python */}
+                      {/* 1. Initialisation & Verification Webhook Python (Code Officiel) */}
                       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">1</span>
+                            <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">PY</span>
                             <div>
-                              <h3 className="text-sm font-extrabold text-slate-900">1. Initialisation de Paiement NanaSwitch Cloud (Python)</h3>
-                              <p className="text-[11px] text-slate-500">Appel POST avec requests et payload structuré.</p>
+                              <h3 className="text-sm font-extrabold text-slate-900">2. Python / Flask (SDK & Script Officiel)</h3>
+                              <p className="text-[11px] text-slate-500">Initialisation de paiement et vérification cryptographique HMAC-SHA256.</p>
                             </div>
                           </div>
                           <button
-                            onClick={() => copyToClipboard?.(`# Initialisation de paiement NanaSwitch Cloud (Python)
-import requests
+                            onClick={() => copyToClipboard?.(`import hmac, hashlib, requests
 
+# Initialisation
 def create_payment():
-    url = "https://nana-payment-api.onrender.com/v1/switch/route"
     headers = {
-        "Content-Type": "application/json",
         "x-nanaswitch-key": "ns_live_pk_12345",
         "x-nanaswitch-skey": "ns_live_sk_67890"
     }
     payload = {
-        "amount": 5000,
-        "currency": "XOF",
-        "order_id": "CMD_12345",
-        "customer": {
-            "email": "client@example.com",
-            "phone": "+22670000000"
-        }
+        "amount": 5000, "currency": "XOF", "order_id": "CMD_12345"
     }
-    response = requests.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-    data = response.json()
-    return data.get("checkout_url")`, 'Code Python Initialisation')}
+    res = requests.post("https://nana-payment-api.onrender.com/v1/switch/route", json=payload, headers=headers)
+    return res.json()["checkout_url"]
+
+# Verification Webhook HMAC-SHA256
+def verify_webhook(raw_body, signature_header, secret):
+    parts = dict(item.split("=") for item in signature_header.split(","))
+    ts, sig = parts["t"], parts["v1"]
+    computed = hmac.new(secret.encode(), f"{ts}.{raw_body}".encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, computed)`, 'Code Python / Flask')}
                             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2331,175 +2328,96 @@ def create_payment():
                         </div>
 
                         <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
-{`# Initialisation de paiement NanaSwitch Cloud (Python)
-import requests
+{`import hmac, hashlib, requests
 
+# Initialisation
 def create_payment():
-    url = "https://nana-payment-api.onrender.com/v1/switch/route"
     headers = {
-        "Content-Type": "application/json",
         "x-nanaswitch-key": "ns_live_pk_12345",
         "x-nanaswitch-skey": "ns_live_sk_67890"
     }
     payload = {
-        "amount": 5000,
-        "currency": "XOF",
-        "order_id": "CMD_12345",
-        "customer": {
-            "email": "client@example.com",
-            "phone": "+22670000000"
-        }
+        "amount": 5000, "currency": "XOF", "order_id": "CMD_12345"
     }
-    response = requests.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-    data = response.json()
-    return data.get("checkout_url")`}
+    res = requests.post("https://nana-payment-api.onrender.com/v1/switch/route", json=payload, headers=headers)
+    return res.json()["checkout_url"]
+
+# Verification Webhook HMAC-SHA256
+def verify_webhook(raw_body, signature_header, secret):
+    parts = dict(item.split("=") for item in signature_header.split(","))
+    ts, sig = parts["t"], parts["v1"]
+    computed = hmac.new(secret.encode(), f"{ts}.{raw_body}".encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, computed)`}
                         </pre>
                       </div>
 
-                      {/* 2. Validation Webhook HMAC-SHA256 Python */}
-                      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
-                            <div>
-                              <h3 className="text-sm font-extrabold text-slate-900">2. Vérification Webhook HMAC-SHA256 (Python)</h3>
-                              <p className="text-[11px] text-slate-500">Comparaison sécurisée avec hmac.compare_digest.</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => copyToClipboard?.(`# Verification Webhook HMAC-SHA256 (Python)
-import hmac
-import hashlib
-
-def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
-    """
-    Valide l'authenticité de la payload brute avec la signature reçue.
-    signature_header format: "t=1730000000,v1=6a3f..."
-    """
-    try:
-        parts = dict(part.strip().split('=') for part in signature_header.split(','))
-        ts_value = parts.get('t')
-        sig_value = parts.get('v1')
-        
-        if not ts_value or not sig_value:
-            return False
-            
-        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
-        expected_sig = hmac.new(
-            secret.encode('utf-8'),
-            signed_payload,
-            hashlib.sha256
-        ).hexdigest()
-        
-        return hmac.compare_digest(sig_value, expected_sig)
-    except Exception:
-        return False`, 'Code Python Validation Webhook')}
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            Copier le code
-                          </button>
-                        </div>
-
-                        <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
-{`# Verification Webhook HMAC-SHA256 (Python)
-import hmac
-import hashlib
-
-def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
-    try:
-        parts = dict(part.strip().split('=') for part in signature_header.split(','))
-        ts_value = parts.get('t')
-        sig_value = parts.get('v1')
-        
-        if not ts_value or not sig_value:
-            return False
-            
-        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
-        expected_sig = hmac.new(
-            secret.encode('utf-8'),
-            signed_payload,
-            hashlib.sha256
-        ).hexdigest()
-        
-        return hmac.compare_digest(sig_value, expected_sig)
-    except Exception:
-        return False`}
-                        </pre>
-                      </div>
-
-                      {/* 3. Serveur FastAPI / Flask de Référence */}
+                      {/* 2. Serveur Flask de Référence */}
                       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                           <div className="flex items-center gap-2.5">
                             <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">3</span>
                             <div>
-                              <h3 className="text-sm font-extrabold text-slate-900">3. Serveur Webhook Complet (FastAPI)</h3>
-                              <p className="text-[11px] text-slate-500">Réception du body brut (bytes) et réponse JSON 200.</p>
+                              <h3 className="text-sm font-extrabold text-slate-900">Serveur Flask de Référence (Listener Production)</h3>
+                              <p className="text-[11px] text-slate-500">Capture du body brut (as_text=True) et réponse JSON HTTP 200.</p>
                             </div>
                           </div>
                           <button
-                            onClick={() => copyToClipboard?.(`from fastapi import FastAPI, Request, HTTPException
-import json
+                            onClick={() => copyToClipboard?.(`from flask import Flask, request, jsonify
 import os
 
-app = FastAPI()
+app = Flask(__name__)
 WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
 
-@app.post("/api/nanaswitch-webhook")
-async def nanaswitch_webhook(request: Request):
-    signature_header = request.headers.get("x-nanaswitch-signature")
-    if not signature_header:
-        raise HTTPException(status_code=400, detail="Missing signature header")
-        
-    raw_body_bytes = await request.body()
-    raw_body_str = raw_body_bytes.decode("utf-8")
-    
-    is_valid = verify_webhook(raw_body_str, signature_header, WEBHOOK_SECRET)
-    if not is_valid:
-        raise HTTPException(status_code=401, detail="Invalid HMAC signature")
-        
-    event = json.loads(raw_body_str)
+@app.route("/api/nanaswitch-webhook", methods=["POST"])
+def nanaswitch_webhook():
+    sig_header = request.headers.get("x-nanaswitch-signature")
+    raw_body = request.get_data(as_text=True)
+
+    if not sig_header or not verify_webhook(raw_body, sig_header, WEBHOOK_SECRET):
+        return jsonify({"error": "Invalid HMAC signature"}), 401
+
+    event = request.get_json(silent=True) or {}
     if event.get("event_type") == "payment.success":
         order_id = event.get("order_id")
         amount = event.get("amount")
-        print(f"Paiement confirmé pour la commande {order_id} ({amount} XOF)")
-        
-    return {"received": True}`, 'Serveur FastAPI')}
+        print(f"Paiement validé pour la commande {order_id} ({amount} XOF)")
+
+    return jsonify({"received": True}), 200
+
+if __name__ == "__main__":
+    app.run(port=5000)`, 'Serveur Flask')}
                             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-600 text-xs font-bold transition flex items-center gap-1.5"
                           >
                             <Copy className="w-3.5 h-3.5" />
-                            Copier FastAPI
+                            Copier Flask
                           </button>
                         </div>
 
                         <pre className="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-[11px] overflow-x-auto leading-relaxed">
-{`from fastapi import FastAPI, Request, HTTPException
-import json
+{`from flask import Flask, request, jsonify
 import os
 
-app = FastAPI()
+app = Flask(__name__)
 WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
 
-@app.post("/api/nanaswitch-webhook")
-async def nanaswitch_webhook(request: Request):
-    signature_header = request.headers.get("x-nanaswitch-signature")
-    if not signature_header:
-        raise HTTPException(status_code=400, detail="Missing signature header")
-        
-    raw_body_bytes = await request.body()
-    raw_body_str = raw_body_bytes.decode("utf-8")
-    
-    if not verify_webhook(raw_body_str, signature_header, WEBHOOK_SECRET):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-        
-    event = json.loads(raw_body_str)
+@app.route("/api/nanaswitch-webhook", methods=["POST"])
+def nanaswitch_webhook():
+    sig_header = request.headers.get("x-nanaswitch-signature")
+    raw_body = request.get_data(as_text=True)
+
+    if not sig_header or not verify_webhook(raw_body, sig_header, WEBHOOK_SECRET):
+        return jsonify({"error": "Invalid HMAC signature"}), 401
+
+    event = request.get_json(silent=True) or {}
     if event.get("event_type") == "payment.success":
-        # Valider la commande dans votre système
-        pass
-        
-    return {"received": True}`}
+        order_id = event.get("order_id")
+        amount = event.get("amount")
+        print(f"Paiement validé pour la commande {order_id} ({amount} XOF)")
+
+    return jsonify({"received": True}), 200
+
+if __name__ == "__main__":
+    app.run(port=5000)`}
                         </pre>
                       </div>
 

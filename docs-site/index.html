@@ -918,92 +918,64 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) =
       <!-- ==================== PARTIE 2: PYTHON ==================== -->
       <div class="space-y-4 pt-4 border-t border-slate-100">
         <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-black text-xs">PY</span>
-          <h3 class="text-base font-extrabold text-slate-900">Intégration Python (Requests & FastAPI)</h3>
+          <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs">PY</span>
+          <h3 class="text-base font-extrabold text-slate-900">2. Python / Flask (SDK & Script Officiel)</h3>
         </div>
 
-        <!-- 2.1 Initialisation de paiement Python -->
+        <!-- 2.1 Initialisation & Verification Webhook Python (Code d'appui requis) -->
         <div class="space-y-2">
-          <span class="text-xs font-bold text-slate-700">1. Initialisation de paiement (Python Requests)</span>
+          <span class="text-xs font-bold text-slate-700">Initialisation de Paiement & Vérification Webhook (Python)</span>
           <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
-# Initialisation de paiement NanaSwitch Cloud (Python)
-import requests
+import hmac, hashlib, requests
 
+# Initialisation
 def create_payment():
-    url = "https://nana-payment-api.onrender.com/v1/switch/route"
     headers = {
-        "Content-Type": "application/json",
         "x-nanaswitch-key": "ns_live_pk_12345",
         "x-nanaswitch-skey": "ns_live_sk_67890"
     }
     payload = {
-        "amount": 5000,
-        "currency": "XOF",
-        "order_id": "CMD_12345",
-        "customer": {
-            "email": "client@example.com",
-            "phone": "+22670000000"
-        }
+        "amount": 5000, "currency": "XOF", "order_id": "CMD_12345"
     }
-    response = requests.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-    return response.json().get("checkout_url")</pre>
+    res = requests.post("https://nana-payment-api.onrender.com/v1/switch/route", json=payload, headers=headers)
+    return res.json()["checkout_url"]
+
+# Verification Webhook HMAC-SHA256
+def verify_webhook(raw_body, signature_header, secret):
+    parts = dict(item.split("=") for item in signature_header.split(","))
+    ts, sig = parts["t"], parts["v1"]
+    computed = hmac.new(secret.encode(), f"{ts}.{raw_body}".encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, computed)</pre>
         </div>
 
-        <!-- 2.2 Verification Webhook Python -->
+        <!-- 2.2 Serveur Flask Complet -->
         <div class="space-y-2">
-          <span class="text-xs font-bold text-slate-700">2. Vérification Webhook HMAC-SHA256 (Python)</span>
+          <span class="text-xs font-bold text-slate-700">Serveur Webhook de Référence (Flask)</span>
           <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
-# Verification Webhook HMAC-SHA256 (Python)
-import hmac
-import hashlib
-
-def verify_webhook(payload: str, signature_header: str, secret: str) -> bool:
-    try:
-        parts = dict(part.strip().split('=') for part in signature_header.split(','))
-        ts_value = parts.get('t')
-        sig_value = parts.get('v1')
-        
-        if not ts_value or not sig_value:
-            return False
-            
-        signed_payload = f"{ts_value}.{payload}".encode('utf-8')
-        expected_sig = hmac.new(
-            secret.encode('utf-8'),
-            signed_payload,
-            hashlib.sha256
-        ).hexdigest()
-        
-        return hmac.compare_digest(sig_value, expected_sig)
-    except Exception:
-        return False</pre>
-        </div>
-
-        <!-- 2.3 Serveur FastAPI Complet -->
-        <div class="space-y-2">
-          <span class="text-xs font-bold text-slate-700">3. Serveur Webhook de Référence (FastAPI)</span>
-          <pre class="bg-slate-900 text-slate-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto leading-relaxed">
-from fastapi import FastAPI, Request, HTTPException
-import json
+from flask import Flask, request, jsonify
 import os
 
-app = FastAPI()
+app = Flask(__name__)
 WEBHOOK_SECRET = os.getenv("NANASWITCH_WEBHOOK_SECRET", "ns_whsec_...")
 
-@app.post("/api/webhook")
-async def handle_webhook(request: Request):
+@app.route("/api/nanaswitch-webhook", methods=["POST"])
+def nanaswitch_webhook():
     sig_header = request.headers.get("x-nanaswitch-signature")
-    body_bytes = await request.body()
-    body_str = body_bytes.decode("utf-8")
+    raw_body = request.get_data(as_text=True)
 
-    if not verify_webhook(body_str, sig_header, WEBHOOK_SECRET):
-        raise HTTPException(status_code=401, detail="Invalid signature")
+    if not sig_header or not verify_webhook(raw_body, sig_header, WEBHOOK_SECRET):
+        return jsonify({"error": "Invalid HMAC signature"}), 401
 
-    event = json.loads(body_str)
+    event = request.get_json(silent=True) or {}
     if event.get("event_type") == "payment.success":
-        print(f"Paiement validé : {event.get('order_id')} ({event.get('amount')} XOF)")
+        order_id = event.get("order_id")
+        amount = event.get("amount")
+        print(f"Paiement validé : {order_id} ({amount} XOF)")
 
-    return {"received": True}</pre>
+    return jsonify({"received": True}), 200
+
+if __name__ == "__main__":
+    app.run(port=5000)</pre>
         </div>
       </div>
     </section>
