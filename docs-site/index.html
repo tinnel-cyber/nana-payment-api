@@ -160,21 +160,21 @@
           </div>
         </a>
 
-        <!-- CARD 2: CLÉS ZERO-TRUST -->
-        <a href="#section-keys" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="clés keys zero-trust ns_live_pk ns_live_sk auth headers bcrypt">
+        <!-- CARD 2: VISION & BUSINESS MODEL (PROMPT 2) -->
+        <a href="#section-overview" class="module-card group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between" data-search="vision business model agrege byok couverture operateurs orange moov wave mtn ligdicash visa kyc 1m 5m">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-2xl">🔑</span>
+              <span class="text-2xl">🌐</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">PROMPT 2</span>
             </div>
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Clés & Authentification Zero-Trust</h3>
-              <p class="text-[11px] font-mono font-bold text-slate-400">ns_live_pk_* & ns_live_sk_*</p>
+              <h3 class="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition">Vision, Modèle d'Affaires & Couverture</h3>
+              <p class="text-[11px] font-mono font-bold text-slate-400">docs/overview • Agrégé vs BYOK</p>
             </div>
-            <p class="text-xs text-slate-600 line-clamp-3">Sécurisation des clés publiques et secrètes, hash bcrypt dans Firestore et isolation des requêtes API serveur.</p>
+            <p class="text-xs text-slate-600 line-clamp-3">Présentation de NanaSwitch Cloud (NANASORE TECHNOLOGIES), comparatif complet Agrégé vs BYOK, workflow en 5 étapes et couverture multi-opérateurs UEMOA.</p>
           </div>
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span>Voir la Sécurité &rarr;</span>
+            <span>Voir l'Overview &rarr;</span>
           </div>
         </a>
 
@@ -330,45 +330,104 @@ Bienvenue dans le Skill officiel de l'Assistant IA Spécialisé NanaSwitch Cloud
       </div>
     </section>
 
-    <!-- ==================== SECTION 2: CLÉS ZERO-TRUST ==================== -->
-    <section id="section-keys" class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
-      <div class="border-b border-slate-100 pb-4">
-        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black uppercase">SECTION 2 • PROMPT 2</span>
-        <h2 class="text-2xl font-black text-slate-900 mt-1">Matrice des Clés d'Authentification Zero-Trust</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Règles absolues de sécurité pour les développeurs et serveurs.</p>
+    <!-- ==================== SECTION 2: PROMPT 2 (VISION & BUSINESS MODEL) ==================== -->
+    <section id="section-overview" class="bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm space-y-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black uppercase">SECTION 2 • PROMPT 2 • docs/overview</span>
+          <h2 class="text-2xl font-black text-slate-900 mt-1">Vision, Modèle d'Affaires & Couverture UEMOA</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Switch B2B & orchestrateur de paiement résilient opéré par <strong>NANASORE TECHNOLOGIES</strong>.</p>
+        </div>
+        <span class="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
+          UEMOA 6+ Pays • Multi-Opérateurs
+        </span>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="border-b border-slate-200 text-slate-500 text-[11px]">
-              <th class="py-2.5 font-bold">Identifiant</th>
-              <th class="py-2.5 font-bold">Format</th>
-              <th class="py-2.5 font-bold">Exposition</th>
-              <th class="py-2.5 font-bold">Règle de Sécurité</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr>
-              <td class="py-3 font-bold text-slate-900">Public Key</td>
-              <td class="py-3 font-mono text-blue-600 font-bold">ns_live_pk_[32 hex]</td>
-              <td class="py-3 text-slate-600">Frontend / Plugins</td>
-              <td class="py-3 text-emerald-600 font-semibold">Identifiant Marchand public</td>
-            </tr>
-            <tr>
-              <td class="py-3 font-bold text-slate-900">Secret Key</td>
-              <td class="py-3 font-mono text-rose-600 font-bold">ns_live_sk_[32 hex]</td>
-              <td class="py-3 text-rose-600 font-bold">Serveur Uniquement</td>
-              <td class="py-3 text-slate-600">Stocké uniquement haché (bcrypt) dans Firestore</td>
-            </tr>
-            <tr>
-              <td class="py-3 font-bold text-slate-900">Webhook Secret</td>
-              <td class="py-3 font-mono text-purple-600 font-bold">ns_whsec_[64 hex]</td>
-              <td class="py-3 text-slate-600">Serveur Marchand</td>
-              <td class="py-3 text-slate-600">Validation de l'en-tête x-nanaswitch-signature</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Présentation & Modèle d'Affaires -->
+      <div class="space-y-3 text-xs text-slate-700 leading-relaxed">
+        <h3 class="text-sm font-black text-slate-900">1. Présentation de NanaSwitch Cloud & Mission B2B</h3>
+        <p>
+          <strong>NanaSwitch Cloud</strong> est l'orchestrateur de paiement intelligent de référence en Afrique de l'Ouest. Développé et opéré par l'entité <strong>NANASORE TECHNOLOGIES</strong>, il résout le problème critique de la fragmentation des passerelles de paiement locales en fournissant une API unifiée haute disponibilité, compatible avec les principaux opérateurs Mobile Money et les cartes bancaires internationales.
+        </p>
+      </div>
+
+      <!-- Comparatif 2 Modes d'Opération -->
+      <div class="space-y-4">
+        <h3 class="text-sm font-black text-slate-900">2. Explication des Deux Modes d'Opération (Agrégé vs BYOK)</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+          
+          <!-- Mode 1: Agrégé -->
+          <div class="p-6 rounded-2xl border-2 border-blue-200 bg-blue-50/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-blue-900 text-sm">Mode Agrégé (Master Merchant)</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">Commissions</span>
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              NanaSwitch gère l'ensemble des flux financiers via son compte maître de régulation. Le marchand n'a besoin d'aucun contrat direct avec les opérateurs télécoms.
+            </p>
+            <ul class="space-y-2 text-slate-700">
+              <li>• <strong>Tarification :</strong> Frais opérateur de base + <strong class="text-blue-700">1.5% de marge de switch</strong> retenue à la source.</li>
+              <li>• <strong>Disponibilité :</strong> Solde crédité instantanément sur le wallet NanaSwitch multi-devises (XOF, USD, XAF, GNF, GHS) avec payout à la demande.</li>
+              <li>• <strong>Plafonds mensuels KYC stricts :</strong>
+                <ul class="list-disc list-inside pl-3 pt-1 text-slate-600">
+                  <li><strong>Particulier / Indépendant :</strong> max <strong>1 000 000 XOF/mois</strong> (CNIB + Selfie).</li>
+                  <li><strong>Entreprise Enregistrée :</strong> max <strong>5 000 000 XOF/mois</strong> (RCCM + IFU + CNIB).</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Mode 2: BYOK -->
+          <div class="p-6 rounded-2xl border-2 border-purple-200 bg-purple-50/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-purple-900 text-sm">Mode BYOK (Bring Your Own Key)</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-600 text-white">Routeur SaaS</span>
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              Routeur SaaS technique pur (pass-through). Les marchands utilisent leurs propres clés API de passerelles partenaires (SasPay API Key, Sebpay Keys).
+            </p>
+            <ul class="space-y-2 text-slate-700">
+              <li>• <strong>Gestion des fonds :</strong> Les fonds vont directement sur vos comptes marchands. NanaSwitch ne touche pas à l'argent.</li>
+              <li>• <strong>Tarification SaaS :</strong> <strong class="text-emerald-700">0% de commission de switch</strong>. Facturation SaaS à <strong class="text-purple-700">0,02 XOF par requête / transaction</strong> débité de vos crédits API.</li>
+              <li>• <strong>Plafonds de volume :</strong> <strong class="text-slate-900">Exempt de tout plafond de volume</strong> (Transactions illimitées).</li>
+              <li>• <strong>Responsabilité :</strong> Clés et sécurité d'infrastructure sous la responsabilité exclusive du client.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Couverture & Opérateurs Pris en Charge -->
+      <div class="space-y-4 pt-2">
+        <h3 class="text-sm font-black text-slate-900">3. Couverture Régionale & Opérateurs Pris en Charge</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-900">🇧🇫 Burkina Faso (BF)</span>
+            <p class="text-slate-600 text-[11px]">Orange Money BF, Moov Money BF, Wave Burkina, LigdiCash.</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-900">🇨🇮 Côte d'Ivoire (CI)</span>
+            <p class="text-slate-600 text-[11px]">Orange Money CI, MTN Mobile Money CI, Wave CI, Moov Money CI.</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-900">🇸🇳 Sénégal (SN)</span>
+            <p class="text-slate-600 text-[11px]">Wave Sénégal, Orange Money Sénégal, Free Money Sénégal.</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-900">🇧🇯 Bénin (BJ)</span>
+            <p class="text-slate-600 text-[11px]">MTN Mobile Money Bénin, Moov Money Bénin, Celtiis Cash.</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-900">🇲🇱 Mali (ML) & 🇹🇬 Togo (TG)</span>
+            <p class="text-slate-600 text-[11px]">Orange Money Mali, Moov ML, TMoney Togo (Togocom), Moov Togo (Flooz).</p>
+          </div>
+          <div class="p-4 bg-blue-50/60 rounded-2xl border border-blue-200 space-y-1">
+            <span class="font-bold text-blue-900">💳 Cartes Bancaires (Global)</span>
+            <p class="text-slate-600 text-[11px]">Cartes VISA, Mastercard, sécurisation 3D-Secure 2.0 universelle.</p>
+          </div>
+        </div>
       </div>
     </section>
 

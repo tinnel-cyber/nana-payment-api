@@ -3,7 +3,8 @@ import {
   Bot, BookOpen, Key, Cpu, ShieldCheck, Layers, Lock, ShoppingCart, 
   AlertCircle, Download, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
   Search, Sparkles, Send, Terminal, CheckCircle2, RefreshCw, FileCode,
-  ShieldAlert, Radio, HelpCircle, FileText, ChevronRight, LogIn
+  ShieldAlert, Radio, HelpCircle, FileText, ChevronRight, LogIn,
+  Globe2, Smartphone, CreditCard, Building2, Coins, Users, Compass, TrendingUp
 } from 'lucide-react';
 
 interface NanaDocPortalAppProps {
@@ -295,14 +296,14 @@ export function NanaDocPortalApp({
     },
     {
       id: 'prompt2',
-      badge: 'PROMPT 2',
+      badge: 'PROMPT 2 • VISION & BUSINESS MODEL',
       badgeColor: 'bg-emerald-600 text-white',
-      icon: Key,
+      icon: Globe2,
       iconColor: 'text-emerald-600',
-      title: "Matrice des Clés & Authentification Zero-Trust",
-      subtitle: "ns_live_pk_* & ns_live_sk_*",
-      description: "Architecture de sécurité Zero-Trust : paires de clés publiques et privées, hachage bcrypt Firestore, règles de protection et headers HTTP requis.",
-      tags: ['Auth Headers', 'Bcrypt Hashing', 'Firestore Vault', 'Protection Serveur']
+      title: "Vision, Modèle d'Affaires & Couverture UEMOA",
+      subtitle: "docs/overview • Agrégé vs BYOK • 6+ Pays",
+      description: "Présentation de NanaSwitch Cloud (NANASORE TECHNOLOGIES), comparatif complet Agrégé (+1.5% marge) vs SaaS BYOK (0.02 XOF/req), plafonds KYC et couverture régionale multi-opérateurs.",
+      tags: ['Vision B2B', 'Mode Agrégé (+1.5%)', 'Mode BYOK (0.02 XOF)', 'Plafonds KYC', 'UEMOA 6+ Pays']
     },
     {
       id: 'prompt3',
@@ -938,59 +939,312 @@ Concernant votre demande "${textToSend}" :
                 </div>
               )}
 
-              {/* ---------------- PROMPT 2: CLÉS ZERO-TRUST ---------------- */}
+              {/* ---------------- PROMPT 2: VISION, MODÈLE D'AFFAIRES & COUVERTURE UEMOA ---------------- */}
               {activeView === 'prompt2' && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed animate-in fade-in duration-200">
-                  <div className="border-b border-slate-100 pb-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">PROMPT 2 • SÉCURITÉ & AUTH</span>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Matrice des Clés d'Authentification Zero-Trust</h2>
-                    <p className="text-slate-500 text-xs mt-1">Gestion sécurisée des clés d'accès publiques et secrètes.</p>
+                <div className="space-y-8 animate-in fade-in duration-200">
+                  
+                  {/* Prompt 2 Header Banner */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-200/80 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+                          <Globe2 className="w-3.5 h-3.5" />
+                          <span>PROMPT 2 • docs/overview • LEAD TECHNICAL WRITER & PRODUCT DESIGNER</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-2">
+                          Vision, Modèle d'Affaires & Couverture UEMOA
+                        </h1>
+                        <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                          Infrastructure d'orchestration de paiements résiliente opérée par <strong className="text-slate-800">NANASORE TECHNOLOGIES</strong>.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-mono font-bold border border-slate-200">
+                          Route : /docs/overview
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      <strong>NanaSwitch Cloud</strong> est un switch B2B et un orchestrateur de paiements intelligent conçu pour éliminer la fragmentation des moyens de paiement en Afrique de l'Ouest. Il permet aux marchands, développeurs et FinTechs d'unifier l'encaissement Mobile Money et cartes bancaires via une API unique haute disponibilité dotée de bascule automatique (failover).
+                    </p>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 text-slate-500 text-[11px]">
-                          <th className="py-2.5 font-bold">Type</th>
-                          <th className="py-2.5 font-bold">Préfixe / Format</th>
-                          <th className="py-2.5 font-bold">Exposition</th>
-                          <th className="py-2.5 font-bold">Stockage Firestore</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        <tr>
-                          <td className="py-3 font-bold text-slate-900">Public Key</td>
-                          <td className="py-3 font-mono text-blue-600 font-bold">ns_live_pk_[32 hex]</td>
-                          <td className="py-3 text-slate-600">Frontend / Plugins</td>
-                          <td className="py-3 text-emerald-600 font-semibold">Clair (Identifiant)</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3 font-bold text-slate-900">Secret Key</td>
-                          <td className="py-3 font-mono text-rose-600 font-bold">ns_live_sk_[32 hex]</td>
-                          <td className="py-3 text-rose-600 font-bold">Serveur Uniquement</td>
-                          <td className="py-3 text-purple-600 font-semibold">Haché (Bcrypt / SHA-256)</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3 font-bold text-slate-900">Webhook Secret</td>
-                          <td className="py-3 font-mono text-purple-600 font-bold">ns_whsec_[64 hex]</td>
-                          <td className="py-3 text-slate-600">Serveur Marchand</td>
-                          <td className="py-3 text-blue-600 font-semibold">Vault Firestore Marchand</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  {/* 1. LES 2 MODES D'OPÉRATION : COMPARATIF COMPLET */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">ARCHITECTURE HYBRIDE</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Deux Modes d'Opération Adaptés à Chaque Profil
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Choisissez le modèle opérationnel correspondant à votre niveau d'autonomie bancaire et de volume de transactions.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      
+                      {/* CARD MODE AGRÉGÉ */}
+                      <div className="p-6 rounded-3xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/60 to-white space-y-5 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-600 text-white">
+                              MODE 1 • AGRÉGÉ (MASTER MERCHANT)
+                            </span>
+                            <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-lg">
+                              Prêt à l'emploi
+                            </span>
+                          </div>
+
+                          <div>
+                            <h3 className="text-lg font-black text-slate-900">Compte Maître Collecteur NanaSwitch</h3>
+                            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                              Idéal pour les PME, e-commerçants et marchands qui souhaitent commencer à encaisser immédiatement sans négocier de contrats directs avec chaque opérateur télécom.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2.5 text-xs text-slate-700">
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Gestion des fonds :</strong> Les fonds sont collectés via le compte maître régulé NanaSwitch Cloud.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Grille tarifaire :</strong> Frais opérateur de base + <strong className="text-blue-700">1.5% de marge de switch</strong> retenue à la source.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Disponibilité :</strong> Crédit instantané sur votre wallet multi-devises (XOF, USD, XAF, GNF, GHS) avec reversements (payouts) à la demande.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                              <span><strong>Plafonds mensuels KYC stricts :</strong>
+                                <ul className="list-disc list-inside mt-1 pl-2 text-slate-600 space-y-0.5">
+                                  <li><strong className="text-slate-900">Particulier / Indépendant :</strong> max <strong>1 000 000 XOF / mois</strong> (CNIB + Selfie).</li>
+                                  <li><strong className="text-slate-900">Entreprise Enregistrée :</strong> max <strong>5 000 000 XOF / mois</strong> (RCCM + IFU + CNIB).</li>
+                                </ul>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] text-blue-900 font-medium">
+                          💡 En cas de dépassement de quota, l'API renvoie le code HTTP <strong>403_MONTHLY_VOLUME_LIMIT_REACHED</strong>.
+                        </div>
+                      </div>
+
+                      {/* CARD MODE BYOK */}
+                      <div className="p-6 rounded-3xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/60 to-white space-y-5 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-700 text-white">
+                              MODE 2 • BYOK (BRING YOUR OWN KEYS)
+                            </span>
+                            <span className="text-xs font-bold text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg">
+                              Routeur SaaS Pur
+                            </span>
+                          </div>
+
+                          <div>
+                            <h3 className="text-lg font-black text-slate-900">Routeur API SaaS Haute Performance</h3>
+                            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                              Conçu pour les Startups FinTech, plateformes et grandes entreprises disposant déjà de leurs propres contrats marchands (SasPay, Sebpay, banques).
+                            </p>
+                          </div>
+
+                          <div className="space-y-2.5 text-xs text-slate-700">
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Gestion des fonds :</strong> Routage direct <em>pass-through</em>. Les fonds vont directement sur vos propres comptes marchands. NanaSwitch ne stocke aucun fonds.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span><strong>Commission de switch :</strong> <strong className="text-emerald-700">0% de commission</strong> sur le volume financier transité.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <Coins className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                              <span><strong>Facturation SaaS :</strong> <strong className="text-purple-700">0,02 XOF par requête / transaction</strong>, décompté automatiquement de votre solde de crédits API Cloud.</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <TrendingUp className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                              <span><strong>Plafonds de volume :</strong> <strong className="text-slate-900">Exempt de tout plafond de volume</strong> (Transactions illimitées sans restriction mensuelle).</span>
+                            </div>
+                            <div className="flex items-start gap-2.5">
+                              <ShieldAlert className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                              <span><strong>Responsabilité :</strong> Vos clés privées (<code className="text-purple-700">saspay_api_key</code>, <code className="text-purple-700">sebpay_public_key</code>) restent sous votre entière responsabilité.</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-white rounded-xl border border-purple-100 text-[11px] text-purple-900 font-medium">
+                          ⚡ Si le solde de crédits API atteint 0, le coupe-circuit <strong>HTTP 402 Payment Required</strong> s'active automatiquement.
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="font-bold text-slate-900 text-sm">Header HTTP obligatoire pour chaque requête backend :</h4>
-                    <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto">
-{`// Requête serveur avec la clé secrète
-POST /v1/switch/route HTTP/1.1
-Host: nana-payment-api.onrender.com
-Content-Type: application/json
-Authorization: Bearer ns_live_sk_89ab32c0f4...
-x-nanaswitch-skey: ns_live_sk_89ab32c0f4...`}
-                    </pre>
+                  {/* 2. PARCOURS UTILISATEUR & FLUX TRANSACTIONNEL */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">WORKFLOW TECHNIQUE</span>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                        Parcours Utilisateur & Orchestration en 5 Étapes
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        De la validation du panier e-commerce jusqu'à la réconciliation par webhook cryptographique.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[11px]">1</span>
+                        <h4 className="font-bold text-slate-900">Initiation Panier</h4>
+                        <p className="text-slate-500 text-[11px]">Le client final valide sa commande sur WooCommerce, Shopify ou votre application mobile.</p>
+                      </div>
+
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[11px]">2</span>
+                        <h4 className="font-bold text-slate-900">Appel Zero-Trust</h4>
+                        <p className="text-slate-500 text-[11px]">Votre serveur envoie <code className="text-blue-600">POST /v1/switch/route</code> avec <code className="text-rose-600">ns_live_sk_*</code>.</p>
+                      </div>
+
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[11px]">3</span>
+                        <h4 className="font-bold text-slate-900">Switch & Failover</h4>
+                        <p className="text-slate-500 text-[11px]">NanaSwitch sélectionne la meilleure passerelle (SasPay/Sebpay) selon la disponibilité réseau en temps réel.</p>
+                      </div>
+
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[11px]">4</span>
+                        <h4 className="font-bold text-slate-900">Paiement Client</h4>
+                        <p className="text-slate-500 text-[11px]">Le client valide le paiement via Push OTP, USSD Mobile Money ou 3D-Secure Carte Bancaire.</p>
+                      </div>
+
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[11px]">5</span>
+                        <h4 className="font-bold text-slate-900">Webhook HMAC</h4>
+                        <p className="text-slate-500 text-[11px]">Notification signée HMAC-SHA256 envoyée à votre serveur pour confirmation immédiate de commande.</p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* 3. COUVERTURE RÉGIONALE & OPÉRATEURS PRIS EN CHARGE */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-600">ZONE GÉOGRAPHIQUE & OPÉRATEURS</span>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                          Couverture UEMOA & Réseaux de Paiement Intégrés
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Accédez à plus de 120 millions d'utilisateurs Mobile Money et porteurs de cartes en Afrique de l'Ouest.
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200 flex items-center gap-1.5 shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Réseau Opérationnel 99.98%</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                      
+                      {/* BURKINA FASO */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>🇧🇫</span> Burkina Faso (BF)
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money BF</strong> (Push OTP / USSD)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money BF</strong> (Flooz)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Burkina</strong> (QR / Deep Link)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-emerald-600" /> <strong>LigdiCash</strong> (Wallet agrégé)</li>
+                        </ul>
+                      </div>
+
+                      {/* CÔTE D'IVOIRE */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>🇨🇮</span> Côte d'Ivoire (CI)
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money CI</strong> (OTP / Web)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-yellow-600" /> <strong>MTN MoMo CI</strong></li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Côte d'Ivoire</strong></li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money CI</strong></li>
+                        </ul>
+                      </div>
+
+                      {/* SÉNÉGAL */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>🇸🇳</span> Sénégal (SN)
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-sky-500" /> <strong>Wave Sénégal</strong> (Instantané)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money Sénégal</strong></li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-red-600" /> <strong>Free Money Sénégal</strong></li>
+                        </ul>
+                      </div>
+
+                      {/* BÉNIN */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>🇧🇯</span> Bénin (BJ)
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-yellow-600" /> <strong>MTN Mobile Money Bénin</strong></li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Money Bénin</strong></li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-indigo-600" /> <strong>Celtiis Cash</strong></li>
+                        </ul>
+                      </div>
+
+                      {/* MALI & TOGO */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>🇲🇱 / 🇹🇬</span> Mali & Togo
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">XOF</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-amber-600" /> <strong>Orange Money Mali</strong> & Moov ML</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-purple-600" /> <strong>TMoney Togo</strong> (Togocom)</li>
+                          <li className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-blue-600" /> <strong>Moov Togo (Flooz)</strong></li>
+                        </ul>
+                      </div>
+
+                      {/* CARTES INTERNATIONALES */}
+                      <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-900 flex items-center gap-2 text-sm">
+                            <span>💳</span> Cartes Bancaires
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Global</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-600 pt-1">
+                          <li className="flex items-center gap-2"><CreditCard className="w-3.5 h-3.5 text-blue-700" /> <strong>Cartes VISA</strong> (Débit & Crédit)</li>
+                          <li className="flex items-center gap-2"><CreditCard className="w-3.5 h-3.5 text-rose-600" /> <strong>Mastercard</strong></li>
+                          <li className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> <strong>3D-Secure 2.0 Universel</strong></li>
+                        </ul>
+                      </div>
+
+                    </div>
+                  </div>
+
                 </div>
               )}
 
